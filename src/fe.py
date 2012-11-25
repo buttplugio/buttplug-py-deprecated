@@ -1,6 +1,6 @@
 import sys
 import DeviceManager
-import clientmanager
+import client
 
 def main():
     plugins = DeviceManager.scanForPlugins()
@@ -8,7 +8,7 @@ def main():
     for p in plugins:
         print p["name"]
     print "Starting server..."
-    clientmanager.startLoop()
+    client.startLoop()
     return 0
 
 if __name__ == '__main__':
