@@ -2,6 +2,7 @@ from Queue import Queue
 from twisted.internet.protocol import Factory
 from twisted.protocols.basic import LineReceiver
 from messages import MessageGenerator
+import system
 
 # PEP318 example
 def singleton(cls):
@@ -38,6 +39,7 @@ class ClientInstance(LineReceiver):
         self._msgQueue = Queue()
         self._devices = {}
         self.setRawMode()
+        self.delimiter = ""
         pass
     
     def rawDataReceived(self, data):
@@ -49,5 +51,10 @@ class ClientInstance(LineReceiver):
         if l is None:
             print "No message!"
         else:
+            if l.msgtype < 1000:
+                m = system.ParseSystemMessage(l)
+                if m is None:
+                    print "No message handler!"
+                self.sendLine(m.rawData())
             print l.msgtype
             print l.value
