@@ -11,12 +11,12 @@ import socket
 class Message(object):
     """
     """
-    
-    def __init__(self, ):
+
+    def __init__(self, msgtype = -1, value = None):
         """
         """
-        self.msgtype = -1
-        self.value = None
+        self.msgtype = msgtype
+        self.value = value
 
     def pack(self):
         return msgpack.packb([self.msgtype, self.value])
@@ -30,7 +30,7 @@ class Message(object):
 class DeviceMessage(Message):
     """
     """
-    
+
     def __init__(self, index):
         """
         """

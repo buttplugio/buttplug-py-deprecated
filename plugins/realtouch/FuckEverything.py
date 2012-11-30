@@ -9,6 +9,7 @@ class RealTouchPlugin(object):
     AUTHOR = "Kyle Machulis"
     REPO_URL = "http://www.github.com/qdot/librealtouch"
     PRODUCT_URL = "http://www.realtouch.com"
+    MULTICLAIM = False
 
     def getDeviceList(self, ):
         """
@@ -19,7 +20,7 @@ class RealTouchPlugin(object):
         """
         """
         d = RealTouchDevice()
-        d.open_path(device["path"])
+        d.open(device["path"])
         return d
 
 def getFEPlugin():

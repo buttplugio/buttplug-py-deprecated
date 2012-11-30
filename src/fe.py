@@ -1,6 +1,6 @@
 import device
 import client
-import time
+import plugin
 import gevent
 from gevent.server import StreamServer
 
@@ -13,10 +13,10 @@ def clientLoop():
     gevent.spawn_later(1, clientLoop)
 
 def start():
-    device.scanForPlugins()
+    plugin.scanForPlugins()
     print "Plugins found:"
-    for p in device.pluginsAvailable():
-        print p
+    for p in plugin.pluginsAvailable():
+        print p.NAME
     print device.scanForDevices()
     print "Starting server..."
     gevent.spawn_later(1, deviceLoop)

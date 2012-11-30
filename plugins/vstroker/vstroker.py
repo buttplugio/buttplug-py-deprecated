@@ -26,7 +26,7 @@ class VStrokerDevice(object):
 
     def open(self, path):
         self._device = hid.device()
-        self._device.open_path(path)
+        return self._device.open_path(path)
 
     def readLoop(self):
         self._device.set_nonblocking(1)

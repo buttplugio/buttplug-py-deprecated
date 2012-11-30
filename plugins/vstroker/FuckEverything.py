@@ -9,6 +9,7 @@ class VStrokerPlugin(object):
     AUTHOR = "Kyle Machulis"
     REPO_URL = "http://www.github.com/qdot/libvstroker"
     PRODUCT_URL = "http://www.vstroker.com"
+    MULTICLAIM = True
 
     def getDeviceList(self, ):
         """
@@ -19,7 +20,8 @@ class VStrokerPlugin(object):
         """
         """
         d = VStrokerDevice()
-        d.open_path(device["path"])
+        if not d.open(device["path"]):
+            return None
         return d
 
 def getFEPlugin():

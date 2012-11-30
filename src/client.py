@@ -1,35 +1,51 @@
-from messages import MessageGenerator, Message
-from collections import namedtuple
+from messages import MessageGenerator
 import system
 import uuid
 import time
+import traceback
 
 _mvars = {"clients" : []}
 
-ClientInstance = namedtuple("ClientInstance", "id, socket, address, devices, name, version, lastping")
+class ClientInstance(object):
+    def __init__(self, socket, address):
+        self.id = uuid.uuid4()
+        self.socket = socket
+        self.address = address
+        self.devices = []
+        self.name = None
+        self.version = None
+        self.lastping = time.time()
 
 def runClient(socket, address):
     """
     """   
     m = MessageGenerator()
-    client = ClientInstance(uuid.uuid4(), socket, address, [], None, None, time.time())
+    client = ClientInstance(socket, address)
+    client.lastping = 100
     _mvars["clients"].append(client)
-    while True:
-        data = client.socket.recv(1024)
-        if not data:
-            break
-        m.addData(data)
-        z = m.generate()
-        l = z.next()
-        if l is None:
-            continue
-        msg = system.ParseMessage(l, client)
-        if msg is None:
-            print "No message handler for type %d" % l.msgtype
-            continue
-        client.socket.send(msg.rawData())
-        print l.msgtype
-        print l.value
+    try:
+        while True:
+            data = client.socket.recv(1024)
+            if not data:
+                print "BREAKING"
+                break
+            m.addData(data)
+            z = m.generate()
+            l = z.next()
+            if l is None:
+                continue
+            msg = system.ParseMessage(l, client)
+            if msg is None:
+                print "No message handler for type %d" % l.msgtype
+                continue
+            if msg is True:
+                continue
+            client.socket.send(msg.rawData())
+    except:
+        print "Internal error: disconnecting client"
+        print traceback.print_exc()
+        pass
+    client.socket.close()
     # Unclaim all devices
     _mvars["clients"].remove(client)
     return

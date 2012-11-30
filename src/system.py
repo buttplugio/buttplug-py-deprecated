@@ -1,78 +1,75 @@
 from messages import Message
 import device
+import plugin
 import feinfo
 import time
 
-def ServerInfo(msg, client):
+def SystemServerInfo(msg, client):
+    """
+    Server Info
+    - Server Name (Changable by user)
+    - Server Software Version (static)
+    - Server Build Date (static)
+    """
+    return Message(0, [{"name": "Fuck Everything", "version": feinfo.SERVER_VERSION, "date": feinfo.SERVER_DATE}])
+
+def SystemPluginList(msg, client):
     """
     """
-    m = Message()
-    m.msgtype = 0
+    return Message(1, [{"name": p.NAME, "version": p.VERSION} for p in plugin.pluginsAvailable()])
 
-    # Server Info
-    # - Server Name (Changable by user)
-    # - Server Software Version (static)
-    # - Server Build Date (static)
-    m.value = [{"name": "Fuck Everything", "version": feinfo.SERVER_VERSION, "date": feinfo.SERVER_DATE}]
-    return m
-
-def PluginList(msg, client):
+def SystemDeviceList(msg, client):    
     """
     """
-    m = Message()
-    m.msgtype = 1
-    
-    # PluginList
-    # - Array of dicts
-    print device.pluginsAvailable()
-    m.value = [{"name": p.NAME, "version": p.VERSION} for p in device.pluginsAvailable().values()]
-    print m.value
-    return m
+    return Message(100, [{ "name" : d["device_info"]["name"], "id" : d["id"]} for d in device.devicesAvailable().values()])
 
-def DeviceList(msg, client):    
-    m = Message()
-    m.msgtype = 100
-    
-    # PluginList
-    # - Array of dicts
-    m.value = [{ "name" : d["name"], "id" : d["id"]} for d in device.devicesAvailable().values()]
-    print m.value
-    return m
+def SystemDeviceAddition(msg, client):
+    """
+    """
+    return Message(101, None)
 
-def DeviceAddition(msg, client):
-    m = Message()
-    m.msgtype = 101
-    return m
+def SystemDeviceRemoval(msg, client):
+    """
+    """
+    return Message(102, None)
 
-def DeviceRemoval(msg, client):
-    m = Message()
-    m.msgtype = 102
-    return m
-
-def DeviceClaim(msg, client):
-    pass
+def SystemDeviceClaim(msg, client):
+    """
+    """
+    return Message(103, None)
 
 def ClientInfo(msg, client):
+    """
+    """
     client.name = msg.value["name"]
     client.version = msg.value["version"]
     return True
 
 def ClientPing(msg, client):
+    """
+    """
     client.lastping = time.time()
+    return True
 
 def ClientClaimDevice(msg, client):
-    pass
+    """
+    """
+    device_id = msg[0]
+    device.addDeviceClaim(device_id, client.id)
+    return True
 
 def ClientReleaseDevice(msg, client):
+    """
+    """
     pass
 
 systemMsgTypeDict = {
-    0 : ServerInfo,
-    1 : PluginList,
-    100 : DeviceList,
-    101 : DeviceAddition,
-    102 : DeviceRemoval,
-    103 : DeviceClaim,
+    0 : SystemServerInfo,
+    1 : SystemPluginList,
+    100 : SystemDeviceList,
+    101 : SystemDeviceAddition,
+    102 : SystemDeviceRemoval,
+    103 : SystemDeviceClaim,
     1000 : ClientInfo,
     1001 : ClientPing,
     1002 : ClientClaimDevice,
