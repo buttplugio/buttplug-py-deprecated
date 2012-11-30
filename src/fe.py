@@ -1,18 +1,30 @@
-import sys
-import DeviceManager
+import device
+import client
+import time
+import gevent
 from gevent.server import StreamServer
-from client import runClient
 
-def main():
-    DeviceManager.scanForPlugins()
+def deviceLoop():
+    device.scanForDevices()
+    gevent.spawn_later(1, deviceLoop)
+
+def clientLoop():
+    client.checkClientPings()
+    gevent.spawn_later(1, clientLoop)
+
+def start():
+    device.scanForPlugins()
     print "Plugins found:"
-    for p in DeviceManager.pluginsAvailable():
+    for p in device.pluginsAvailable():
         print p
-    print DeviceManager.scanForDevices()
+    print device.scanForDevices()
     print "Starting server..."
-    s = StreamServer(("localhost", 12345), runClient)
-    s.serve_forever()
-    return 0
+    gevent.spawn_later(1, deviceLoop)
+    gevent.spawn_later(1, clientLoop)
+    s = StreamServer(("localhost", 12345), client.runClient)
+    try:
+        s.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    print "Quitting server..."
 
-if __name__ == '__main__':
-    sys.exit(main())

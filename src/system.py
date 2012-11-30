@@ -1,6 +1,7 @@
 from messages import Message
-import DeviceManager
+import device
 import feinfo
+import time
 
 def ServerInfo(msg, client):
     """
@@ -23,22 +24,30 @@ def PluginList(msg, client):
     
     # PluginList
     # - Array of dicts
-    m.value = []
-    for (plugin_name, plugin) in DeviceManager.pluginsAvailable().items():
-        print plugin
-        m.value += { plugin.NAME }
-
+    print device.pluginsAvailable()
+    m.value = [{"name": p.NAME, "version": p.VERSION} for p in device.pluginsAvailable().values()]
     print m.value
     return m
 
-def DeviceList(msg, client):
-    pass
+def DeviceList(msg, client):    
+    m = Message()
+    m.msgtype = 100
+    
+    # PluginList
+    # - Array of dicts
+    m.value = [{ "name" : d["name"], "id" : d["id"]} for d in device.devicesAvailable().values()]
+    print m.value
+    return m
 
 def DeviceAddition(msg, client):
-    pass
+    m = Message()
+    m.msgtype = 101
+    return m
 
 def DeviceRemoval(msg, client):
-    pass
+    m = Message()
+    m.msgtype = 102
+    return m
 
 def DeviceClaim(msg, client):
     pass
@@ -49,7 +58,7 @@ def ClientInfo(msg, client):
     return True
 
 def ClientPing(msg, client):
-    pass
+    client.lastping = time.time()
 
 def ClientClaimDevice(msg, client):
     pass
