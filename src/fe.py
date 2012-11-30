@@ -1,14 +1,17 @@
 import sys
 import DeviceManager
-import client
+from gevent.server import StreamServer
+from client import runClient
 
 def main():
-    plugins = DeviceManager.scanForPlugins()
+    DeviceManager.scanForPlugins()
     print "Plugins found:"
-    for p in plugins:
-        print p["name"]
+    for p in DeviceManager.pluginsAvailable():
+        print p
+    print DeviceManager.scanForDevices()
     print "Starting server..."
-    client.startLoop()
+    s = StreamServer(("localhost", 12345), runClient)
+    s.serve_forever()
     return 0
 
 if __name__ == '__main__':

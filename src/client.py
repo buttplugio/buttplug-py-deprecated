@@ -1,11 +1,21 @@
 from messages import MessageGenerator
+from collections import namedtuple
 import system
-from gevent.server import StreamServer
+import uuid
+import time
 
-def Client(socket, address):
+_clients = []
+
+ClientInstance = namedtuple("ClientInstance", "id, socket, address, devices, name, version, lastping")
+
+def runClient(socket, address):
+    """
+    """   
     m = MessageGenerator()
+    client = ClientInstance(uuid.uuid4(), socket, address, [], None, None, time.time())
+    _clients.append(client)
     while True:
-        data = socket.recv(1024)
+        data = client.socket.recv(1024)
         if not data:
             break
         m.addData(data)
@@ -13,22 +23,16 @@ def Client(socket, address):
         l = z.next()
         if l is None:
             continue
-        if l.msgtype < 1000:
-            msg = system.ParseSystemMessage(l)
-            if msg is None:
-                print "No message handler!"
-            socket.send(msg.rawData())
-            print l.msgtype
-            print l.value
+        msg = system.ParseMessage(l, client)
+        if msg is None:
+            print "No message handler!"
+        client.socket.send(msg.rawData())
+        print l.msgtype
+        print l.value
+        return
+    # Unclaim all devices
+    _clients.remove(client)
+    return
 
-def startLoop():
-    """
-    """
-    s = StreamServer(("localhost", 12345), Client)
-    s.serve_forever()
-
-def stopLoop():
-    """
-    """
-    pass
-
+def getClients():
+    return _clients
