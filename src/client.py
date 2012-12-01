@@ -1,33 +1,39 @@
-from messages import MessageGenerator
+from message import MessageGenerator
 import system
+import device
 import uuid
 import time
 import traceback
 
-_mvars = {"clients" : []}
+_mvars = {"clients" : {}}
 
 class ClientInstance(object):
     def __init__(self, socket, address):
         self.id = uuid.uuid4()
         self.socket = socket
         self.address = address
-        self.devices = []
+        self.devices = {}
         self.name = None
         self.version = None
         self.lastping = time.time()
 
+def sendMessage(client, msg):
+    global _mvars
+    if not client.socket:
+        return
+    client.socket.send(msg.rawData())
+
 def runClient(socket, address):
     """
-    """   
+    """
+    global _mvars
     m = MessageGenerator()
     client = ClientInstance(socket, address)
-    client.lastping = 100
-    _mvars["clients"].append(client)
+    _mvars["clients"][client.id] = client
     try:
         while True:
             data = client.socket.recv(1024)
             if not data:
-                print "BREAKING"
                 break
             m.addData(data)
             z = m.generate()
@@ -46,8 +52,11 @@ def runClient(socket, address):
         print traceback.print_exc()
         pass
     client.socket.close()
+    client.socket = None
+    for (d_id, d) in client.devices.items():
+        device.removeDeviceClaim(d, client)
     # Unclaim all devices
-    _mvars["clients"].remove(client)
+    del _mvars["clients"][client.id]
     return
 
 def getClients():
@@ -60,4 +69,4 @@ def checkClientPings():
             print("Lost connection to client, ending")
             c.socket.close()
             continue
-        
+

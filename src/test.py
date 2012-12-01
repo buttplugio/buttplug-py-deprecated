@@ -41,8 +41,13 @@ m.value = [0]
 s.send(m.rawData())
 
 while True:
-    m.msgtype = 1001
-    s.send(m.rawData())
-    time.sleep(1)
+    q = s.recv(100)
+    mg.addData(q)
+    msg2 = g.next()
+    print msg2.msgtype
+    print msg2.value
+    # m.msgtype = 1001
+    # s.send(m.rawData())
+    # time.sleep(1)
 
 s.close()

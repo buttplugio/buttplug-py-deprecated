@@ -24,46 +24,56 @@ class VStrokerDevice(object):
             devices.append(d["path"])
         return devices
 
+    def isOpen(self):
+        return self._device != None
+
     def open(self, path):
         self._device = hid.device()
-        return self._device.open_path(path)
-
-    def readLoop(self):
+        self._device.open_path(path)
         self._device.set_nonblocking(1)
+        return True
 
-        while True:
-            data = self._device.read(10)
-            if len(data) == 0:
-                yield None
-                continue
-            axis = []
-            xor_byte = data[0]
-            for i in range(3):
-                a = (((data[(i*2)+1] & 0xf) << 4) | (data[(i*2)+1] >> 4)) ^ xor_byte
-                b = (((data[(i*2)+2] & 0xf) << 4) | (data[(i*2)+2] >> 4)) ^ xor_byte
-                c = a | (b << 8)
-                # convert to signed 16-bit int
-                if c > 2**15:
-                    c = c - 2**16
-                axis.append(c)
-            yield axis
+    def close(self):
+        self._device.close()
+        self._device = None
+
+    def getRawData(self):
+        data = self._device.read(10)
+        if len(data) == 0:
+            return None
+        return data
+
+    def getParsedData(self):
+        data = self.getRawData()
+        if data is None:
+            return None
+        axis = []
+        xor_byte = data[0]
+        for i in range(3):
+            a = (((data[(i*2)+1] & 0xf) << 4) | (data[(i*2)+1] >> 4)) ^ xor_byte
+            b = (((data[(i*2)+2] & 0xf) << 4) | (data[(i*2)+2] >> 4)) ^ xor_byte
+            c = a | (b << 8)
+            # convert to signed 16-bit int
+            if c > 2**15:
+                c = c - 2**16
+            axis.append(c)
+        return axis
 
 def main():
     d = VStrokerDevice.getDeviceList()
     if len(d) == 0:
         print "No devices found!"
         return 1
+    print d
     v = VStrokerDevice()
     v.open(d[0])
-    g = v.readLoop()
     try:
-        c = 0
-        s = time.time()
         while True:
-            l = g.next()            
+            l = v.getParsedData()
             if l is None:
                 time.sleep(.004)
                 continue
+            print l
     except KeyboardInterrupt:
         return 0
 

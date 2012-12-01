@@ -1,4 +1,4 @@
-from messages import Message
+from message import Message
 import device
 import plugin
 import feinfo
@@ -16,7 +16,7 @@ def SystemServerInfo(msg, client):
 def SystemPluginList(msg, client):
     """
     """
-    return Message(1, [{"name": p.NAME, "version": p.VERSION} for p in plugin.pluginsAvailable()])
+    return Message(1, [{"name": p.plugin_info["name"], "version": p.plugin_info["version"]} for p in plugin.pluginsAvailable()])
 
 def SystemDeviceList(msg, client):    
     """
@@ -55,7 +55,8 @@ def ClientClaimDevice(msg, client):
     """
     """
     device_id = msg[0]
-    device.addDeviceClaim(device_id, client.id)
+    if not device.addDeviceClaim(device_id, client):
+        return False
     return True
 
 def ClientReleaseDevice(msg, client):

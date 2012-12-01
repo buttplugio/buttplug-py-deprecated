@@ -1,3 +1,4 @@
+import sys
 import device
 import client
 import plugin
@@ -9,14 +10,16 @@ def deviceLoop():
     gevent.spawn_later(1, deviceLoop)
 
 def clientLoop():
-    client.checkClientPings()
+    # client.checkClientPings()
     gevent.spawn_later(1, clientLoop)
 
 def start():
+    sys.path.append("/home/qdot/code/git-projects/fuck-everything/")
     plugin.scanForPlugins()
     print "Plugins found:"
-    for p in plugin.pluginsAvailable():
-        print p.NAME
+    print plugin.pluginsAvailable()
+    for p in plugin.pluginsAvailable():        
+        print p.plugin_info["name"]
     print device.scanForDevices()
     print "Starting server..."
     gevent.spawn_later(1, deviceLoop)
