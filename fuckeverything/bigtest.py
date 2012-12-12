@@ -2,7 +2,7 @@ import sys
 import random
 import gevent
 import gevent.socket
-from messages import Message, MessageGenerator
+from message import Message, MessageGenerator
 
 def testClient(num):
     s = gevent.socket.create_connection(("localhost", 12345))

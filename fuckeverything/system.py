@@ -82,4 +82,3 @@ def ParseMessage(msg, client):
         return None
     return systemMsgTypeDict[msg.msgtype](msg.value, client)
 
-

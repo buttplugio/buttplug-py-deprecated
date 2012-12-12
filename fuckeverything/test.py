@@ -1,5 +1,5 @@
 from socket import socket
-from messages import Message, MessageGenerator
+from message import Message, MessageGenerator
 import time
 
 s = socket()

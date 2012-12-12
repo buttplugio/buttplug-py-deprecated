@@ -64,8 +64,13 @@
 ** Core
 *** TODO Make plugins use zeromq and run as processes instead of being imported code
 *** TODO Register plugin handled messages
+*** TODO Figure out issues with TCP send not working on OS X until next packet sent
+*** TODO Figure out way to clear pyc's properly
 ** Plugins
-*** TODO Write raw message plugin for RealTouch
+*** DONE Write raw message plugin for RealTouch
+CLOSED: [2012-12-11 Tue 23:50]
+- State "DONE"       from "TODO"       [2012-12-11 Tue 23:50]
+*** TODO Properly handle Unicode Manufacturer and Product strings in USB descriptors
 *** TODO Find wiimote library for python
 *** TODO Write trancevibe plugin
 *** TODO Write Pen15 board plugin

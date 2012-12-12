@@ -1,4 +1,4 @@
-import messages
+import message
 import client
 import feinfo
 import fe
