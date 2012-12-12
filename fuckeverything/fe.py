@@ -18,7 +18,7 @@ def start():
     plugin.scanForPlugins()
     print "Plugins found:"
     print plugin.pluginsAvailable()
-    for p in plugin.pluginsAvailable():        
+    for p in plugin.pluginsAvailable():
         print p.plugin_info["name"]
     print device.scanForDevices()
     print "Starting server..."

@@ -14,7 +14,7 @@ def getDeviceList():
     """
     """
     return [{ "name" : plugin_info["name"], "path" : dev } for dev in VStrokerDevice.getDeviceList()]
-    
+
 def openDevice(device):
     """
     """
