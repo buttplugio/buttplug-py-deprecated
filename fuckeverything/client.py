@@ -42,7 +42,12 @@ def runClient(socket, address):
                 continue
             msg = system.ParseMessage(l, client)
             if msg is None:
+                for d in client.devices.values():
+                    d["plugin"].parseMessage(l, client, d)
                 print "No message handler for type %d" % l.msgtype
+                continue
+            if msg is False:
+                print "ERROR"
                 continue
             if msg is True:
                 continue
