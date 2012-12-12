@@ -63,6 +63,7 @@
 * Tasks
 ** Core
 *** TODO Make plugins use zeromq and run as processes instead of being imported code
+*** TODO Register plugin handled messages
 ** Plugins
 *** TODO Write raw message plugin for RealTouch
 *** TODO Find wiimote library for python
