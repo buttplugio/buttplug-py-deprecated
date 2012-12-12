@@ -1,0 +1,73 @@
+* FuckEverything
+** Features
+*** Pluggable communications modules
+*** Cross-platform communication
+*** Local client-server architecture
+*** Hot-pluggable devices
+** Packets
+*** Format
+**** OSC? msgpack?
+**** How to notify developers of packet types?
+*** Types
+**** Client Ping
+**** Device List
+**** Device Claim
+**** Device Addition
+**** Device Removal
+**** Device Command Status
+**** Raw Device - Real Touch
+**** Raw Device - Virtual Hole
+**** 1D vector input - Speed
+**** 2D vector input - Direction/Speed
+**** 2D vector input - Absolute Position/Speed
+**** Accelerometer output 
+**** Gyro output
+**** Pressure output?
+**** ?D vector output?
+** Program Setup
+*** Networking core
+**** Twisted
+**** Creates new client every connection
+*** Client
+**** Takes data from outside apps, translates, routes to app as needed
+*** Device Manager
+**** Single manager for whole program
+**** Deals with who can access what device, hotplugging, etc...
+*** Plugins
+**** The portion that talks to hardware
+**** Hotpluggable/upgradable
+**** Each device on own thread?
+* Video Subclient
+** Features
+*** Encode animated gifs
+*** Encode youtube videos
+*** Encode any media available
+*** User accounts on central database
+*** Upload/Download encoding information to central database
+*** Replay encoding information on multiple output devices, synced with videos
+*** Replay encoding information without video
+*** Visualization of encoding information, with editor
+*** Manual encoding tools
+*** Plugin system for new hardware/encoding GUIs
+** Versions
+*** 0.1 - OpenFrameworks + RealTouch + Animated gifs + OpenCV
+**** TODO Load an animated gif
+**** TODO Display animated gif
+**** TODO Apply simple optical flow on a per frame basis, averaged across the image
+**** TODO Replay flow information to RealTouch, sending one network frame per animation, with haptic information for real touch
+*** 0.2 - Qt
+**** TODO Create simple GUI for loading/playing gifs
+** Subprojects
+*** Web Backend for pattern sharing
+*** Qt based cross-platform RealTouch network server
+* Tasks
+** Core
+*** TODO Make plugins use zeromq and run as processes instead of being imported code
+** Plugins
+*** TODO Write raw message plugin for RealTouch
+*** TODO Find wiimote library for python
+*** TODO Write trancevibe plugin
+*** TODO Write Pen15 board plugin
+*** TODO Write original interactive fleshlight plugin?
+*** TODO Write virtual hole plugin
+*** TODO Write Ju-C Air plugin
