@@ -36,14 +36,14 @@ def addDeviceClaim(device_id, client):
     if len(device["claims"]) > 0 and not device["plugin"].plugin_info["multiclaim"]:
         print "Device already claimed"
         return False
-    device["claims"][client.id] = client
     # We're the first to claim, so open it
-    if len(device["claims"]) == 1:
+    if len(device["claims"]) == 0:
         device["device"] = device["plugin"].openDevice(device["device_info"])
-        device["plugin"].startLoop(device)
         if not device["device"]:
             print "Can't open device"
             return False
+        device["plugin"].startLoop(device)
+    device["claims"][client.id] = client
     client.devices[device_id] = device
     # print "Device claimed"
     return True
