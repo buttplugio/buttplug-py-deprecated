@@ -11,16 +11,25 @@ def getDeviceList():
     """
     """
     return [{ "name" : plugin_info["name"], "path" : dev } for dev in RealTouchDevice.getDeviceList()]
-    
+
 def openDevice(device):
     """
     """
     d = RealTouchDevice()
-    d.open(device["path"])
+    if not d.open(device["path"]):
+        return None
     return d
 
+def closeDevice(device):
+    device.close()
+
+def startLoop(device):
+    pass
+
 def ParseCDKString(msg, device):
-    device.runCDKCommand(msg.value)
+    print "Running cdk string"
+    print msg.value
+    device.runCDKCommand(msg.value[0])
     return None
 
 # TODO: Return some kind of status? Or can we just assume fire and forget is cool?
@@ -33,7 +42,8 @@ def ParseCDKString(msg, device):
 # def GenericReturnStatus(msg, device):
 #     pass
 
-in_message_list = { "RealTouchCDKString" : ParseCDKString }
+# in_message_list = { "RealTouchCDKString" : ParseCDKString }
+in_message_list = { 9999 : ParseCDKString }
 
 # out_message_list = { "RealTouchStatus" : ReturnStatus,
 #                      "GenericDeviceStatus" : GenericReturnStatus }
@@ -42,7 +52,8 @@ def getMessageList():
     return {"in" : in_message_list.keys(), "out" : [] }
 
 def parseMessage(msg, client, device):
+    print msg.msgtype
     if msg.msgtype not in in_message_list.keys():
         print "Not a ? Message!"
         return
-    return in_message_list[msg.msgtype](device)
+    return in_message_list[msg.msgtype](msg, device["device"])

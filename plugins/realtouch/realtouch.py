@@ -11,6 +11,7 @@
 import sys
 import array
 import hid
+import exceptions
 
 # TODO: Fix endian problems for packing
 
@@ -38,8 +39,17 @@ class RealTouchDevice(object):
         return devices
 
     def open(self, path):
+        print "Opening %s" % path
         self._device = hid.device()
         self._device.open_path(path)
+        if self._device is None:
+            return False
+        self._device.set_nonblocking(1)
+        return True
+
+    def close(self):
+        self._device.close()
+        self._device = None
 
     def getSerial(self):
         g = array.array('B', [0] * 64)
@@ -55,7 +65,7 @@ class RealTouchDevice(object):
         g[0] = 0x05
         g[1] = magnitude
         self._device.write(g)
-      
+
     def fireLube(self, magnitude, duration):
         g = array.array('B', [0] * 64)
         # Command byte 0x06
@@ -66,7 +76,7 @@ class RealTouchDevice(object):
         g[2] = duration & 0xff
         g[3] = (duration & 0xff00) >> 0x8
         self._device.write(g)
-        
+
     def stopMovement(self, axis):
         # Mapping of CDK Stop command values to USB command values
         stop_dict = {
@@ -83,7 +93,7 @@ class RealTouchDevice(object):
         g[1] = stop_dict[axis]
         self._device.write(g)
         print ["0x%.02x " % x for x in self._device.read(64)]
-        
+
     def vectorMovement(self, magnitude, axis, direction, duration,
                        inMagnitude = 0x0, inDuration = 0x0,
                        outMagnitude = 0x0, outDuration = 0x0):
@@ -139,6 +149,14 @@ class RealTouchDevice(object):
         self._device.write(g)
 
     def runCDKCommand(self, cdkstr):
+        r = cdkstr.split(" ")
+        for i in range(0, len(r)):
+            try:
+                r[i] = int(r[i])
+            except exceptions.ValueError:
+                pass
+        print "sending %s" % r
+        self.vectorMovement(*r[1:])
         pass
 
 def main():
