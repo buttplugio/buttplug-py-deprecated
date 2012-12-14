@@ -29,8 +29,8 @@ class RealTouchDevice(object):
         devices = []
         for d in hid.enumerate(RealTouchDevice.VID, RealTouchDevice.PID):
             # Check the manufacturer string
-            if d["manufacturer_string"] != "AEBN":
-                continue
+            # if d["manufacturer_string"] != u"AEBN":
+            #     continue
             if "v1" in d["product_string"]:
                 # TODO: Throw on this?
                 print "Warning, v1 device connected! Please update Realtouch Firmware to v2! (Available with v2 Platform Agent)"
@@ -150,14 +150,22 @@ class RealTouchDevice(object):
 
     def runCDKCommand(self, cdkstr):
         r = cdkstr.split(" ")
-        for i in range(0, len(r)):
+        for i in range(1, len(r)):
             try:
                 r[i] = int(r[i])
             except exceptions.ValueError:
                 pass
         print "sending %s" % r
-        self.vectorMovement(*r[1:])
-        pass
+        function_map = {
+            'V' : self.vectorMovement,
+            'P' : self.periodicMovement,
+            'S' : self.stopMovement,
+            'H' : self.setHeat,
+            'L' : self.fireLube }
+        if r[1] not in function_map.keys():
+            print "Function not in map!"
+            return
+        function_map[r[1]](*r[2:])
 
 def main():
     r = RealTouchDevice()

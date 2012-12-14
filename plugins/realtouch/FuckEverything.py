@@ -17,7 +17,9 @@ def openDevice(device):
     """
     d = RealTouchDevice()
     if not d.open(device["path"]):
+        print "Open failed!"
         return None
+    print "opened!"
     return d
 
 def closeDevice(device):
@@ -30,7 +32,7 @@ def ParseCDKString(msg, device):
     print "Running cdk string"
     print msg.value
     device.runCDKCommand(msg.value[0])
-    return None
+    return True
 
 # TODO: Return some kind of status? Or can we just assume fire and forget is cool?
 #
