@@ -39,7 +39,9 @@ def runClient(socket, address):
             z = m.generate()
             l = z.next()
             if l is None:
+                print "Continue!"
                 continue
+            print "MESSAGE %d" % l.msgtype
             msg = system.ParseMessage(l, client)
             if msg is None:
                 for d in client.devices.values():
@@ -56,6 +58,7 @@ def runClient(socket, address):
         print "Internal error: disconnecting client"
         print traceback.print_exc()
         pass
+    print "Client exiting!"
     client.socket.close()
     client.socket = None
     for (d_id, d) in client.devices.items():

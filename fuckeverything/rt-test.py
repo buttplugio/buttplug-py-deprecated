@@ -41,10 +41,25 @@ m.value = [0]
 s.send(m.rawData())
 
 #m.msgtype = "RealTouchCDKString"
-m.msgtype = 9999
-m.value = ["V 255 U OUT 1000"]
-s.send(m.rawData())
+g = socket()
+g.bind(("localhost", 4506))
+g.listen(0)
+v = g.accept()[0]
+while(1):
+    r = v.recv(100)
+    print r
+    v.send("OK")
+    m.msgtype = 9999
+    m.value = [r]
+    s.send(m.rawData())
+    # print "Sent final"
 
-time.sleep(.1)
+# m.msgtype = 100
+# s.send(m.rawData())
+# q = s.recv(100)
+# mg.addData(q)
+# msg2 = g.next()
+# print msg2.msgtype
+# print msg2.value
 
 s.close()

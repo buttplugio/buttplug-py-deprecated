@@ -14,7 +14,7 @@ def clientLoop():
     gevent.spawn_later(1, clientLoop)
 
 def start():
-    sys.path.append("/home/qdot/code/git-projects/fuck-everything/")
+    sys.path.append("/Users/kmachulis/code/git-projects/fuck-everything/")
     plugin.scanForPlugins()
     print "Plugins found:"
     print plugin.pluginsAvailable()
