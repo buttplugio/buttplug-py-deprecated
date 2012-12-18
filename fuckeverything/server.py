@@ -1,4 +1,5 @@
 import sys
+import os
 import device
 import client
 import plugin
@@ -15,8 +16,8 @@ def clientLoop():
 
 def start():
     sys.path.append("/home/qdot/code/git-projects/fuck-everything/")
-    conf_dir = os.path.join(os.path.expanduser("~"), ".fuck_everything")
-    plugin_dir = os.path.join(os.path.expanduser("~"), ".fuck_everything", "plugins")
+    conf_dir = os.path.join(os.path.expanduser("~"), ".fuckeverything")
+    plugin_dir = os.path.join(os.path.expanduser("~"), ".fuckeverything", "plugins")
     if not os.path.exists(conf_dir):
         os.makedirs(conf_dir)
     if not os.path.exists(plugin_dir):
