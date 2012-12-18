@@ -1,10 +1,12 @@
+#!/usr/bin/python
+
 import sys
-import fe
+import fuckeverything.server
 import greenlet
 import hid
 
 def main():
-    fe.start()
+    fuckeverything.server.start()
 
 if __name__ == '__main__':
     sys.exit(main())

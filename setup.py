@@ -9,4 +9,5 @@ setup(name='FuckEverything',
       author_email='kyle@nonpolynomial.com',
       url='http://www.slashdong.org/',
       packages=['fuckeverything'],
+      scripts=['scripts/fuckeverything']
      )
