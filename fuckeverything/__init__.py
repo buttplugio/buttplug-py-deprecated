@@ -1,7 +1,7 @@
 import message
 import client
 import feinfo
-import fe
+import fuckeverything
 import device
 import plugin
 import system
