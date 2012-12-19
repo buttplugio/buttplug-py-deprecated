@@ -1,19 +1,19 @@
 import imp
 import os
 import sys
+import config
 
 _mvars = { "plugins" : [] }
 
-PluginFolder = os.path.join(os.getcwd(), "plugins")
 MainModule = "FuckEverything"
 
 def scanForPlugins():
     """
     http://lkubuntu.wordpress.com/2012/10/02/writing-a-python-plugin-api/
     """
-    for i in os.listdir(PluginFolder):
+    for i in os.listdir(config.plugin_dir):
         print i
-        location = os.path.join(PluginFolder, i)
+        location = os.path.join(config.plugin_dir, i)
         if not os.path.isdir(location) or not MainModule + ".py" in os.listdir(location):
             print "continuing"
             continue
