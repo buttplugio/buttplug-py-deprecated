@@ -4,7 +4,7 @@ import plugin
 import feinfo
 import time
 
-def SystemServerInfo(msg, client):
+def FEServerInfo(msg, client):
     """
     Server Info
     - Server Name (Changable by user)
@@ -13,45 +13,50 @@ def SystemServerInfo(msg, client):
     """
     return Message(0, [{"name": "Fuck Everything", "version": feinfo.SERVER_VERSION, "date": feinfo.SERVER_DATE}])
 
-def SystemPluginList(msg, client):
+def FEPluginList(msg, client):
     """
     """
     return Message(1, [{"name": p.plugin_info["name"], "version": p.plugin_info["version"]} for p in plugin.pluginsAvailable()])
 
-def SystemDeviceList(msg, client):    
+def FEDeviceList(msg, client):
     """
     """
     return Message(100, [{ "name" : d["device_info"]["name"], "id" : d["id"]} for d in device.devicesAvailable().values()])
 
-def SystemDeviceAddition(msg, client):
+def FEDeviceAddition(msg, client):
     """
     """
     return Message(101, None)
 
-def SystemDeviceRemoval(msg, client):
+def FEDeviceRemoval(msg, client):
     """
     """
     return Message(102, None)
 
-def SystemDeviceClaim(msg, client):
+def FEDeviceClaim(msg, client):
     """
     """
     return Message(103, None)
 
-def ClientInfo(msg, client):
+def FEClientInfo(msg, client):
     """
     """
     client.name = msg.value["name"]
     client.version = msg.value["version"]
     return True
 
-def ClientPing(msg, client):
+def FEClientPing(msg, client):
     """
     """
     client.lastping = time.time()
     return True
 
-def ClientClaimDevice(msg, client):
+def FEPluginPing(msg, client):
+    """
+    """
+    return True
+
+def FEClientClaimDevice(msg, client):
     """
     """
     device_id = msg[0]
@@ -59,22 +64,23 @@ def ClientClaimDevice(msg, client):
         return False
     return True
 
-def ClientReleaseDevice(msg, client):
+def FEClientReleaseDevice(msg, client):
     """
     """
     pass
 
 systemMsgTypeDict = {
-    0 : SystemServerInfo,
-    1 : SystemPluginList,
-    100 : SystemDeviceList,
-    101 : SystemDeviceAddition,
-    102 : SystemDeviceRemoval,
-    103 : SystemDeviceClaim,
-    1000 : ClientInfo,
-    1001 : ClientPing,
-    1002 : ClientClaimDevice,
-    1003 : ClientReleaseDevice
+    "FEServerInfo": FEServerInfo,
+    "FEPluginList": FEPluginList,
+    "FEPluginPing": FEPluginPing,
+    "FEDeviceList": FEDeviceList,
+    "FEDeviceAddition": FEDeviceAddition,
+    "FEDeviceRemoval": FEDeviceRemoval,
+    "FEDeviceClaim": FEDeviceClaim,
+    "FEClientInfo": FEClientInfo,
+    "FEClientPing": FEClientPing,
+    "FEClientClaimDevice": FEClientClaimDevice,
+    "FEClientReleaseDevice": FEClientReleaseDevice
 }
 
 def ParseMessage(msg, client):
