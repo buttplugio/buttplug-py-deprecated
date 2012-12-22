@@ -1,7 +1,7 @@
-import message
-import client
-import feinfo
-import server
-import device
-import plugin
-import system
+from fuckeverything import message
+from fuckeverything import client
+from fuckeverything import feinfo
+from fuckeverything import server
+from fuckeverything import device
+from fuckeverything import plugin
+from fuckeverything import system

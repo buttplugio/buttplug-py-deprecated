@@ -66,6 +66,7 @@
 *** TODO Register plugin handled messages
 *** TODO Figure out issues with TCP send not working on OS X until next packet sent
 *** TODO Figure out way to clear pyc's properly
+*** TODO Move logging from prints to logging module
 ** Plugins
 *** DONE Write raw message plugin for RealTouch
 CLOSED: [2012-12-11 Tue 23:50]

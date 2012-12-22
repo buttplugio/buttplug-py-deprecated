@@ -1,12 +1,17 @@
-import plugin
-import client
+from fuckeverything import plugin
+from fuckeverything import client
 
-_mvars = { "devices" : {}, "id" : 0}
+_mvars = {"devices": {}, "id": 0}
 
-def scanForDevices():
+
+def scan_for_devices():
+    """Iterate through all plugins, making a set of all devices available to
+    use."""
     new_devices = {}
     devs = _mvars["devices"]
-    [new_devices.update(dict((hash(frozenset(dev.values())), {"device_info": dev, "plugin": p}) for dev in p.getDeviceList())) for p in plugin.pluginsAvailable()]
+    [new_devices.update(dict((hash(frozenset(dev.values())), {"device_info": dev, "plugin": p})
+                             for dev in p.getDeviceList()))
+     for p in plugin.plugins_available()]
     # Remove devices no longer connected
     dead_keys = devs.viewkeys() - new_devices.viewkeys()
     new_keys = new_devices.viewkeys() - devs.viewkeys()
@@ -20,17 +25,23 @@ def scanForDevices():
         _mvars["id"] += 1
     return devs
 
-def devicesAvailable():
+
+def devices_available():
     """
+    Return the current list of all devices available
     """
     return _mvars["devices"]
 
-def addDeviceClaim(device_id, client):
+
+def add_device_claim(device_id, client_inst):
+    """
+    See if a client can claim a certain device ID
+    """
     # print "Adding claim"
     device = None
-    for (k,v) in _mvars["devices"].items():
-        if v["id"] == device_id:
-            device = v
+    for val in _mvars["devices"].values():
+        if val["id"] == device_id:
+            device = val
             break
     # First off, is it already claimed?
     if len(device["claims"]) > 0 and not device["plugin"].plugin_info["multiclaim"]:
@@ -43,16 +54,24 @@ def addDeviceClaim(device_id, client):
             print "Can't open device"
             return False
         device["plugin"].startLoop(device)
-    device["claims"][client.id] = client
-    client.devices[device_id] = device
+    device["claims"][client_inst.id] = client_inst
+    client_inst.devices[device_id] = device
     # print "Device claimed"
     return True
 
-def removeDeviceClaim(device, client):
-    del device["claims"][client.id]
+
+def remove_device_claim(device, client_inst):
+    """
+    Drop a device claim for a specific client
+    """
+    del device["claims"][client_inst.id]
     if len(device["claims"]) == 0:
         device["plugin"].closeDevice(device["device"])
 
-def distributeMessage(device, msg):
-    for (cid,c) in device["claims"].items():
-        client.sendMessage(c, msg)
+
+def distribute_message(device, msg):
+    """
+    Distribute a message from a device to all claims
+    """
+    for claim in device["claims"].values():
+        client.sendMessage(claim, msg)
