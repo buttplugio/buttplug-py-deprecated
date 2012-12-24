@@ -1,4 +1,3 @@
-from fuckeverything import message
 from fuckeverything import system
 from fuckeverything import device
 import uuid

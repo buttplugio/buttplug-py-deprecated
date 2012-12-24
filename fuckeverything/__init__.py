@@ -1,4 +1,3 @@
-from fuckeverything import message
 from fuckeverything import client
 from fuckeverything import feinfo
 from fuckeverything import server
