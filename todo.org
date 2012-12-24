@@ -60,11 +60,25 @@
 ** Subprojects
 *** Web Backend for pattern sharing
 *** Qt based cross-platform RealTouch network server
+* ZeroMQ Design
+- Server runs a single ROUTER socket
+- Both clients and plugins are DEALER sockets with random identities
+** Plugin
+- On discovery, server starts instance of all plugins as "counters" for device updates (push from plugin per second?)
+- On device claim:
+  - If not multicast, start new plugin process
+  - If multicast, check if process exists already. If so, add claim counter.
+** Client
+- On client connect, client sends over info about itself
+- 
 * Tasks
 ** Core
 *** TODO Make plugins use zeromq and run as processes instead of being imported code
 *** TODO Register plugin handled messages
-*** TODO Figure out issues with TCP send not working on OS X until next packet sent
+*** CANCELLED Figure out issues with TCP send not working on OS X until next packet sent
+CLOSED: [2012-12-23 Sun 18:39]
+- State "CANCELLED"  from "TODO"       [2012-12-23 Sun 18:39] \\
+  Moved to zmq
 *** TODO Figure out way to clear pyc's properly
 *** TODO Move logging from prints to logging module
 ** Plugins
