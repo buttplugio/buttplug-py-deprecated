@@ -87,18 +87,19 @@
 - On CloseClient message, remove client socket from heartbeat list
 * Messages
 ** System Messages
-*** FEServerInfo
+*** FEGetServerInfo
 *** FEDeviceCount
 *** FEDeviceClaim
 *** FEDeviceRelease
 *** FEDeviceList
-*** FEClosePlugin
-*** FECloseClient
+*** FECloseConnection
 *** FEClientRegistration
 *** FEPluginRegistration
 *** FEServerInfo
 *** FEPluginList
 *** FEPing
+*** FESetConfigValue
+*** FEGetConfigValue
 ** Plugin Messages
 *** RealTouchCDKStr
 *** VStrokerRaw
@@ -107,6 +108,10 @@
 *** 3AxisAccelm
 *** 1DMovement
 *** 2DMovement
+* Configuration Values
+** Server Name - RW
+** Server Address - RW
+** Plugins Directory - RW
 * Filters
 A way to translate between messages without changing drivers
 * Tasks
