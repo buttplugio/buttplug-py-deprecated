@@ -11,9 +11,9 @@ def scan_for_plugins():
     """
     http://lkubuntu.wordpress.com/2012/10/02/writing-a-python-plugin-api/
     """
-    for i in os.listdir(config.plugin_dir):
+    for i in os.listdir(config.PLUGIN_DIR):
         print i
-        location = os.path.join(config.plugin_dir, i)
+        location = os.path.join(config.PLUGIN_DIR, i)
         if (not os.path.isdir(location)) or \
            (not MAIN_MODULE + ".py" in os.listdir(location)):
             print "continuing"
@@ -28,4 +28,3 @@ def plugins_available():
     Return the list of all plugins available on the system
     """
     return _mvars["plugins"]
-

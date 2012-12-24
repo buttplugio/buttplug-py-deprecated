@@ -1,15 +1,17 @@
-from message import MessageGenerator
-import system
-import device
+from fuckeverything import message
+from fuckeverything import system
+from fuckeverything import device
 import uuid
 import time
 import traceback
 
-_mvars = {"clients" : {}}
+_mvars = {"clients": {}}
+
 
 class ClientInstance(object):
+    """Struct for holding client data"""
     def __init__(self, socket, address):
-        self.id = uuid.uuid4()
+        self.cid = uuid.uuid4()
         self.socket = socket
         self.address = address
         self.devices = {}
@@ -17,64 +19,65 @@ class ClientInstance(object):
         self.version = None
         self.lastping = time.time()
 
-def sendMessage(client, msg):
-    global _mvars
+
+def send_message(client, msg):
+    """Send a message to a specified client"""
     if not client.socket:
         return
-    client.socket.send(msg.rawData())
+    client.socket.send(msg.raw_data())
 
-def runClient(socket, address):
-    """
-    """
+
+def run_client(socket, address):
+    """Create and maintain client connection"""
     global _mvars
-    m = MessageGenerator()
+    msggen = message.get_message_generator()
     client = ClientInstance(socket, address)
-    _mvars["clients"][client.id] = client
+    _mvars["clients"][client.cid] = client
     try:
         while True:
             data = client.socket.recv(1024)
             if not data:
                 break
-            m.addData(data)
-            z = m.generate()
-            l = z.next()
-            if l is None:
+            rawmsg = msggen.next(data)
+            if rawmsg is None:
                 print "Continue!"
                 continue
-            print "MESSAGE %d" % l.msgtype
-            msg = system.ParseMessage(l, client)
-            if msg is None:
-                for d in client.devices.values():
-                    d["plugin"].parseMessage(l, client, d)
-                print "No message handler for type %d" % l.msgtype
+            print "MESSAGE %d" % rawmsg.msgtype
+            outmsg = system.parse_message(rawmsg, client)
+            if outmsg is None:
+                for dev in client.devices.values():
+                    dev["plugin"].parseMessage(rawmsg, client, dev)
+                print "No message handler for type %d" % rawmsg.msgtype
                 continue
-            if msg is False:
+            if outmsg is False:
                 print "ERROR"
                 continue
-            if msg is True:
+            if outmsg is True:
                 continue
-            client.socket.send(msg.rawData())
+            client.socket.send(outmsg.raw_data())
     except:
         print "Internal error: disconnecting client"
         print traceback.print_exc()
-        pass
     print "Client exiting!"
     client.socket.close()
     client.socket = None
-    for (d_id, d) in client.devices.items():
-        device.removeDeviceClaim(d, client)
+    for dev in client.devices.values():
+        device.remove_device_claim(dev, client)
     # Unclaim all devices
-    del _mvars["clients"][client.id]
+    del _mvars["clients"][client.cid]
     return
 
-def getClients():
+
+def get_clients():
+    """Return all current clients"""
     return _mvars["clients"]
 
-def checkClientPings():
-    for c in _mvars["clients"]:
-        t = time.time()
-        if t - c.lastping > 2:
-            print("Lost connection to client, ending")
-            c.socket.close()
-            continue
 
+def check_client_pings():
+    """Check to make sure all clients are still connected."""
+    for cli in _mvars["clients"]:
+        ctime = time.time()
+        if ctime - cli.lastping > 2:
+            print("Lost connection to client, ending")
+            cli.socket.close()
+            continue
