@@ -13,4 +13,3 @@ def init_config():
         os.makedirs(CONF_DIR)
     if not os.path.exists(PLUGIN_DIR):
         os.makedirs(PLUGIN_DIR)
-    sys.path.append(PLUGIN_DIR)

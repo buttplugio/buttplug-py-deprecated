@@ -3,6 +3,7 @@ from fuckeverything import device
 from fuckeverything import client
 from fuckeverything import plugin
 import gevent
+import msgpack
 from gevent_zeromq import zmq
 from gevent.server import StreamServer
 
@@ -44,6 +45,10 @@ def start():
         socket_router = context.socket(zmq.ROUTER)
         socket_router.bind(config.SERVER_ADDRESS)
         while True:
+            identity = socket_router.recv()
+            msg = socket_router.recv()
+            socket_router.send(identity, zmq.SNDMORE)
+            socket_router.send(msgpack.packb(["DeviceCount"]))
             gevent.sleep(.1)
     # svr = StreamServer(("localhost", 12345), client.run_client)
     # try:

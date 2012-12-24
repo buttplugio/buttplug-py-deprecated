@@ -60,16 +60,55 @@
 ** Subprojects
 *** Web Backend for pattern sharing
 *** Qt based cross-platform RealTouch network server
-* ZeroMQ Design
+* ZeroMQ/Protocol Design
 - Server runs a single ROUTER socket
 - Both clients and plugins are DEALER sockets with random identities
 ** Plugin
-- On discovery, server starts instance of all plugins as "counters" for device updates (push from plugin per second?)
+- On discovery, server starts instance of all plugins as "counters" for device updates
+- On plugin process startup:
+  - Plugin sends registration to server, saying whether it's in count mode or device mode
+  - If in count mode, plugin only takes "DeviceCount" and "ClosePlugin" messages
+  - If in device mode, plugin expects to open a device, transfer data to/from it, close device, and close itself
 - On device claim:
   - If not multicast, start new plugin process
   - If multicast, check if process exists already. If so, add claim counter.
+- On server shutdown:
+  - Send "ClosePlugin" to plugin
+  - Wait until a timeout for a join
 ** Client
-- On client connect, client sends over info about itself
+- On client connect, client sends over a ClientRegistration message to register itself with the server
+- Client can then query for device info, claim devices etc...
+- To end session, client sends CloseClient message to server
+** Process heartbeat
+- Add both client and plugin sockets to heartbeat manager on registration
+- Server initiates heartbeat, client replies
+- On timeout from client to server, disconnect client
+- On timeout from server to client, ?!?
+- On CloseClient message, remove client socket from heartbeat list
+* Messages
+** System Messages
+*** FEServerInfo
+*** FEDeviceCount
+*** FEDeviceClaim
+*** FEDeviceRelease
+*** FEDeviceList
+*** FEClosePlugin
+*** FECloseClient
+*** FEClientRegistration
+*** FEPluginRegistration
+*** FEServerInfo
+*** FEPluginList
+*** FEPing
+** Plugin Messages
+*** RealTouchCDKStr
+*** VStrokerRaw
+*** USBHIDVibrationRaw
+*** 3AxisAccelmRange
+*** 3AxisAccelm
+*** 1DMovement
+*** 2DMovement
+* Filters
+A way to translate between messages without changing drivers
 * Tasks
 ** Core
 *** TODO Make plugins use zeromq and run as processes instead of being imported code
