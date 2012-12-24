@@ -2,7 +2,8 @@ from fuckeverything import config
 from fuckeverything import device
 from fuckeverything import client
 from fuckeverything import plugin
-import gevent_zeromq import zmq
+import gevent
+from gevent_zeromq import zmq
 from gevent.server import StreamServer
 
 
@@ -20,9 +21,10 @@ def client_loop():
 
 def server_loop(context):
     socket_router = context.socket(zmq.ROUTER)
-    socket_router.bind("tcp://*:9829")
+    socket_router.bind(config.SERVER_ADDRESS)
     while True:
-        pass
+        gevent.sleep(.1)
+
 
 def start():
     """Start server loop"""
@@ -31,14 +33,18 @@ def start():
     print "Plugins found:"
     print plugin.plugins_available()
     for plin in plugin.plugins_available():
-        print plin.plugin_info["name"]
-    print device.scan_for_devices()
-    print "Starting server..."
-    gevent.spawn_later(1, device_loop)
-    gevent.spawn_later(1, client_loop)
+        print plin["name"]
+    # print device.scan_for_devices()
+    # print "Starting server..."
+    # gevent.spawn_later(1, device_loop)
+    # gevent.spawn_later(1, client_loop)
     context = zmq.Context()
-    gevent.spawn(server_loop, context)
-
+    #gevent.spawn(server_loop, context)
+    while 1:
+        socket_router = context.socket(zmq.ROUTER)
+        socket_router.bind(config.SERVER_ADDRESS)
+        while True:
+            gevent.sleep(.1)
     # svr = StreamServer(("localhost", 12345), client.run_client)
     # try:
     #     svr.serve_forever()

@@ -70,7 +70,6 @@
   - If multicast, check if process exists already. If so, add claim counter.
 ** Client
 - On client connect, client sends over info about itself
-- 
 * Tasks
 ** Core
 *** TODO Make plugins use zeromq and run as processes instead of being imported code

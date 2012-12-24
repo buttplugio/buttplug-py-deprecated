@@ -3,6 +3,8 @@ import sys
 
 CONF_DIR = os.path.join(os.path.expanduser("~"), ".fuckeverything")
 PLUGIN_DIR = os.path.join(CONF_DIR, "plugins")
+# SERVER_ADDRESS = "ipc://fetest"
+SERVER_ADDRESS = "tcp://127.0.0.1:9389"
 
 
 def init_config():
