@@ -1,54 +1,43 @@
-from fuckeverything.message import Message
 from fuckeverything import device
 from fuckeverything import plugin
 from fuckeverything import feinfo
 import time
+import re
+import sys
 
 
-def fe_server_info(msg, client):
+def fe_get_server_info(msg, client):
     """
     Server Info
     - Server Name (Changable by user)
     - Server Software Version (static)
     - Server Build Date (static)
     """
-    return Message(0, [{"name": "Fuck Everything",
-                        "version": feinfo.SERVER_VERSION,
-                        "date": feinfo.SERVER_DATE}])
+    return ["FEServerInfo", [{"name": "Fuck Everything",
+                              "version": feinfo.SERVER_VERSION,
+                              "date": feinfo.SERVER_DATE}]]
 
 
 def fe_plugin_list(msg, client):
     """
     """
-    return Message(1, [{"name": p.plugin_info["name"],
-                        "version": p.plugin_info["version"]}
-                       for p in plugin.plugins_available()])
+    return ["FEPluginList", [{"name": p.plugin_info["name"],
+                              "version": p.plugin_info["version"]}
+                             for p in plugin.plugins_available()]]
 
 
 def fe_device_list(msg, client):
     """
     """
-    return Message(100, [{"name": d["device_info"]["name"],
-                          "id": d["id"]}
-                         for d in device.devices_available().values()])
-
-
-def fe_device_addition(msg, client):
-    """
-    """
-    return Message(101, None)
-
-
-def fe_device_removal(msg, client):
-    """
-    """
-    return Message(102, None)
+    return ["FEDeviceList", [{"name": d["device_info"]["name"],
+                              "id": d["id"]}
+                             for d in device.devices_available().values()]]
 
 
 def fe_device_claim(msg, client):
     """
     """
-    return Message(103, None)
+    pass
 
 
 def fe_client_info(msg, client):
@@ -59,20 +48,14 @@ def fe_client_info(msg, client):
     return True
 
 
-def fe_client_ping(msg, client):
+def fe_ping(msg, client):
     """
     """
     client.lastping = time.time()
     return True
 
 
-def fe_plugin_ping(msg, client):
-    """
-    """
-    return True
-
-
-def fe_client_claim_device(msg, client):
+def fe_claim_device(msg):
     """
     """
     device_id = msg[0]
@@ -81,28 +64,27 @@ def fe_client_claim_device(msg, client):
     return True
 
 
-def fe_client_release_device(msg, client):
+def fe_release_device(msg, client):
     """
     """
     pass
 
 
-_MSG_TYPE_DICT = {
-    "FEServerInfo": fe_server_info,
-    "FEPluginList": fe_plugin_list,
-    "FEPluginPing": fe_plugin_ping,
-    "FEDeviceList": fe_device_list,
-    "FEDeviceAddition": fe_device_addition,
-    "FEDeviceRemoval": fe_device_removal,
-    "FEDeviceClaim": fe_device_claim,
-    "FEClientInfo": fe_client_info,
-    "FEClientPing": fe_client_ping,
-    "FEClientClaimDevice": fe_client_claim_device,
-    "FEClientReleaseDevice": fe_client_release_device
-}
+#PEP8ize message names
+FE_CAP_RE = re.compile('^FE')
+FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
+ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 
 
-def parse_message(msg, client):
-    if msg.msgtype not in _MSG_TYPE_DICT.keys():
+def convert_msgname(name):
+    s0 = FE_CAP_RE.sub(r'fe', name)
+    s1 = FIRST_CAP_RE.sub(r'\1_\2', s0)
+    return ALL_CAP_RE.sub(r'\1_\2', s1).lower()
+
+
+def parse_message(msg):
+    # TODO: Stop trusting the user will send a value message name
+    func_name = convert_msgname(msg[0])
+    if func_name not in dir(sys.modules[__name__]):
         return None
-    return _MSG_TYPE_DICT[msg.msgtype](msg.value, client)
+    return func_name(msg)
