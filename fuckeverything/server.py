@@ -31,7 +31,7 @@ def start():
     print "Plugins found:"
     print plugin.plugins_available()
     for plin in plugin.plugins_available():
-        print plin["name"]
+        print plin
     # print device.scan_for_devices()
     # print "Starting server..."
     # gevent.spawn_later(1, device_loop)
@@ -46,6 +46,7 @@ def start():
     poller = zmq.Poller()
     poller.register(socket_router, zmq.POLLIN)
     poller.register(socket_queue, zmq.POLLIN)
+    plugin.scan_for_devices(True)
     try:
         while True:
             socks = dict(poller.poll())

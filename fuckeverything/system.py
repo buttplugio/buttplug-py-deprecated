@@ -3,50 +3,51 @@ from fuckeverything import plugin
 from fuckeverything import feinfo
 from fuckeverything import queue
 from fuckeverything import heartbeat
-import time
 import re
 import sys
 
 
-def fe_get_server_info(msg, client):
+def fe_server_info(identity, msg):
     """
     Server Info
     - Server Name (Changable by user)
     - Server Software Version (static)
     - Server Build Date (static)
     """
-    return ["FEServerInfo", [{"name": "Fuck Everything",
-                              "version": feinfo.SERVER_VERSION,
-                              "date": feinfo.SERVER_DATE}]]
+    queue.add_to_queue(identity, ["FEServerInfo", [{"name": "Fuck Everything",
+                                                    "version": feinfo.SERVER_VERSION,
+                                                    "date": feinfo.SERVER_DATE}]])
 
 
-def fe_plugin_list(msg, client):
+def fe_plugin_list(identity, msg):
     """
     """
-    return ["FEPluginList", [{"name": p.plugin_info["name"],
-                              "version": p.plugin_info["version"]}
-                             for p in plugin.plugins_available()]]
+    queue.add_to_queue(identity, ["FEPluginList", [{"name": p.plugin_info["name"],
+                                                    "version": p.plugin_info["version"]}
+                                                   for p in plugin.plugins_available()]])
 
 
-def fe_device_list(msg, client):
+def fe_device_list(identity, msg):
     """
     """
-    return ["FEDeviceList", [{"name": d["device_info"]["name"],
-                              "id": d["id"]}
-                             for d in device.devices_available().values()]]
+    queue.add_to_queue(identity, ["FEDeviceList", plugin.get_device_list()])
 
 
-def fe_device_claim(msg, client):
+def fe_device_count(identity, msg):
+    """
+    """
+    plugin.update_device_list(identity, msg[1])
+
+
+def fe_device_claim(identity, msg):
     """
     """
     pass
 
 
-def fe_client_info(msg, client):
+def fe_client_info(identity, msg):
     """
     """
-    client.name = msg.value["name"]
-    client.version = msg.value["version"]
     return True
 
 
@@ -65,9 +66,12 @@ def fe_claim_device(msg):
     return True
 
 
-def fe_close_plugin(identity, msg):
-    #TODO: Remove identity from heartbeat manager
-    pass
+def fe_close(identity, msg):
+    """
+    """
+    print "Shutting down socket %s" % (identity)
+    heartbeat.remove(identity)
+    # TODO: release all devices
 
 
 def fe_release_device(msg, client):
@@ -79,6 +83,14 @@ def fe_release_device(msg, client):
 def fe_register_plugin(identity, msg):
     print "Plugin registering socket %s as %s" % (identity, msg[1])
     heartbeat.add(identity)
+    if msg[2] is True:
+        plugin.add_count_socket(msg[1], identity)
+
+
+def fe_register_client(identity, msg):
+    print "Client registering socket %s as %s" % (identity, msg[1])
+    heartbeat.add(identity)
+    queue.add_to_queue(identity, ["FERegisterClient"])
 
 
 #PEP8ize message names
