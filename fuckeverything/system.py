@@ -83,9 +83,13 @@ def fe_release_device(msg, client):
 def fe_register_plugin(identity, msg):
     print "Plugin registering socket %s as %s" % (identity, msg[1])
     heartbeat.add(identity)
+    # If count is true, we have a count process to file off
     if msg[2] is True:
         plugin.add_count_socket(msg[1], identity)
-
+        return
+    # Otherwise, this process has been brought up for a device claim. Start a
+    # device claim cycle.
+    
 
 def fe_register_client(identity, msg):
     print "Client registering socket %s as %s" % (identity, msg[1])

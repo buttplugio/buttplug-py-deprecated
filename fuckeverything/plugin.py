@@ -65,6 +65,20 @@ def update_device_list(identity, device_list):
     _mvars[plugin_key]["devices"] = device_list
 
 
+def start_claim_process(name, dev_id):
+    # TODO: Start a process for the plugin requested
+    if name not in _mvars.keys():
+        print "Wrong plugin name!"
+        return
+    _mvars[name]["claim_queue"].append(dev_id)
+    _mvars[name]["dev_processes"].append(subprocess.Popen([_mvars[name]["executable"], "--server_port=%s" % config.SERVER_ADDRESS]))
+
+
+def get_claim_list(name):
+    # TODO: Build a claim list
+    return _mvars[name]["claim_queue"]
+
+
 def get_device_list():
     devices = []
     for (key, value) in _mvars.items():
