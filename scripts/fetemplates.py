@@ -1,4 +1,3 @@
-import sys
 import msgpack
 import argparse
 import zmq
@@ -95,8 +94,7 @@ class FEBase(object):
 
         try:
             while not self.exit_now:
-                socks = dict(poller.poll())
-
+                socks = dict(poller.poll(10))
                 if self.socket_client in socks and socks[self.socket_client] == zmq.POLLIN:
                     msg = self.socket_client.recv()
                     self.parse_message(msgpack.unpackb(msg))
@@ -105,9 +103,11 @@ class FEBase(object):
                     msg = self.socket_out.recv()
                     self.socket_client.send(msg)
         except KeyboardInterrupt:
-            pass
+            self.exit_now = True
         self.socket_client.send(msgpack.packb(["FEClose"]))
         self.socket_client.close()
+        self.socket_queue.close()
+        self.socket_out.close()
         return 0
 
 
@@ -115,17 +115,6 @@ class FEClient(FEBase):
 
     def __init__(self):
         super(FEClient, self).__init__()
-        self.add_handlers({"FEServerInfo": self.server_info,
-                           "FEDeviceList": self.device_list})
-
-    def get_device_list(self, msg):
-        self.send(["FEDeviceList"])
-
-    def server_info(self, msg):
-        print msg
-
-    def device_list(self, msg):
-        print msg
 
     def register(self):
         self.send(["FERegisterClient", "Test Client"])

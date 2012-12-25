@@ -1,11 +1,6 @@
 #!/opt/homebrew/bin/python
 from fetemplates import FEClient
 import sys
-import msgpack
-import argparse
-import zmq
-import random
-import string
 
 
 class FETestClient(FEClient):
