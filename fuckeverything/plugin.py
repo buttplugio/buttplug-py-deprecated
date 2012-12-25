@@ -5,7 +5,7 @@ from fuckeverything import config
 
 _mvars = {"plugins": [], "count_processes": []}
 PLUGIN_INFO_FILE = "feplugin.json"
-PLUGIN_REQUIRED_HEADERS = [u"name", u"version", u"executable"]
+PLUGIN_REQUIRED_KEYS = [u"name", u"version", u"executable"]
 
 
 class PluginException(Exception):
@@ -24,7 +24,7 @@ def scan_for_plugins():
             continue
         with open(plugin_file) as pfile:
             info = json.load(pfile)
-            if not set(PLUGIN_REQUIRED_HEADERS).issubset(set(info.keys())):
+            if not set(PLUGIN_REQUIRED_KEYS).issubset(set(info.keys())):
                 raise PluginException("Invalid Plugin")
             _mvars["plugins"].append(info)
             plugin_executable = os.path.join(config.PLUGIN_DIR, i, info["executable"])

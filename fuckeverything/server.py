@@ -2,22 +2,19 @@ from fuckeverything import config
 from fuckeverything import device
 from fuckeverything import client
 from fuckeverything import plugin
+from fuckeverything import queue
+from fuckeverything import system
+from fuckeverything import heartbeat
+from gevent_zeromq import zmq
+import time
 import gevent
 import msgpack
-from gevent_zeromq import zmq
-from gevent.server import StreamServer
 
 
 def device_loop():
     """Rescan for devices every second"""
     device.scan_for_devices()
     gevent.spawn_later(1, device_loop)
-
-
-def client_loop():
-    """Ping all active clients every second to make sure they're still alive"""
-    # client.check_client_pings()
-    gevent.spawn_later(1, client_loop)
 
 
 def server_loop(context):
@@ -38,21 +35,31 @@ def start():
     # print device.scan_for_devices()
     # print "Starting server..."
     # gevent.spawn_later(1, device_loop)
-    # gevent.spawn_later(1, client_loop)
+    heartbeat.run()
     context = zmq.Context()
     #gevent.spawn(server_loop, context)
-    while 1:
-        socket_router = context.socket(zmq.ROUTER)
-        socket_router.bind(config.SERVER_ADDRESS)
+    queue.start_queue(context)
+    socket_router = context.socket(zmq.ROUTER)
+    socket_router.bind(config.SERVER_ADDRESS)
+    socket_queue = context.socket(zmq.PULL)
+    socket_queue.connect(queue.QUEUE_ADDRESS)
+    poller = zmq.Poller()
+    poller.register(socket_router, zmq.POLLIN)
+    poller.register(socket_queue, zmq.POLLIN)
+    try:
         while True:
-            identity = socket_router.recv()
-            msg = socket_router.recv()
-            socket_router.send(identity, zmq.SNDMORE)
-            socket_router.send(msgpack.packb(["DeviceCount"]))
-            gevent.sleep(.1)
-    # svr = StreamServer(("localhost", 12345), client.run_client)
-    # try:
-    #     svr.serve_forever()
-    # except KeyboardInterrupt:
-    #     pass
+            socks = dict(poller.poll())
+
+            if socket_router in socks and socks[socket_router] == zmq.POLLIN:
+                identity = socket_router.recv()
+                msg = socket_router.recv()
+                system.parse_message(identity, msgpack.unpackb(msg))
+
+            if socket_queue in socks and socks[socket_queue] == zmq.POLLIN:
+                identity = socket_queue.recv()
+                msg = socket_queue.recv()
+                socket_router.send(identity, zmq.SNDMORE)
+                socket_router.send(msg)
+    except KeyboardInterrupt:
+        socket_router.close()
     print "Quitting server..."

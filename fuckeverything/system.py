@@ -1,6 +1,8 @@
 from fuckeverything import device
 from fuckeverything import plugin
 from fuckeverything import feinfo
+from fuckeverything import queue
+from fuckeverything import heartbeat
 import time
 import re
 import sys
@@ -48,11 +50,10 @@ def fe_client_info(msg, client):
     return True
 
 
-def fe_ping(msg, client):
+def fe_ping(identity, msg):
     """
     """
-    client.lastping = time.time()
-    return True
+    heartbeat.update(identity)
 
 
 def fe_claim_device(msg):
@@ -64,10 +65,20 @@ def fe_claim_device(msg):
     return True
 
 
+def fe_close_plugin(identity, msg):
+    #TODO: Remove identity from heartbeat manager
+    pass
+
+
 def fe_release_device(msg, client):
     """
     """
     pass
+
+
+def fe_register_plugin(identity, msg):
+    print "Plugin registering socket %s as %s" % (identity, msg[1])
+    heartbeat.add(identity)
 
 
 #PEP8ize message names
@@ -82,9 +93,20 @@ def convert_msgname(name):
     return ALL_CAP_RE.sub(r'\1_\2', s1).lower()
 
 
-def parse_message(msg):
+def parse_message(identity, msg):
+    if not isinstance(msg, (list, tuple)):
+        print "NOT A LIST: %s" % (msg)
+        return
+    if len(msg) is 0:
+        print "NULL LIST"
+        return
     # TODO: Stop trusting the user will send a value message name
     func_name = convert_msgname(msg[0])
+    if not heartbeat.contains(identity) and msg[0] not in ["FERegisterPlugin", "FERegisterClient"]:
+        print "Unregistered socket trying to call functions!"
+        return
     if func_name not in dir(sys.modules[__name__]):
+        print "No related function for name %s" % func_name
         return None
-    return func_name(msg)
+    # This is basically an eval. So bad. So very bad. But so very lazy. :D
+    return getattr(sys.modules[__name__], func_name)(identity, msg)
