@@ -1,6 +1,4 @@
 from fuckeverything import config
-from fuckeverything import device
-from fuckeverything import client
 from fuckeverything import plugin
 from fuckeverything import queue
 from fuckeverything import system
@@ -9,12 +7,6 @@ from gevent_zeromq import zmq
 import time
 import gevent
 import msgpack
-
-
-def device_loop():
-    """Rescan for devices every second"""
-    device.scan_for_devices()
-    gevent.spawn_later(1, device_loop)
 
 
 def server_loop(context):
@@ -32,12 +24,8 @@ def start():
     print plugin.plugins_available()
     for plin in plugin.plugins_available():
         print plin
-    # print device.scan_for_devices()
-    # print "Starting server..."
-    # gevent.spawn_later(1, device_loop)
     heartbeat.run()
     context = zmq.Context()
-    #gevent.spawn(server_loop, context)
     queue.start_queue(context)
     socket_router = context.socket(zmq.ROUTER)
     socket_router.bind(config.SERVER_ADDRESS)

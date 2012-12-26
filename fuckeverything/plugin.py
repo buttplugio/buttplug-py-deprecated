@@ -32,7 +32,8 @@ def scan_for_plugins():
             if info["name"] in _mvars:
                 raise PluginException("Plugin Collision! Two plugins named %s" % info["name"])
             _mvars[info["name"]] = info
-            plugin_executable = os.path.join(config.PLUGIN_DIR, i, info["executable"])
+            _mvars[info["name"]]["executable"] = os.path.join(config.PLUGIN_DIR, i, info["executable"])
+            plugin_executable = _mvars[info["name"]]["executable"]
             if not os.path.exists(plugin_executable):
                 raise PluginException("Cannot find plugin executable: %s" % plugin_executable)
             _mvars[info["name"]]["count_process"] = subprocess.Popen([plugin_executable, "--server_port=%s" % config.SERVER_ADDRESS, "--count"])
@@ -70,7 +71,11 @@ def start_claim_process(name, dev_id):
     if name not in _mvars.keys():
         print "Wrong plugin name!"
         return
+    if "claim_queue" not in _mvars[name]:
+        _mvars[name]["claim_queue"] = []
     _mvars[name]["claim_queue"].append(dev_id)
+    if "dev_processes" not in _mvars[name]:
+        _mvars[name]["dev_processes"] = []
     _mvars[name]["dev_processes"].append(subprocess.Popen([_mvars[name]["executable"], "--server_port=%s" % config.SERVER_ADDRESS]))
 
 

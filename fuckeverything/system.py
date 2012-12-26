@@ -1,4 +1,3 @@
-from fuckeverything import device
 from fuckeverything import plugin
 from fuckeverything import feinfo
 from fuckeverything import queue
@@ -42,6 +41,8 @@ def fe_device_count(identity, msg):
 def fe_device_claim(identity, msg):
     """
     """
+    print identity
+    print msg
     pass
 
 
@@ -57,13 +58,12 @@ def fe_ping(identity, msg):
     heartbeat.update(identity)
 
 
-def fe_claim_device(msg):
+def fe_claim_device(identity, msg):
     """
     """
-    device_id = msg[0]
-    if not device.add_device_claim(device_id, client):
-        return False
-    return True
+    print identity
+    print msg
+    plugin.start_claim_process(msg[1], msg[2])
 
 
 def fe_close(identity, msg):
@@ -89,7 +89,14 @@ def fe_register_plugin(identity, msg):
         return
     # Otherwise, this process has been brought up for a device claim. Start a
     # device claim cycle.
-    
+    claim_list = plugin.get_claim_list(msg[1])
+    print "New claim process!"
+    if len(claim_list) is 0:
+        print "No claims in queue?!"
+    claim_id = claim_list.pop()
+    print claim_id
+    queue.add_to_queue(identity, ["FEDeviceClaim", claim_id])
+
 
 def fe_register_client(identity, msg):
     print "Client registering socket %s as %s" % (identity, msg[1])
