@@ -9,13 +9,6 @@ import gevent
 import msgpack
 
 
-def server_loop(context):
-    socket_router = context.socket(zmq.ROUTER)
-    socket_router.bind(config.SERVER_ADDRESS)
-    while True:
-        gevent.sleep(.1)
-
-
 def start():
     """Start server loop"""
     config.init_config()

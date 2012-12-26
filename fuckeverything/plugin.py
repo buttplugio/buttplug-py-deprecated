@@ -6,7 +6,20 @@ from fuckeverything import queue
 from fuckeverything import config
 from fuckeverything import heartbeat
 
-_mvars = {}
+
+class Plugin(object):
+    def __init__(self, info):
+        self.count_process = None
+        self.count_socket = None
+        self.device_list = []
+        self.device_processes = {}
+        self.plugin_path = None
+        self.executable_path = None
+        self.name = info["name"]
+        self.version = info["version"]
+        self.claim_queue = []
+
+_plugins = {}
 PLUGIN_INFO_FILE = "feplugin.json"
 PLUGIN_REQUIRED_KEYS = [u"name", u"version", u"executable"]
 
@@ -29,68 +42,63 @@ def scan_for_plugins():
             info = json.load(pfile)
             if not set(PLUGIN_REQUIRED_KEYS).issubset(set(info.keys())):
                 raise PluginException("Invalid Plugin")
-            if info["name"] in _mvars:
+            if info["name"] in _plugins.keys():
                 raise PluginException("Plugin Collision! Two plugins named %s" % info["name"])
-            _mvars[info["name"]] = info
-            _mvars[info["name"]]["executable"] = os.path.join(config.PLUGIN_DIR, i, info["executable"])
-            plugin_executable = _mvars[info["name"]]["executable"]
-            if not os.path.exists(plugin_executable):
-                raise PluginException("Cannot find plugin executable: %s" % plugin_executable)
-            _mvars[info["name"]]["count_process"] = subprocess.Popen([plugin_executable, "--server_port=%s" % config.SERVER_ADDRESS, "--count"])
+            plugin = Plugin(info)
+            _plugins[plugin.name] = plugin
+            plugin.plugin_path = os.path.join(config.PLUGIN_DIR, i)
+            plugin.executable_path = os.path.join(config.PLUGIN_DIR, i, info["executable"])
+            if not os.path.exists(plugin.executable_path):
+                raise PluginException("Cannot find plugin executable: %s" % plugin.executable_path)
+            plugin.count_process = subprocess.Popen([plugin.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--count"])
 
 
 def add_count_socket(name, identity):
-    _mvars[name]["count_socket_identity"] = identity
+    _plugins[name].count_socket = identity
 
 
 def scan_for_devices(respawn):
-    for (plugin, pdict) in _mvars.items():
+    for (pname, pobj) in _plugins.items():
         # Race condition, we may not have registered yet
-        if "count_socket_identity" not in pdict:
+        if pobj.count_socket is None:
             continue
         # If we lose our count process, god knows what else has gone wrong. Kill it.
-        if not heartbeat.contains(pdict["count_socket_identity"]):
-            del _mvars[plugin]
+        if not heartbeat.contains(pobj.count_socket):
+            del _plugins[pname]
             continue
-        queue.add_to_queue(pdict["count_socket_identity"], ["FEDeviceCount"])
+        queue.add_to_queue(pobj.count_socket, ["FEDeviceCount"])
     if respawn:
         gevent.spawn_later(1, scan_for_devices, respawn)
 
 
 def update_device_list(identity, device_list):
     plugin_key = None
-    for (key, values) in _mvars.items():
-        if values["count_socket_identity"] == identity:
-            plugin_key = key
+    for (pname, pobj) in _plugins.items():
+        if pobj.count_socket == identity:
+            plugin_key = pname
             break
-    _mvars[plugin_key]["devices"] = device_list
+    _plugins[plugin_key].device_list = device_list
 
 
-def start_claim_process(name, dev_id):
+def start_claim_process(identity, name, dev_id):
     # TODO: Start a process for the plugin requested
-    if name not in _mvars.keys():
+    if name not in _plugins.keys():
         print "Wrong plugin name!"
         return
-    if "claim_queue" not in _mvars[name]:
-        _mvars[name]["claim_queue"] = []
-    _mvars[name]["claim_queue"].append(dev_id)
-    if "dev_processes" not in _mvars[name]:
-        _mvars[name]["dev_processes"] = []
-    _mvars[name]["dev_processes"].append(subprocess.Popen([_mvars[name]["executable"], "--server_port=%s" % config.SERVER_ADDRESS]))
+    _plugins[name].claim_queue.append((identity, dev_id))
+    _plugins[name].device_processes[dev_id] = subprocess.Popen([_plugins[name]["executable"], "--server_port=%s" % config.SERVER_ADDRESS])
 
 
 def get_claim_list(name):
     # TODO: Build a claim list
-    return _mvars[name]["claim_queue"]
+    return _plugins[name].claim_queue
 
 
 def get_device_list():
     devices = []
-    for (key, value) in _mvars.items():
-        if "devices" not in value:
-            continue
-        for dev in value["devices"]:
-            devices.append((key, dev))
+    for (pname, pobj) in _plugins.items():
+        for dev in pobj.device_list:
+            devices.append((pname, dev))
     return devices
 
 
@@ -98,4 +106,4 @@ def plugins_available():
     """
     Return the list of all plugins available on the system
     """
-    return _mvars.keys()
+    return _plugins.keys()
