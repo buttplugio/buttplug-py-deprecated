@@ -3,6 +3,8 @@ import argparse
 import zmq
 import random
 import string
+import time
+import gevent
 
 
 def random_ident():
@@ -26,6 +28,7 @@ class FEBase(object):
         self.parser = argparse.ArgumentParser()
         self.args = None
         self.server_port = None
+        self.last_ping = time.time()
         self.identity = random_ident()
         self.inmsg = {"FEClose": self.close_socket,
                       "FEPing": self.ping_reply}
@@ -34,6 +37,14 @@ class FEBase(object):
         self.socket_queue.bind("inproc://fe-%s" % (self.identity))
         self.socket_out = self.context.socket(zmq.PULL)
         self.socket_out.connect("inproc://fe-%s" % (self.identity))
+        gevent.spawn_later(2, self.ping_check)
+
+    def ping_check(self):
+        if time.time() - self.last_ping > 3:
+            print "Dead!"
+            self.close_socket()
+            return
+        gevent.spawn_later(1, self.ping_check)
 
     def parse_message(self, msg):
         """Parse incoming message"""
@@ -64,11 +75,12 @@ class FEBase(object):
     def send(self, msg):
         self.socket_queue.send(msgpack.packb(msg))
 
-    def close_socket(self, msg):
+    def close_socket(self, msg=None):
         self.exit_now = True
-        self.send(msg)
+        self.send(["FEClose"])
 
     def ping_reply(self, msg):
+        self.last_ping = time.time()
         self.send(msg)
 
     def add_other_arguments(self):
@@ -125,12 +137,39 @@ class FEPlugin(FEBase):
     def __init__(self):
         super(FEPlugin, self).__init__()
         self.count_mode = False
+        self.device_id = None
+        self.add_handlers({"FEDeviceClaim": self.device_claim,
+                           "FEDeviceRelease": self.device_release})
 
     def setup_parser(self):
         super(FEPlugin, self).setup_parser()
         self.parser.add_argument('--count', action='store_true', help='count mode '
                                  "means that process will only be used to keep device "
                                  "counts")
+
+    def get_device_list(self):
+        raise RuntimeError("Define your own damn get_device_list!")
+
+    def device_claim(self, msg):
+        if msg[1] not in self.get_device_list():
+            print "Cannot claim!"
+            msglst = list(msg)
+            msglst.append(False)
+            self.send(msglst)
+        self.device_id = msg[1]
+        msglst = list(msg)
+        msglst.append(True)
+        self.send(msglst)
+
+    def device_release(self, msg):
+        if self.device_id != msg[1]:
+            print "Cannot release!"
+            msg.append(None)
+            self.send(msg)
+        self.device_id = None
+        msg.append(self.device_id)
+        self.send(msg)
+        self.close_socket()
 
     def parse_arguments(self):
         r = super(FEPlugin, self).parse_arguments()

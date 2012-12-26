@@ -9,35 +9,16 @@ class TestPlugin(FEPlugin):
 
     def __init__(self):
         super(TestPlugin, self).__init__()
-        self.add_handlers({"FEDeviceCount": self.get_device_list,
-                           "FEDeviceClaim": self.device_claim,
-                           "FEDeviceRelease": self.device_release,
+        self.add_handlers({"FEDeviceCount": self.send_device_list_msg,
                            "RawTestMsg": self.raw_test_msg})
         self.device_id = None
 
-    def device_claim(self, msg):
-        if msg[1] not in ["123", "456", "789"]:
-            print "Cannot claim!"
-            msglst = list(msg)
-            msglst.append(False)
-            self.send(msglst)
-        self.device_id = msg[1]
-        msglst = list(msg)
-        msglst.append(True)
-        self.send(msglst)
+    def send_device_list_msg(self, msg):
+        self.send(["FEDeviceCount", self.get_device_list()])
 
-    def device_release(self, msg):
-        if self.device_id != msg[1]:
-            print "Cannot release!"
-            msg.append(None)
-            self.send(msg)
-        self.device_id = None
-        msg.append(self.device_id)
-        self.send(msg)
-
-    def get_device_list(self, msg):
+    def get_device_list(self):
         """Returns the device list for the plugin"""
-        self.send(["FEDeviceCount", ["123", "456", "789"]])
+        return ["123", "456", "789"]
 
     def raw_test_msg(self, msg):
         self.send(["RawTestMsg", msg[1].swapcase()])

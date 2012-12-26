@@ -27,6 +27,7 @@ class FETestClient(FEClient):
 
     def device_list(self, msg):
         print msg
+        self.send(["FEClaimDevice", msg[1][0][0], msg[1][0][1]])
 
 
 def main():
