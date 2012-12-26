@@ -136,7 +136,7 @@ class FEPlugin(FEBase):
         r = super(FEPlugin, self).parse_arguments()
         if not r:
             return r
-        if self.args.count is not None:
+        if self.args.count is True:
             self.count_mode = True
         return True
 

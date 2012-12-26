@@ -18,11 +18,13 @@ class TestPlugin(FEPlugin):
     def device_claim(self, msg):
         if msg[1] not in ["123", "456", "789"]:
             print "Cannot claim!"
-            msg.append(None)
-            self.send(msg)
+            msglst = list(msg)
+            msglst.append(False)
+            self.send(msglst)
         self.device_id = msg[1]
-        msg.append(self.device_id)
-        self.send(msg)
+        msglst = list(msg)
+        msglst.append(True)
+        self.send(msglst)
 
     def device_release(self, msg):
         if self.device_id != msg[1]:
