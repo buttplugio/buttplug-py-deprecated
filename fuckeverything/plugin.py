@@ -2,9 +2,20 @@ import os
 import json
 import subprocess
 import gevent
+import string
+import random
 from fuckeverything import queue
 from fuckeverything import config
 from fuckeverything import heartbeat
+
+
+def random_ident():
+    """Generate a random string of letters and digits to use as zmq router
+    socket identity
+
+    """
+    return ''.join(random.choice(string.ascii_uppercase + string.digits)
+                   for x in range(8))
 
 
 class Plugin(object):
@@ -13,6 +24,7 @@ class Plugin(object):
         self.count_socket = None
         self.device_list = []
         self.device_processes = {}
+        self.device_sockets = []
         self.plugin_path = None
         self.executable_path = None
         self.name = info["name"]
@@ -50,7 +62,8 @@ def scan_for_plugins():
             plugin.executable_path = os.path.join(config.PLUGIN_DIR, i, info["executable"])
             if not os.path.exists(plugin.executable_path):
                 raise PluginException("Cannot find plugin executable: %s" % plugin.executable_path)
-            plugin.count_process = subprocess.Popen([plugin.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--count"])
+            print plugin.executable_path
+            plugin.count_process = subprocess.Popen([plugin.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--count", "--identity=%s" % random_ident()])
 
 
 def add_count_socket(name, identity):
@@ -85,8 +98,9 @@ def start_claim_process(identity, name, dev_id):
     if name not in _plugins.keys():
         print "Wrong plugin name!"
         return
-    _plugins[name].claim_queue.append((identity, dev_id))
-    _plugins[name].device_processes[dev_id] = subprocess.Popen([_plugins[name]["executable"], "--server_port=%s" % config.SERVER_ADDRESS])
+    plugin = _plugins[name]
+    plugin.claim_queue.append((identity, dev_id))
+    plugin.device_processes[dev_id] = subprocess.Popen([plugin.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--identity=%s" % random_ident()])
 
 
 def get_claim_list(name):
@@ -100,6 +114,14 @@ def get_device_list():
         for dev in pobj.device_list:
             devices.append((pname, dev))
     return devices
+
+
+def add_device_socket(name, identity):
+    _plugins[name].device_sockets.append(identity)
+
+
+def get_device_socket(name, identity):
+    _plugins[name].device_sockets.append(identity)
 
 
 def plugins_available():

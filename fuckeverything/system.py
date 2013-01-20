@@ -41,9 +41,14 @@ def fe_device_count(identity, msg):
 def fe_device_claim(identity, msg):
     """
     """
-    print identity
-    print msg
-    pass
+    plugin_name = msg[1]
+    device_id = msg[2]
+    claim_result = msg[3]
+    claim_list = plugin.get_claim_list(plugin_name)
+    for claim in claim_list:
+        if claim[1] == device_id:
+            queue.add_to_queue(claim[0], ["FEDeviceClaimReply", device_id, claim_result])
+            break
 
 
 def fe_client_info(identity, msg):
@@ -61,9 +66,7 @@ def fe_ping(identity, msg):
 def fe_claim_device(identity, msg):
     """
     """
-    print identity
-    print msg
-    plugin.start_claim_process(msg[1], msg[2])
+    plugin.start_claim_process(identity, msg[1], msg[2])
 
 
 def fe_close(identity, msg):
@@ -90,12 +93,12 @@ def fe_register_plugin(identity, msg):
     # Otherwise, this process has been brought up for a device claim. Start a
     # device claim cycle.
     claim_list = plugin.get_claim_list(msg[1])
+    plugin.add_device_socket(msg[1], identity)
     print "New claim process!"
     if len(claim_list) is 0:
         print "No claims in queue?!"
-    claim_id = claim_list.pop()
-    print claim_id
-    queue.add_to_queue(identity, ["FEDeviceClaim", claim_id])
+    claim_id = claim_list[0]
+    queue.add_to_queue(identity, ["FEDeviceClaim", msg[1], claim_id[1]])
 
 
 def fe_register_client(identity, msg):
