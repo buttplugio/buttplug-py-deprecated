@@ -18,20 +18,6 @@ def random_ident():
                    for x in range(8))
 
 
-class Plugin(object):
-    def __init__(self, info):
-        self.count_process = None
-        self.count_socket = None
-        self.device_list = []
-        self.device_processes = {}
-        self.device_sockets = []
-        self.plugin_path = None
-        self.executable_path = None
-        self.name = info["name"]
-        self.version = info["version"]
-        self.claim_queue = []
-
-_plugins = {}
 # The claim array holds process information for all claims. It is an array of
 # tuples with the following values:
 #
@@ -44,19 +30,27 @@ _plugins = {}
 # use the client ID and bus ID to figure out which socket to route the message
 # to. Similarly, when we receive messages from a plugin, we can route to any and
 # all client IDs provided with the proper device bus ID.
-_claims = []
-PLUGIN_INFO_FILE = "feplugin.json"
-PLUGIN_REQUIRED_KEYS = [u"name", u"version", u"executable"]
+class Plugin(object):
+    PLUGIN_INFO_FILE = "feplugin.json"
+    PLUGIN_REQUIRED_KEYS = [u"name", u"version", u"executable"]
 
+    def __init__(self, info, plugin_dir):
+        self.count_process = None
+        self.count_socket = None
+        self.plugin_path = os.path.join(config.PLUGIN_DIR, plugin_dir)
+        self.executable_path = os.path.join(config.PLUGIN_DIR, plugin_dir, info["executable"])
+        if not os.path.exists(self.executable_path):
+            raise PluginException("Cannot find plugin executable: %s" % self.executable_path)
+        self.name = info["name"]
+        self.version = info["version"]
+        self.device_list = []
+        self.device_sockets = []
+        self.device_processes = {}
 
-def get_claim_tuple(client_id=None, device_id=None, process_id=None):
-    if client_id is not None:
-        pass
-    if device_id is not None:
-        pass
-    if process_id is not None:
-        pass
-    return
+    def open_count_process(self):
+        self.count_process = subprocess.Popen([self.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--count", "--identity=%s" % random_ident()])
+
+_plugins = {}
 
 
 class PluginException(Exception):
@@ -70,23 +64,19 @@ def scan_for_plugins():
 
     """
     for i in os.listdir(config.PLUGIN_DIR):
-        plugin_file = os.path.join(config.PLUGIN_DIR, i, PLUGIN_INFO_FILE)
+        plugin_file = os.path.join(config.PLUGIN_DIR, i, Plugin.PLUGIN_INFO_FILE)
         if not os.path.exists(plugin_file):
             continue
+        info = None
         with open(plugin_file) as pfile:
             info = json.load(pfile)
-            if not set(PLUGIN_REQUIRED_KEYS).issubset(set(info.keys())):
-                raise PluginException("Invalid Plugin")
-            if info["name"] in _plugins.keys():
-                raise PluginException("Plugin Collision! Two plugins named %s" % info["name"])
-            plugin = Plugin(info)
-            _plugins[plugin.name] = plugin
-            plugin.plugin_path = os.path.join(config.PLUGIN_DIR, i)
-            plugin.executable_path = os.path.join(config.PLUGIN_DIR, i, info["executable"])
-            if not os.path.exists(plugin.executable_path):
-                raise PluginException("Cannot find plugin executable: %s" % plugin.executable_path)
-            print plugin.executable_path
-            plugin.count_process = subprocess.Popen([plugin.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--count", "--identity=%s" % random_ident()])
+        if not set(Plugin.PLUGIN_REQUIRED_KEYS).issubset(set(info.keys())):
+            raise PluginException("Invalid Plugin")
+        if info["name"] in _plugins.keys():
+            raise PluginException("Plugin Collision! Two plugins named %s" % info["name"])
+        plugin = Plugin(info, i)
+        _plugins[plugin.name] = plugin
+        plugin.open_count_process()
 
 
 def add_count_socket(name, identity):
@@ -116,20 +106,6 @@ def update_device_list(identity, device_list):
     _plugins[plugin_key].device_list = device_list
 
 
-def start_claim_process(identity, name, dev_id):
-    if name not in _plugins.keys():
-        print "Wrong plugin name!"
-        return
-    plugin = _plugins[name]
-    plugin.claim_queue.append((identity, dev_id))
-    plugin.device_processes[dev_id] = subprocess.Popen([plugin.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--identity=%s" % random_ident()])
-
-
-def get_claim_list(name):
-    # TODO: Build a claim list
-    return _plugins[name].claim_queue
-
-
 def get_device_list():
     devices = []
     for (pname, pobj) in _plugins.items():
@@ -138,16 +114,31 @@ def get_device_list():
     return devices
 
 
-def add_device_socket(name, identity):
-    _plugins[name].device_sockets.append(identity)
-
-
-def get_device_socket(name, identity):
-    _plugins[name].device_sockets.append(identity)
-
-
 def plugins_available():
     """
     Return the list of all plugins available on the system
     """
     return _plugins.keys()
+
+
+def start_claim_process(name, dev_id):
+    if name not in _plugins.keys():
+        print "Wrong plugin name!"
+        return
+    plugin = _plugins[name]
+    process_id = random_ident()
+    plugin.device_processes[dev_id] = subprocess.Popen([plugin.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--identity=%s" % process_id])
+    return process_id
+
+
+# def get_claim_list(name):
+#     # TODO: Build a claim list
+#     return _plugins[name].claim_queue
+
+
+def add_device_socket(name, identity):
+    _plugins[name].device_sockets.append(identity)
+
+
+# def get_device_socket(name, identity):
+#     _plugins[name].device_sockets.append(identity)
