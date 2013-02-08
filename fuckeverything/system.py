@@ -97,6 +97,7 @@ def fe_register_plugin(identity, msg):
     print "New claim process!"
     if len(claim_list) is 0:
         print "No claims in queue?!"
+    # TODO: Claims should be assigned a process identity to talk to
     claim_id = claim_list[0]
     queue.add_to_queue(identity, ["FEDeviceClaim", msg[1], claim_id[1]])
 
@@ -126,7 +127,7 @@ def parse_message(identity, msg):
     if len(msg) is 0:
         print "NULL LIST"
         return
-    # TODO: Stop trusting the user will send a value message name
+    # TODO: Stop trusting the user will send a valid message name
     func_name = convert_msgname(msg[0])
     if not heartbeat.contains(identity) and msg[0] not in ["FERegisterPlugin", "FERegisterClient"]:
         print "Unregistered socket trying to call functions!"
@@ -134,5 +135,5 @@ def parse_message(identity, msg):
     if func_name not in dir(sys.modules[__name__]):
         print "No related function for name %s" % func_name
         return None
-    # This is basically an eval. So bad. So very bad. But so very lazy. :D
+    # TODO: This is basically an eval. So bad. So very bad. But so very lazy. :D
     return getattr(sys.modules[__name__], func_name)(identity, msg)

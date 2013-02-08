@@ -32,8 +32,31 @@ class Plugin(object):
         self.claim_queue = []
 
 _plugins = {}
+# The claim array holds process information for all claims. It is an array of
+# tuples with the following values:
+#
+# - Client ID(s)
+# - Device Bus ID
+# - Process ID
+# - Plugin Object
+#
+# Therefore when we get a Device Bus ID addressed message from a client, we can
+# use the client ID and bus ID to figure out which socket to route the message
+# to. Similarly, when we receive messages from a plugin, we can route to any and
+# all client IDs provided with the proper device bus ID.
+_claims = []
 PLUGIN_INFO_FILE = "feplugin.json"
 PLUGIN_REQUIRED_KEYS = [u"name", u"version", u"executable"]
+
+
+def get_claim_tuple(client_id=None, device_id=None, process_id=None):
+    if client_id is not None:
+        pass
+    if device_id is not None:
+        pass
+    if process_id is not None:
+        pass
+    return
 
 
 class PluginException(Exception):
@@ -94,7 +117,6 @@ def update_device_list(identity, device_list):
 
 
 def start_claim_process(identity, name, dev_id):
-    # TODO: Start a process for the plugin requested
     if name not in _plugins.keys():
         print "Wrong plugin name!"
         return

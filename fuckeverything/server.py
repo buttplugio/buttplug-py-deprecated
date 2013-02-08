@@ -5,7 +5,6 @@ from fuckeverything import system
 from fuckeverything import heartbeat
 from gevent_zeromq import zmq
 import time
-import gevent
 import msgpack
 
 
