@@ -143,6 +143,7 @@ CLOSED: [2013-03-01 Fri 18:51]
 CLOSED: [2013-03-01 Fri 19:10]
 - State "DONE"       from "TODO"       [2013-03-01 Fri 19:10]
 
+*** TODO Make sure client disconnect means claims are released
 *** TODO Handle plugin claim startup errors
 *** TODO Have server do error handling if plugin device handling process doesn't come up in time
 *** TODO Register plugin handled messages
@@ -153,6 +154,7 @@ http://www.velocityreviews.com/forums/t612189-subprocess-popen-output-to-logging
 *** TODO Warn clients of disconnect on main process shutdown
 *** TODO Cross platform cx-freeze testing
 *** TODO Assign random names to client sockets?
+*** TODO Write command line arguments and config file parsing
 ** Plugins
 *** DONE Write raw message plugin for RealTouch
 CLOSED: [2012-12-11 Tue 23:50]
@@ -168,7 +170,9 @@ CLOSED: [2012-12-11 Tue 23:50]
 *** TODO Write Ju-C Air plugin
 ** Testing
 *** Core
-**** TODO Help Message
+**** DONE Help Message
+CLOSED: [2013-03-01 Fri 23:57]
+- State "DONE"       from "TODO"       [2013-03-01 Fri 23:57]
 **** TODO Alternate configuration file
 **** TODO Plugin found
 **** TODO Plugin fails to load (invalid config)
@@ -178,7 +182,7 @@ CLOSED: [2012-12-11 Tue 23:50]
 **** TODO Plugin comes up on server load
 **** TODO Plugin count mode
 **** TODO Plugin tries to register more messages than needed on count mode
-**** TODO Plugin 
+**** TODO Plugin can't open device claim
 *** Client
 **** TODO Client fails connect to non-existent host
 **** TODO Client connect to existing host
@@ -187,4 +191,4 @@ CLOSED: [2012-12-11 Tue 23:50]
 **** TODO Client registers messages
 **** TODO Client tries to register system message
 **** TODO Client tries to register plugin message
-**** TODO 
+**** TODO Claims released on client disconnect
