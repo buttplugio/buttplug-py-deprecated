@@ -41,9 +41,11 @@ def open_process(cmd):
 # use the client ID and bus ID to figure out which socket to route the message
 # to. Similarly, when we receive messages from a plugin, we can route to any and
 # all client IDs provided with the proper device bus ID.
+
+
 class Plugin(object):
     PLUGIN_INFO_FILE = "feplugin.json"
-    PLUGIN_REQUIRED_KEYS = [u"name", u"version", u"executable"]
+    PLUGIN_REQUIRED_KEYS = [u"name", u"version", u"executable", u"messages"]
 
     def __init__(self, info, plugin_dir):
         self.count_process = None
@@ -54,6 +56,7 @@ class Plugin(object):
             raise PluginException("Cannot find plugin executable: %s" % self.executable_path)
         self.name = info["name"]
         self.version = info["version"]
+        self.messages = info["messages"]
         self.device_list = []
         self.device_sockets = []
         self.device_processes = {}
@@ -63,7 +66,8 @@ class Plugin(object):
         self.count_process = open_process(count_process_cmd)
         if not self.count_process:
             logging.warning("Count process unable to start. Removing plugin from plugin list.")
-        del _plugins[self.name]
+            del _plugins[self.name]
+
 _plugins = {}
 
 

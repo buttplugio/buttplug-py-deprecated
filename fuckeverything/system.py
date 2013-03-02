@@ -67,15 +67,14 @@ def fe_device_list(identity, msg):
 def fe_device_count(identity, msg):
     """
     """
+    logging.debug("%s got device list %s", identity, msg[1])
     plugin.update_device_list(identity, msg[1])
 
 
 def fe_device_claim(identity, msg):
     """
     """
-    plugin_name = msg[1]
-    device_id = msg[2]
-    claim_result = msg[3]
+    (plugin_name, device_id, claim_result) = msg[1:]
     c = find_claim(device_process_id=identity)
     if c is None:
         raise RuntimeError("Cannot match claim identity to client!")
@@ -109,6 +108,7 @@ def fe_close(identity, msg):
     """
     logging.info("Shutting down socket %s", identity)
     heartbeat.remove(identity)
+    remove_claim(device_process_id=identity)
     # TODO: release all devices
 
 
@@ -119,7 +119,7 @@ def fe_release_device(msg, client):
 
 
 def fe_register_plugin(identity, msg):
-    logging.info("Plugin registering socket %s as %s" % (identity, msg[1]))
+    logging.info("Plugin registering socket %s as %s", identity, msg[1])
     heartbeat.add(identity)
     # If count is true, we have a count process to file off
     if msg[2] is True:
@@ -136,7 +136,7 @@ def fe_register_plugin(identity, msg):
 
 
 def fe_register_client(identity, msg):
-    logging.info("Client registering socket %s as %s" % (identity, msg[1]))
+    logging.info("Client registering socket %s as %s", identity, msg[1])
     heartbeat.add(identity)
     queue.add_to_queue(identity, ["FERegisterClient"])
 
@@ -155,10 +155,10 @@ def convert_msgname(name):
 
 def parse_message(identity, msg):
     if not isinstance(msg, (list, tuple)):
-        logging.info("NOT A LIST: %s" % (msg))
+        logging.debug("NOT A LIST: %s", msg)
         return
     if len(msg) is 0:
-        logging.info("NULL LIST")
+        logging.debug("NULL LIST")
         return
     # TODO: Stop trusting the user will send a valid message name
     func_name = convert_msgname(msg[0])
@@ -177,7 +177,7 @@ def parse_message(identity, msg):
         logging.info("Unregistered socket trying to call functions!")
         return None
     if func_name not in dir(sys.modules[__name__]):
-        logging.info("No related function for name %s" % func_name)
+        logging.info("No related function for name %s", func_name)
         return None
     # TODO: This is basically an eval. So bad. So very bad. But so very lazy. :D
     return getattr(sys.modules[__name__], func_name)(identity, msg)
