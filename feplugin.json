@@ -1,3 +1,4 @@
 {"name": "Test Plugin",
  "version": "0.001",
- "executable": "scripts/plugin.py"}
+ "executable": "scripts/plugin.py",
+ "messages": ["RawTestMsg", "FEDeviceCount"]}
