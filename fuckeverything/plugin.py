@@ -4,6 +4,7 @@ import subprocess
 import gevent
 import string
 import random
+import logging
 from fuckeverything import queue
 from fuckeverything import config
 from fuckeverything import heartbeat
@@ -17,6 +18,16 @@ def random_ident():
     return ''.join(random.choice(string.ascii_uppercase + string.digits)
                    for x in range(8))
 
+
+def open_process(cmd):
+    o = None
+    try:
+        logging.debug("Plugin Process: Running %s", cmd)
+        o = subprocess.Popen(cmd)
+    except OSError, e:
+        o = None
+        logging.warning("Plugin Process did not execute correctly: %s", e.strerror)
+    return o
 
 # The claim array holds process information for all claims. It is an array of
 # tuples with the following values:
@@ -48,8 +59,11 @@ class Plugin(object):
         self.device_processes = {}
 
     def open_count_process(self):
-        self.count_process = subprocess.Popen([self.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--count", "--identity=%s" % random_ident()])
-
+        count_process_cmd = [self.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--count", "--identity=%s" % random_ident()]
+        self.count_process = open_process(count_process_cmd)
+        if not self.count_process:
+            logging.warning("Count process unable to start. Removing plugin from plugin list.")
+        del _plugins[self.name]
 _plugins = {}
 
 
@@ -123,22 +137,18 @@ def plugins_available():
 
 def start_claim_process(name, dev_id):
     if name not in _plugins.keys():
-        print "Wrong plugin name!"
+        logging.info("Wrong plugin name!")
         return
     plugin = _plugins[name]
     process_id = random_ident()
-    plugin.device_processes[dev_id] = subprocess.Popen([plugin.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--identity=%s" % process_id])
+    cmd = [plugin.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--identity=%s" % process_id]
+    o = open_process(cmd)
+    if not o:
+        logging.warning("Not starting claim process")
+        return None
+    plugin.device_processes[dev_id] = o
     return process_id
-
-
-# def get_claim_list(name):
-#     # TODO: Build a claim list
-#     return _plugins[name].claim_queue
 
 
 def add_device_socket(name, identity):
     _plugins[name].device_sockets.append(identity)
-
-
-# def get_device_socket(name, identity):
-#     _plugins[name].device_sockets.append(identity)

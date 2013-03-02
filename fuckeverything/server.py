@@ -6,16 +6,18 @@ from fuckeverything import heartbeat
 from gevent_zeromq import zmq
 import time
 import msgpack
+import logging
 
 
 def start():
     """Start server loop"""
+    logging.basicConfig(level=logging.DEBUG)
     config.init_config()
     plugin.scan_for_plugins()
-    print "Plugins found:"
-    print plugin.plugins_available()
+    logging.info("Plugins found:")
+    logging.info(plugin.plugins_available())
     for plin in plugin.plugins_available():
-        print plin
+        logging.info(plin)
     heartbeat.run()
     context = zmq.Context()
     queue.start_queue(context)
@@ -43,4 +45,4 @@ def start():
                 socket_router.send(msg)
     except KeyboardInterrupt:
         socket_router.close()
-    print "Quitting server..."
+    logging.info("Quitting server...")

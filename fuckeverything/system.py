@@ -2,6 +2,7 @@ from fuckeverything import plugin
 from fuckeverything import feinfo
 from fuckeverything import queue
 from fuckeverything import heartbeat
+import logging
 import re
 import sys
 
@@ -35,6 +36,7 @@ def find_claim(device_address=None, client_id=None, device_process_id=None):
             if c.device_process_id == device_process_id:
                 return c
     return None
+
 
 def fe_server_info(identity, msg):
     """
@@ -96,13 +98,16 @@ def fe_claim_device(identity, msg):
     """
     """
     process_id = plugin.start_claim_process(msg[1], msg[2])
+    if not process_id:
+        logging.warning("Claim could not start")
+        return
     _claims.append(Claim(msg[2], identity, process_id))
 
 
 def fe_close(identity, msg):
     """
     """
-    print "Shutting down socket %s" % (identity)
+    logging.info("Shutting down socket %s", identity)
     heartbeat.remove(identity)
     # TODO: release all devices
 
@@ -114,7 +119,7 @@ def fe_release_device(msg, client):
 
 
 def fe_register_plugin(identity, msg):
-    print "Plugin registering socket %s as %s" % (identity, msg[1])
+    logging.info("Plugin registering socket %s as %s" % (identity, msg[1]))
     heartbeat.add(identity)
     # If count is true, we have a count process to file off
     if msg[2] is True:
@@ -123,7 +128,7 @@ def fe_register_plugin(identity, msg):
     # Otherwise, this process has been brought up for a device claim. Start a
     # device claim cycle.
     plugin.add_device_socket(msg[1], identity)
-    print "New claim process!"
+    logging.info("New claim process!")
     c = find_claim(device_process_id=identity)
     if c is None:
         raise RuntimeError("Claim for device id %s not found!" % identity)
@@ -131,7 +136,7 @@ def fe_register_plugin(identity, msg):
 
 
 def fe_register_client(identity, msg):
-    print "Client registering socket %s as %s" % (identity, msg[1])
+    logging.info("Client registering socket %s as %s" % (identity, msg[1]))
     heartbeat.add(identity)
     queue.add_to_queue(identity, ["FERegisterClient"])
 
@@ -150,10 +155,10 @@ def convert_msgname(name):
 
 def parse_message(identity, msg):
     if not isinstance(msg, (list, tuple)):
-        print "NOT A LIST: %s" % (msg)
+        logging.info("NOT A LIST: %s" % (msg))
         return
     if len(msg) is 0:
-        print "NULL LIST"
+        logging.info("NULL LIST")
         return
     # TODO: Stop trusting the user will send a valid message name
     func_name = convert_msgname(msg[0])
@@ -169,10 +174,10 @@ def parse_message(identity, msg):
             raise RuntimeError("Function %s unknown or device address not found!" % msg[0])
         return None
     if not heartbeat.contains(identity) and msg[0] not in ["FERegisterPlugin", "FERegisterClient"]:
-        print "Unregistered socket trying to call functions!"
+        logging.info("Unregistered socket trying to call functions!")
         return None
     if func_name not in dir(sys.modules[__name__]):
-        print "No related function for name %s" % func_name
+        logging.info("No related function for name %s" % func_name)
         return None
     # TODO: This is basically an eval. So bad. So very bad. But so very lazy. :D
     return getattr(sys.modules[__name__], func_name)(identity, msg)

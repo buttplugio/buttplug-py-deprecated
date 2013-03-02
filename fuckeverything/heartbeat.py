@@ -2,6 +2,7 @@ from fuckeverything import queue as fequeue
 from fuckeverything import config
 import gevent
 import time
+import logging
 
 _last_update = {}
 
@@ -35,7 +36,7 @@ def run():
     now = time.time()
     for (identity, pingtime) in _last_update.items():
         if now - pingtime > config.PING_MAX:
-            print "identity %s died" % identity
+            logging.debug("identity %s died" % identity)
             remove(identity)
             continue
         fequeue.add_to_queue(identity, ["FEPing"])
