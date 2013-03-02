@@ -133,19 +133,58 @@ CLOSED: [2012-12-25 Tue 22:29]
 *** DONE Server should define identity for plugins
 CLOSED: [2012-12-25 Tue 22:39]
 - State "DONE"       from "TODO"       [2012-12-25 Tue 22:39]
-*** TODO Register plugin handled messages
+*** DONE Make plugins shutdown if main process crashes
+CLOSED: [2013-03-01 Fri 18:32]
+- State "DONE"       from "TODO"       [2013-03-01 Fri 18:32]
+*** DONE Move logging from prints to logging module
+CLOSED: [2013-03-01 Fri 18:51]
+- State "DONE"       from "TODO"       [2013-03-01 Fri 18:51]
+*** DONE Handle plugin count startup errors
+CLOSED: [2013-03-01 Fri 19:10]
+- State "DONE"       from "TODO"       [2013-03-01 Fri 19:10]
+
+*** TODO Handle plugin claim startup errors
 *** TODO Have server do error handling if plugin device handling process doesn't come up in time
+*** TODO Register plugin handled messages
+*** TODO Log subprocess output to logging module
+http://www.velocityreviews.com/forums/t612189-subprocess-popen-output-to-logging-streamhandler.html
 *** TODO Figure out way to clear pyc's properly
-*** TODO Move logging from prints to logging module
 *** TODO Figure out how clients will refer to devices they've claimed
+*** TODO Warn clients of disconnect on main process shutdown
+*** TODO Cross platform cx-freeze testing
+*** TODO Assign random names to client sockets?
 ** Plugins
 *** DONE Write raw message plugin for RealTouch
 CLOSED: [2012-12-11 Tue 23:50]
 - State "DONE"       from "TODO"       [2012-12-11 Tue 23:50]
 *** TODO Properly handle Unicode Manufacturer and Product strings in USB descriptors
+*** TODO Write game control vibrator plugin
+*** TODO Write socket.io based webvibrator plugin
 *** TODO Find wiimote library for python
 *** TODO Write trancevibe plugin
 *** TODO Write Pen15 board plugin
 *** TODO Write original interactive fleshlight plugin?
 *** TODO Write virtual hole plugin
 *** TODO Write Ju-C Air plugin
+** Testing
+*** Core
+**** TODO Help Message
+**** TODO Alternate configuration file
+**** TODO Plugin found
+**** TODO Plugin fails to load (invalid config)
+**** TODO Plugin fails to load (can't start count process)
+*** Plugin
+**** TODO Plugin shutdown on server missing
+**** TODO Plugin comes up on server load
+**** TODO Plugin count mode
+**** TODO Plugin tries to register more messages than needed on count mode
+**** TODO Plugin 
+*** Client
+**** TODO Client fails connect to non-existent host
+**** TODO Client connect to existing host
+**** TODO Client claims device success
+**** TODO Client claims device failure
+**** TODO Client registers messages
+**** TODO Client tries to register system message
+**** TODO Client tries to register plugin message
+**** TODO 
