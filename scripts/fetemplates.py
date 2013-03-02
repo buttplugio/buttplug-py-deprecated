@@ -27,6 +27,7 @@ class FEBase(object):
         self.exit_now = False
         self.parser = argparse.ArgumentParser()
         self.args = None
+        self.socket_identity = None
         self.server_port = None
         self.last_ping = time.time()
         self.identity = random_ident()
@@ -40,18 +41,25 @@ class FEBase(object):
         gevent.spawn_later(2, self.ping_check)
 
     def ping_check(self):
+        print "Ping test"
         if time.time() - self.last_ping > 3:
             print "Dead!"
             self.close_socket()
+            self.exit_now = True
             return
         gevent.spawn_later(1, self.ping_check)
 
     def parse_message(self, msg):
         """Parse incoming message"""
-        if msg[0] not in self.inmsg.keys():
-            print "No handler for %s messages" % msg[0]
+        if msg[0] in self.inmsg.keys():
+            self.inmsg[msg[0]](msg)
             return
-        self.inmsg[msg[0]](msg)
+        # Fucking hack for device IDs
+        elif msg[1] in self.inmsg.keys():
+            self.inmsg[msg[1]](msg)
+            return
+        print msg
+        print "No handler for %s messages" % msg[0]
 
     def setup_parser(self):
         self.parser = argparse.ArgumentParser(description=self.APP_DESC)
@@ -96,7 +104,10 @@ class FEBase(object):
             print "Argument error!"
             return 1
         self.socket_client = self.context.socket(zmq.DEALER)
-        self.socket_client.setsockopt(zmq.IDENTITY, random_ident())
+        if self.socket_identity:
+            self.socket_client.setsockopt(zmq.IDENTITY, self.socket_identity)
+        else:
+            self.socket_client.setsockopt(zmq.IDENTITY, random_ident())
         self.socket_client.connect(self.server_port)
         poller = zmq.Poller()
         poller.register(self.socket_client, zmq.POLLIN)
@@ -129,7 +140,7 @@ class FEClient(FEBase):
         super(FEClient, self).__init__()
 
     def register(self):
-        self.send(["FERegisterClient", "Test Client"])
+        self.send(["FERegisterClient", self.APP_NAME])
 
 
 class FEPlugin(FEBase):
@@ -143,33 +154,14 @@ class FEPlugin(FEBase):
 
     def setup_parser(self):
         super(FEPlugin, self).setup_parser()
-        self.parser.add_argument('--count', action='store_true', help='count mode '
+        self.parser.add_argument('--count', action='store_true', help="count mode "
                                  "means that process will only be used to keep device "
                                  "counts")
+        self.parser.add_argument('--identity', action='store', type=str, required=True,
+                                 help="server provided zmq socket identity")
 
     def get_device_list(self):
         raise RuntimeError("Define your own damn get_device_list!")
-
-    def device_claim(self, msg):
-        if msg[1] not in self.get_device_list():
-            print "Cannot claim!"
-            msglst = list(msg)
-            msglst.append(False)
-            self.send(msglst)
-        self.device_id = msg[1]
-        msglst = list(msg)
-        msglst.append(True)
-        self.send(msglst)
-
-    def device_release(self, msg):
-        if self.device_id != msg[1]:
-            print "Cannot release!"
-            msg.append(None)
-            self.send(msg)
-        self.device_id = None
-        msg.append(self.device_id)
-        self.send(msg)
-        self.close_socket()
 
     def parse_arguments(self):
         r = super(FEPlugin, self).parse_arguments()
@@ -177,7 +169,32 @@ class FEPlugin(FEBase):
             return r
         if self.args.count is True:
             self.count_mode = True
+        self.socket_identity = self.args.identity
         return True
 
     def register(self):
         self.send(["FERegisterPlugin", self.APP_NAME, self.count_mode])
+
+    def device_claim(self, msg):
+        # TODO: Implement actual device claiming!
+        if msg[2] not in self.get_device_list():
+            print "Cannot claim!"
+            msglst = list(msg)
+            msglst.append(False)
+            self.send(msglst)
+            return
+        self.device_id = msg[2]
+        msglst = list(msg)
+        msglst.append(True)
+        self.send(msglst)
+
+    def device_release(self, msg):
+        if self.device_id != msg[2]:
+            print "Cannot release!"
+            msg.append(None)
+            self.send(msg)
+            return
+        self.device_id = None
+        msg.append(self.device_id)
+        self.send(msg)
+        self.close_socket()
