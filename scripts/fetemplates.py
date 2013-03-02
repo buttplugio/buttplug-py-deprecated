@@ -1,10 +1,10 @@
 import msgpack
 import argparse
-import zmq
 import random
 import string
 import time
 import gevent
+from gevent_zeromq import zmq
 
 
 def random_ident():
