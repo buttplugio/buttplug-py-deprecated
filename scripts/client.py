@@ -1,7 +1,7 @@
-#!/opt/homebrew/bin/python
+#!/usr/bin/python
 from fetemplates import FEClient
 import sys
-
+import gevent
 
 class FETestClient(FEClient):
     """
@@ -14,13 +14,30 @@ class FETestClient(FEClient):
         """
         """
         super(FETestClient, self).__init__()
+        self.device_claim_id = None
         self.add_handlers({"FEServerInfo": self.server_info,
                            "FERegisterClient": self.on_register,
-                           "FEDeviceList": self.device_list})
+                           "FEDeviceClaimReply": self.on_device_claim,
+                           "FEDeviceList": self.device_list,
+                           "RawTestMsg": self.raw_test_msg})
 
     def on_register(self, msg):
         self.send(["FEServerInfo"])
         self.send(["FEDeviceList"])
+
+    def raw_test_msg(self, msg):
+        print msg
+
+    def run_device_query(self):
+        print "Running device query!"
+        self.send([self.device_claim_id, "RawTestMsg", "testing"])
+        gevent.spawn_later(1, self.run_device_query)
+
+    def on_device_claim(self, msg):
+        print "Claimed!"
+        print msg
+        self.device_claim_id = msg[1]
+        self.run_device_query()
 
     def server_info(self, msg):
         print msg
