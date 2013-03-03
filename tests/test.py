@@ -5,19 +5,13 @@ import shutil
 import mock
 import json
 import tempfile
+import time
 sys.path.append("/home/qdot/code/git-projects/fuckeverything")
 from fuckeverything import config
 from fuckeverything import plugin
 # from fuckeverything import queue
 # from fuckeverything import system
 # from fuckeverything import heartbeat
-
-# argparse sys.argv testing using mock
-# via http://www.reddit.com/r/Python/comments/r9o2i/using_nose_and_argparse/
-# import mock
-# with mock.patch('sys.argv', ['whatever', 'I', 'wanna', 'test']):
-#         pass   # do whatever you want
-
 
 class ConfigTests(unittest.TestCase):
 
@@ -121,9 +115,17 @@ class PluginTests(unittest.TestCase):
         reload(config)
         reload(plugin)
         self.tmpdir = tempfile.mkdtemp()
+        self.plugin_dest = ""
+
+    def copyPlugin(self):
+        # Copy plugin to directory here
+        plugin_path = os.path.join(os.getcwd(), "tests", "example-plugin")
+        self.plugin_dest = os.path.join(config.get_config_dir("plugin"), "example")
+        shutil.copytree(plugin_path, self.plugin_dest)
 
     def tearDown(self):
-        shutil.rmtree(self.tmpdir)
+        #shutil.rmtree(self.tmpdir)
+        pass
 
     def testNoPlugins(self):
         """have no plugins"""
@@ -136,22 +138,45 @@ class PluginTests(unittest.TestCase):
         """have valid plugin"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init_config()
-        # Copy plugin to directory here
+        self.copyPlugin()
         plugin.scan_for_plugins()
-        self.failIf(len(plugin.plugins_available()) > 0)
+        self.failIf(len(plugin.plugins_available()) == 0)
 
     def testOnePluginIncorrectJSON(self):
         """have plugin with invalid json"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init_config()
         # Copy plugin to directory here
+        self.copyPlugin()
         # Edit json
+        with open(os.path.join(self.plugin_dest, "feplugin.json"), "w") as f:
+            f.write("This is so not some fucking json")
         plugin.scan_for_plugins()
         self.failIf(len(plugin.plugins_available()) > 0)
 
+    def testValidCountProcess(self):
+        """have plugin with live count process"""
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+            config.init_config()
+        self.copyPlugin()
+        plugin.scan_for_plugins()
+        plugin.start_plugin_counts()
+        # Put a sleep in, so that the count process can actually come up
+        time.sleep(.1)
+        # If plugin count process doesn't come up, it's removed from list
+        self.failIf(len(plugin.plugins_available()) == 0)
+
     def testInvalidCountProcess(self):
         """have plugin whose count process doesn't come up"""
-        pass
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+            config.init_config()
+        self.copyPlugin()
+        plugin.scan_for_plugins()
+        # Fuck with the plugin executable script
+        with open(os.path.join(self.plugin_dest, "scripts", "plugin.py"), "w") as f:
+            f.write("This is so not executable")
+        plugin.start_plugin_counts()
+        self.failIf(len(plugin.plugins_available()) > 0)
 
 
 class HeartbeatTests(unittest.TestCase):
