@@ -7,7 +7,7 @@ import json
 import tempfile
 sys.path.append("/home/qdot/code/git-projects/fuckeverything")
 from fuckeverything import config
-# from fuckeverything import plugin
+from fuckeverything import plugin
 # from fuckeverything import queue
 # from fuckeverything import system
 # from fuckeverything import heartbeat
@@ -41,8 +41,8 @@ class ConfigTests(unittest.TestCase):
         """create a new config directory and populate it"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init_config()
-            self.failIf(not os.path.exists(config._cdirs["config"]))
-            self.failIf(not os.path.exists(config._cdirs["plugin"]))
+        self.failIf(not os.path.exists(config._cdirs["config"]))
+        self.failIf(not os.path.exists(config._cdirs["plugin"]))
 
     def testDirectoryNoCreation(self):
         """do not create new directory if it doesn't exist, fail out instead"""
@@ -57,24 +57,24 @@ class ConfigTests(unittest.TestCase):
         """throw when we get a bad config value"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init_config()
-            try:
-                config.get_config_value("testing")
-                self.fail("Not throwing expection on missing configuration option!")
-            except KeyError:
-                pass
+        try:
+            config.get_config_value("testing")
+            self.fail("Not throwing expection on missing configuration option!")
+        except KeyError:
+            pass
 
     def testValidConfigValue(self):
         """get a matching config value"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init_config()
-            v = config.get_config_value("server_address")
-            self.failIf(v != config._config["server_address"])
+        v = config.get_config_value("server_address")
+        self.failIf(v != config._config["server_address"])
 
     def testConfigFileCreation(self):
         """create config files correctly"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init_config()
-            self.failIf(not os.path.exists(os.path.join(config._cdirs["config"], "config.json")))
+        self.failIf(not os.path.exists(os.path.join(config._cdirs["config"], "config.json")))
 
     def testConfigFileLoad(self):
         """load config files correctly"""
@@ -114,3 +114,77 @@ class ConfigTests(unittest.TestCase):
                 self.fail("Didn't fail on gibberish json!")
             except KeyError:
                 pass
+
+
+class PluginTests(unittest.TestCase):
+    def setUp(self):
+        reload(config)
+        reload(plugin)
+        self.tmpdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
+    def testNoPlugins(self):
+        """have no plugins"""
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+            config.init_config()
+        plugin.scan_for_plugins()
+        self.failIf(len(plugin.plugins_available()) > 0)
+
+    def testOnePluginCorrectJSON(self):
+        """have valid plugin"""
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+            config.init_config()
+        # Copy plugin to directory here
+        plugin.scan_for_plugins()
+        self.failIf(len(plugin.plugins_available()) > 0)
+
+    def testOnePluginIncorrectJSON(self):
+        """have plugin with invalid json"""
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+            config.init_config()
+        # Copy plugin to directory here
+        # Edit json
+        plugin.scan_for_plugins()
+        self.failIf(len(plugin.plugins_available()) > 0)
+
+    def testInvalidCountProcess(self):
+        """have plugin whose count process doesn't come up"""
+        pass
+
+
+class HeartbeatTests(unittest.TestCase):
+
+    def testAddHeartbeat(self):
+        pass
+
+    def testRemoveHeartbeat(self):
+        pass
+
+    def testSucceedHeartbeat(self):
+        pass
+
+    def testFailHeartbeat(self):
+        pass
+
+
+class ClaimFlowTests(unittest.TestCase):
+
+    def testDroppedSocket(self):
+        pass
+
+    def testClaimDisappearedDevice(self):
+        pass
+
+    def testClaimValidDevice(self):
+        pass
+
+    def testClaimDuringClientDeath(self):
+        pass
+
+    def testClaimOnClientShutdown(self):
+        pass
+
+    def testClaimOnPluginShutdown(self):
+        pass
