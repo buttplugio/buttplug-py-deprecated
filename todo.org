@@ -173,7 +173,12 @@ CLOSED: [2012-12-11 Tue 23:50]
 **** DONE Help Message
 CLOSED: [2013-03-01 Fri 23:57]
 - State "DONE"       from "TODO"       [2013-03-01 Fri 23:57]
-**** TODO Alternate configuration file
+**** DONE Directory Creation
+CLOSED: [2013-03-02 Sat 17:27]
+- State "DONE"       from "TODO"       [2013-03-02 Sat 17:27]
+**** DONE Alternate configuration file
+CLOSED: [2013-03-02 Sat 17:27]
+- State "DONE"       from "TODO"       [2013-03-02 Sat 17:27]
 **** TODO Plugin found
 **** TODO Plugin fails to load (invalid config)
 **** TODO Plugin fails to load (can't start count process)
