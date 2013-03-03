@@ -3,6 +3,8 @@ import os
 import unittest
 import shutil
 import mock
+import json
+import tempfile
 sys.path.append("/home/qdot/code/git-projects/fuckeverything")
 from fuckeverything import config
 # from fuckeverything import plugin
@@ -21,9 +23,13 @@ class ConfigTests(unittest.TestCase):
 
     def setUp(self):
         reload(config)
+        self.tmpdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
 
     def testHelp(self):
-        """Help test. Should just bail out."""
+        """help test, should just bail out."""
         with mock.patch('sys.argv', ['fuckeverything', '-h']):
             try:
                 config.init_config()
@@ -32,72 +38,79 @@ class ConfigTests(unittest.TestCase):
                 pass
 
     def testDirectoryCreation(self):
-        """Create a new config directory and populate it"""
-        import tempfile
-        d = tempfile.mkdtemp()
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', d]):
+        """create a new config directory and populate it"""
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init_config()
-            self.failIf(not os.path.exists(d))
             self.failIf(not os.path.exists(config._cdirs["config"]))
             self.failIf(not os.path.exists(config._cdirs["plugin"]))
-        shutil.rmtree(d)
 
     def testDirectoryNoCreation(self):
-        """Do not create new directory if it doesn't exist, fail out instead"""
-        import tempfile
-        d = tempfile.mkdtemp()
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', d, "--config_no_create_dir"]):
+        """do not create new directory if it doesn't exist, fail out instead"""
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir, "--config_no_create_dir"]):
             try:
                 config.init_config()
                 self.fail("Not throwing exception on missing configuration directories!")
             except RuntimeError:
                 pass
-        shutil.rmtree(d)
 
     def testInvalidConfigValue(self):
-        """Test that we throw when we get a bad config value"""
-        import tempfile
-        d = tempfile.mkdtemp()
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', d]):
+        """throw when we get a bad config value"""
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init_config()
             try:
                 config.get_config_value("testing")
                 self.fail("Not throwing expection on missing configuration option!")
             except KeyError:
                 pass
-        shutil.rmtree(d)
 
     def testValidConfigValue(self):
-        """Test that we get a matching config value"""
-        import tempfile
-        d = tempfile.mkdtemp()
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', d]):
+        """get a matching config value"""
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init_config()
             v = config.get_config_value("server_address")
             self.failIf(v != config._config["server_address"])
-        shutil.rmtree(d)
 
     def testConfigFileCreation(self):
-        """Test that we create config files correctly"""
-        import tempfile
-        d = tempfile.mkdtemp()
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', d]):
+        """create config files correctly"""
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init_config()
             self.failIf(not os.path.exists(os.path.join(config._cdirs["config"], "config.json")))
-        shutil.rmtree(d)
 
     def testConfigFileLoad(self):
-        """Test that we load config files correctly"""
-        import tempfile
-        d = tempfile.mkdtemp()
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', d]):
+        """load config files correctly"""
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init_config()
             config.set_config_value("server_address", "ipc://wat")
             reload(config)
             config.init_config()
             self.failIf(config.get_config_value("server_address") != "ipc://wat")
-        shutil.rmtree(d)
 
     def testInvalidConfigurationFileLoad(self):
-        pass
+        """throw on screwed config files correctly"""
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+            config.init_config()
+            config.set_config_value("server_address", "ipc://wat")
+            # Insert gibberish!
+            with open(os.path.join(config._cdirs["config"], "config.json"), "w") as f:
+                f.write("This is so not some fucking json")
+            reload(config)
+            try:
+                config.init_config()
+                self.fail("Didn't fail on gibberish json!")
+            except ValueError:
+                pass
 
+    def testInvalidConfigurationKeyLoad(self):
+        """throw on screwed config files correctly"""
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+            config.init_config()
+            config.set_config_value("server_address", "ipc://wat")
+            # Insert bad key!
+            with open(os.path.join(config._cdirs["config"], "config.json"), "w") as f:
+                json.dump({"server_addres": "tcp://127.0.0.1:9389"}, f)
+            reload(config)
+            try:
+                config.init_config()
+                self.fail("Didn't fail on gibberish json!")
+            except KeyError:
+                pass
