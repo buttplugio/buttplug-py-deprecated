@@ -35,7 +35,7 @@ def stop():
 def run():
     now = time.time()
     for (identity, pingtime) in _last_update.items():
-        if now - pingtime > config.PING_MAX:
+        if now - pingtime > config.get_config_value("ping_max"):
             logging.debug("identity %s died", identity)
             remove(identity)
             continue

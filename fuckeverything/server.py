@@ -8,27 +8,36 @@ import time
 import msgpack
 import logging
 
-
-def start():
+1def start():
     """Start server loop"""
+    # Bring up logging, fill out configuration values
     logging.basicConfig(level=logging.DEBUG)
     config.init_config()
-    plugin.scan_for_plugins()
-    logging.info("Plugins found:")
-    logging.info(plugin.plugins_available())
-    for plin in plugin.plugins_available():
-        logging.info(plin)
-    heartbeat.run()
+
+    # Start zmq server
     context = zmq.Context()
     queue.start_queue(context)
     socket_router = context.socket(zmq.ROUTER)
-    socket_router.bind(config.SERVER_ADDRESS)
+    socket_router.bind(config.get_config_value("server_address"))
     socket_queue = context.socket(zmq.PULL)
     socket_queue.connect(queue.QUEUE_ADDRESS)
     poller = zmq.Poller()
     poller.register(socket_router, zmq.POLLIN)
     poller.register(socket_queue, zmq.POLLIN)
+
+    # Start ping counter
+    heartbeat.run()
+
+    # Start plugins
+    plugin.scan_for_plugins()
+    plugin.start_plugin_counts()
+    logging.info("Plugins found:")
+    logging.info(plugin.plugins_available())
+    for plin in plugin.plugins_available():
+        logging.info(plin)
     plugin.scan_for_devices(True)
+
+    # Run Loop
     try:
         while True:
             socks = dict(poller.poll())

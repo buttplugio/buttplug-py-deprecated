@@ -86,15 +86,23 @@ def scan_for_plugins():
         if not os.path.exists(plugin_file):
             continue
         info = None
-        with open(plugin_file) as pfile:
-            info = json.load(pfile)
+        try:
+            with open(plugin_file) as pfile:
+                info = json.load(pfile)
+        except ValueError:
+            logging.warning("JSON configuration not valid for plugin %s!", i)
+            continue
         if not set(Plugin.PLUGIN_REQUIRED_KEYS).issubset(set(info.keys())):
             raise PluginException("Invalid Plugin")
         if info["name"] in _plugins.keys():
             raise PluginException("Plugin Collision! Two plugins named %s" % info["name"])
         plugin = Plugin(info, i)
         _plugins[plugin.name] = plugin
-        plugin.open_count_process()
+
+
+def start_plugin_counts():
+    for p in _plugins.values():
+        p.open_count_process()
 
 
 def add_count_socket(name, identity):
@@ -145,7 +153,7 @@ def start_claim_process(name, dev_id):
         return
     plugin = _plugins[name]
     process_id = random_ident()
-    cmd = [plugin.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--identity=%s" % process_id]
+    cmd = [plugin.executable_path, "--server_port=%s" % config.get_config_value("server_address"), "--identity=%s" % process_id]
     o = open_process(cmd)
     if not o:
         logging.warning("Not starting claim process")
