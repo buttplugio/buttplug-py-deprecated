@@ -50,8 +50,8 @@ class Plugin(object):
     def __init__(self, info, plugin_dir):
         self.count_process = None
         self.count_socket = None
-        self.plugin_path = os.path.join(config.PLUGIN_DIR, plugin_dir)
-        self.executable_path = os.path.join(config.PLUGIN_DIR, plugin_dir, info["executable"])
+        self.plugin_path = os.path.join(config.get_config_dir("plugin"), plugin_dir)
+        self.executable_path = os.path.join(config.get_config_dir("plugin"), plugin_dir, info["executable"])
         if not os.path.exists(self.executable_path):
             raise PluginException("Cannot find plugin executable: %s" % self.executable_path)
         self.name = info["name"]
@@ -62,7 +62,7 @@ class Plugin(object):
         self.device_processes = {}
 
     def open_count_process(self):
-        count_process_cmd = [self.executable_path, "--server_port=%s" % config.SERVER_ADDRESS, "--count", "--identity=%s" % random_ident()]
+        count_process_cmd = [self.executable_path, "--server_port=%s" % config.get_config_value("server_address"), "--count", "--identity=%s" % random_ident()]
         self.count_process = open_process(count_process_cmd)
         if not self.count_process:
             logging.warning("Count process unable to start. Removing plugin from plugin list.")
@@ -81,8 +81,8 @@ def scan_for_plugins():
     called named what we expect from the PLUGIN_INFO_FILE constant
 
     """
-    for i in os.listdir(config.PLUGIN_DIR):
-        plugin_file = os.path.join(config.PLUGIN_DIR, i, Plugin.PLUGIN_INFO_FILE)
+    for i in os.listdir(config.get_config_dir("plugin")):
+        plugin_file = os.path.join(config.get_config_dir("plugin"), i, Plugin.PLUGIN_INFO_FILE)
         if not os.path.exists(plugin_file):
             continue
         info = None
