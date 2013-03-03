@@ -1,6 +1,7 @@
 from fuckeverything import plugin
 from fuckeverything import feinfo
 from fuckeverything import queue
+from fuckeverything import event
 from fuckeverything import heartbeat
 import logging
 import re
@@ -91,7 +92,7 @@ def fe_ping(identity, msg):
     """
     """
     logging.debug("Firing FEPing event for %s", identity)
-    queue.fire_event(identity, "FEPing")
+    event.fire_event(identity, "FEPing")
 
 
 def fe_claim_device(identity, msg):

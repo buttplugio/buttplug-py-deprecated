@@ -3,7 +3,10 @@ from fuckeverything import plugin
 from fuckeverything import queue
 from fuckeverything import system
 from fuckeverything import heartbeat
+from fuckeverything import utils
+from fuckeverything import event
 from gevent_zeromq import zmq
+import gevent
 import time
 import msgpack
 import logging
@@ -53,4 +56,7 @@ def start():
                 socket_router.send(msg)
     except KeyboardInterrupt:
         socket_router.close()
+    event.kill_events()
+    utils.gevent_join()
+    #gevent.shutdown()
     logging.info("Quitting server...")
