@@ -1,33 +1,10 @@
 import os
 import json
-import subprocess
 import gevent
-import string
-import random
 import logging
 from fuckeverything import queue
 from fuckeverything import config
-from fuckeverything import heartbeat
-
-
-def random_ident():
-    """Generate a random string of letters and digits to use as zmq router
-    socket identity
-
-    """
-    return ''.join(random.choice(string.ascii_uppercase + string.digits)
-                   for x in range(8))
-
-
-def open_process(cmd):
-    o = None
-    try:
-        logging.debug("Plugin Process: Running %s", cmd)
-        o = subprocess.Popen(cmd)
-    except OSError, e:
-        o = None
-        logging.warning("Plugin Process did not execute correctly: %s", e.strerror)
-    return o
+from fuckeverything import process
 
 # The claim array holds process information for all claims. It is an array of
 # tuples with the following values:
@@ -48,10 +25,8 @@ class Plugin(object):
     PLUGIN_REQUIRED_KEYS = [u"name", u"version", u"executable", u"messages"]
 
     def __init__(self, info, plugin_dir):
-        self.count_process = None
+        self.count_identity = None
         self.count_socket = None
-        self.plugin_path = os.path.join(config.get_config_dir("plugin"), plugin_dir)
-        self.executable_path = os.path.join(config.get_config_dir("plugin"), plugin_dir, info["executable"])
         self.plugin_path = os.path.join(config.get_dir("plugin"), plugin_dir)
         self.executable_path = os.path.join(config.get_dir("plugin"), plugin_dir, info["executable"])
         if not os.path.exists(self.executable_path):
@@ -64,9 +39,9 @@ class Plugin(object):
         self.device_processes = {}
 
     def open_count_process(self):
-        count_process_cmd = [self.executable_path, "--server_port=%s" % config.get_config_value("server_address"), "--count", "--identity=%s" % random_ident()]
-        self.count_process = open_process(count_process_cmd)
-        if not self.count_process:
+        count_process_cmd = [self.executable_path, "--server_port=%s" % config.get_value("server_address"), "--count"]
+        self.count_identity = process.add(count_process_cmd)
+        if not self.count_identity:
             logging.warning("Count process unable to start. Removing plugin from plugin list.")
             del _plugins[self.name]
 

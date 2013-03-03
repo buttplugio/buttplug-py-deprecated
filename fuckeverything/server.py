@@ -5,9 +5,8 @@ from fuckeverything import system
 from fuckeverything import heartbeat
 from fuckeverything import utils
 from fuckeverything import event
+from fuckeverything import process
 from gevent_zeromq import zmq
-import gevent
-import time
 import msgpack
 import logging
 
@@ -56,6 +55,7 @@ def start():
                 socket_router.send(msg)
     except KeyboardInterrupt:
         socket_router.close()
+    process.kill_all()
     event.kill_all()
     utils.gevent_join()
     #gevent.shutdown()
