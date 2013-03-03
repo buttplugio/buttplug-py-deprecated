@@ -179,12 +179,20 @@ CLOSED: [2013-03-02 Sat 17:27]
 **** DONE Alternate configuration file
 CLOSED: [2013-03-02 Sat 17:27]
 - State "DONE"       from "TODO"       [2013-03-02 Sat 17:27]
-**** TODO Plugin found
-**** TODO Plugin fails to load (invalid config)
-**** TODO Plugin fails to load (can't start count process)
+**** DONE Plugin found
+CLOSED: [2013-03-02 Sat 22:11]
+- State "DONE"       from "TODO"       [2013-03-02 Sat 22:11]
+**** DONE Plugin fails to load (invalid config)
+CLOSED: [2013-03-02 Sat 22:11]
+- State "DONE"       from "TODO"       [2013-03-02 Sat 22:11]
+**** DONE Plugin fails to load (can't start count process)
+CLOSED: [2013-03-02 Sat 22:11]
+- State "DONE"       from "TODO"       [2013-03-02 Sat 22:11]
 *** Plugin
+**** DONE Plugin comes up on server load
+CLOSED: [2013-03-02 Sat 22:11]
+- State "DONE"       from "TODO"       [2013-03-02 Sat 22:11]
 **** TODO Plugin shutdown on server missing
-**** TODO Plugin comes up on server load
 **** TODO Plugin count mode
 **** TODO Plugin tries to register more messages than needed on count mode
 **** TODO Plugin can't open device claim
@@ -197,3 +205,8 @@ CLOSED: [2013-03-02 Sat 17:27]
 **** TODO Client tries to register system message
 **** TODO Client tries to register plugin message
 **** TODO Claims released on client disconnect
+* Things we do
+** Count Processes
+** Client/System Communication
+** Claim Devices
+** Client/Device Communication

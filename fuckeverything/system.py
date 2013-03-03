@@ -90,7 +90,8 @@ def fe_client_info(identity, msg):
 def fe_ping(identity, msg):
     """
     """
-    heartbeat.update(identity)
+    logging.debug("Firing FEPing event for %s", identity)
+    queue.fire_event(identity, "FEPing")
 
 
 def fe_claim_device(identity, msg):
@@ -120,7 +121,7 @@ def fe_release_device(msg, client):
 
 def fe_register_plugin(identity, msg):
     logging.info("Plugin registering socket %s as %s", identity, msg[1])
-    heartbeat.add(identity)
+    heartbeat.start_heartbeat(identity)
     # If count is true, we have a count process to file off
     if msg[2] is True:
         plugin.add_count_socket(msg[1], identity)
@@ -137,7 +138,7 @@ def fe_register_plugin(identity, msg):
 
 def fe_register_client(identity, msg):
     logging.info("Client registering socket %s as %s", identity, msg[1])
-    heartbeat.add(identity)
+    heartbeat.start_heartbeat(identity)
     queue.add_to_queue(identity, ["FERegisterClient"])
 
 
@@ -173,9 +174,9 @@ def parse_message(identity, msg):
         else:
             raise RuntimeError("Function %s unknown or device address not found!" % msg[0])
         return None
-    if not heartbeat.contains(identity) and msg[0] not in ["FERegisterPlugin", "FERegisterClient"]:
-        logging.info("Unregistered socket trying to call functions!")
-        return None
+    # if msg[0] not in ["FERegisterPlugin", "FERegisterClient"]:
+    #     logging.info("Unregistered socket trying to call functions!")
+    #     return None
     if func_name not in dir(sys.modules[__name__]):
         logging.info("No related function for name %s", func_name)
         return None

@@ -8,6 +8,7 @@ import time
 import msgpack
 import logging
 
+
 def start():
     """Start server loop"""
     # Bring up logging, fill out configuration values
@@ -25,8 +26,6 @@ def start():
     poller.register(socket_router, zmq.POLLIN)
     poller.register(socket_queue, zmq.POLLIN)
 
-    # Start ping counter
-    heartbeat.run()
 
     # Start plugins
     plugin.scan_for_plugins()

@@ -4,40 +4,18 @@ import gevent
 import time
 import logging
 
-_last_update = {}
 
-
-def contains(identity):
-    return identity in _last_update.keys()
-
-
-def add(identity):
-    if contains(identity):
-        return
-    _last_update[identity] = time.time()
-
-
-def remove(identity):
-    if not contains(identity):
-        return
-    del _last_update[identity]
-
-
-def update(identity):
-    _last_update[identity] = time.time()
-
-
-def stop():
-    for identity in _last_update.items():
-        fequeue.add_to_queue(identity, ["FEClose"])
-
-
-def run():
-    now = time.time()
-    for (identity, pingtime) in _last_update.items():
-        if now - pingtime > config.get_config_value("ping_max"):
-            logging.debug("identity %s died", identity)
-            remove(identity)
-            continue
+def _run_heartbeat(identity):
+    while True:
+        e = gevent.event.Event()
+        fequeue.add_event(identity, "FEPing", e)
         fequeue.add_to_queue(identity, ["FEPing"])
-    gevent.spawn_later(config.get_config_value("ping_rate"), run)
+        ret = e.wait(config.get_config_value("ping_max"))
+        if not ret:
+            logging.debug("identity %s died", identity)
+            break
+        gevent.sleep(1)
+
+
+def start_heartbeat(identity):
+    gevent.spawn(_run_heartbeat, identity)

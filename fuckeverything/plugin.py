@@ -110,14 +110,11 @@ def add_count_socket(name, identity):
 
 
 def scan_for_devices(respawn):
-    for (pname, pobj) in _plugins.items():
+    for pobj in _plugins.values():
         # Race condition, we may not have registered yet
         if pobj.count_socket is None:
             continue
         # If we lose our count process, god knows what else has gone wrong. Kill it.
-        if not heartbeat.contains(pobj.count_socket):
-            del _plugins[pname]
-            continue
         queue.add_to_queue(pobj.count_socket, ["FEDeviceCount"])
     if respawn:
         gevent.spawn_later(1, scan_for_devices, respawn)

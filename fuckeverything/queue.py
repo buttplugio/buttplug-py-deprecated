@@ -1,7 +1,8 @@
 from gevent_zeromq import zmq
+import logging
 import msgpack
 
-_mvars = {"_socket_queue": None}
+_mvars = {"_socket_queue": None, "_socket_events": {}}
 QUEUE_ADDRESS = "inproc://fequeue"
 
 
@@ -17,3 +18,20 @@ def add_to_queue(identity, msg):
 
 def close_queue():
     _mvars["_socket_queue"].close()
+
+
+def add_event(identity, msgtype, event):
+    if identity not in _mvars["_socket_events"]:
+        _mvars["_socket_events"][identity] = {}
+    if msgtype in _mvars["_socket_events"][identity]:
+        raise ValueError("Event already set!")
+    logging.debug("Queuing event %s for identity %s", msgtype, identity)
+    _mvars["_socket_events"][identity][msgtype] = event
+
+
+def fire_event(identity, msgtype):
+    if identity not in _mvars["_socket_events"] and msgtype not in _mvars["_socket_events"][identity]:
+        raise ValueError("Event already set!")
+    logging.debug("Firing event %s for identity %s", msgtype, identity)
+    _mvars["_socket_events"][identity][msgtype].set()
+    del _mvars["_socket_events"][identity][msgtype]
