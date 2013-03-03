@@ -36,8 +36,8 @@ def run():
     now = time.time()
     for (identity, pingtime) in _last_update.items():
         if now - pingtime > config.PING_MAX:
-            logging.debug("identity %s died" % identity)
+            logging.debug("identity %s died", identity)
             remove(identity)
             continue
         fequeue.add_to_queue(identity, ["FEPing"])
-    gevent.spawn_later(config.PING_RATE, run)
+    gevent.spawn_later(config.get_config_value("ping_rate"), run)
