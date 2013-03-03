@@ -6,15 +6,15 @@ _mvars = {"_socket_queue": None}
 QUEUE_ADDRESS = "inproc://fequeue"
 
 
-def start_queue(context):
+def init(context):
     _mvars["_socket_queue"] = context.socket(zmq.PUSH)
     _mvars["_socket_queue"].bind(QUEUE_ADDRESS)
 
 
-def add_to_queue(identity, msg):
+def add(identity, msg):
     _mvars["_socket_queue"].send(identity, zmq.SNDMORE)
     _mvars["_socket_queue"].send(msgpack.packb(msg))
 
 
-def close_queue():
+def close():
     _mvars["_socket_queue"].close()

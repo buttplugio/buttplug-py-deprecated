@@ -13,7 +13,7 @@ _config = {"server_address": _default_server_addr,
            "ping_rate": 1,
            "ping_max": 3}
 
-def load_config():
+def _load():
     logging.debug("Loading JSON Config from %s", os.path.join(_cdirs["config"], "config.json"))
     with open(os.path.join(_cdirs["config"], "config.json"), "r+") as f:
         j = json.load(f)
@@ -24,13 +24,13 @@ def load_config():
                 raise KeyError("Unexpected key %s found in configuration file!" % k)
 
 
-def save_config():
+def _save():
     logging.debug("Saving JSON Config to %s", os.path.join(_cdirs["config"], "config.json"))
     with open(os.path.join(_cdirs["config"], "config.json"), "w") as f:
         json.dump(_config, f)
 
 
-def init_config():
+def init():
     """Initialize configuration values for server"""
     parser = argparse.ArgumentParser(description="FuckEverything")
     parser.add_argument('--server_address', metavar='addr', type=str,
@@ -50,9 +50,9 @@ def init_config():
         logging.debug("Creating directory %s", _cdirs["config_dir"])
         os.makedirs(_cdirs["config"])
     if not os.path.exists(os.path.join(_cdirs["config"], "config.json")):
-        save_config()
+        _save()
     else:
-        load_config()
+        _load()
     if not os.path.exists(_cdirs["plugin"]):
         if args.config_no_create_dir:
             raise RuntimeError("Plugin directory does not exist!")
@@ -61,25 +61,25 @@ def init_config():
 
     # only reset the server address if it's not the default
     if args.server_address != _default_server_addr:
-        set_config_value("server_address", args.server_address)
+        set_value("server_address", args.server_address)
 
 
-def get_config_value(key):
+def get_value(key):
     if key not in _config.keys():
         raise KeyError("Config value %s does not exist!" % key)
     logging.debug("Config value %s is %s", key, _config[key])
     return _config[key]
 
 
-def set_config_value(key, value):
+def set_value(key, value):
     if key not in _config.keys():
         raise KeyError("Config value %s does not exist!" % key)
     _config[key] = value
     logging.debug("Setting config value %s to %s", key, _config[key])
-    save_config()
+    _save()
 
 
-def get_config_dir(key):
+def get_dir(key):
     if key not in _cdirs.keys():
         raise KeyError("Config dir %s does not exist!" % key)
     logging.debug("Config dir %s is %s", key, _cdirs[key])

@@ -1,7 +1,7 @@
 import logging
-from gevent.pool import Group
+import gevent.pool
 
-_pool = Group()
+_pool = gevent.pool.Group()
 
 class FEShutdownException(Exception):
     pass

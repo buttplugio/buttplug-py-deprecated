@@ -16,27 +16,27 @@ def start():
     """Start server loop"""
     # Bring up logging, fill out configuration values
     logging.basicConfig(level=logging.DEBUG)
-    config.init_config()
+    config.init()
 
     # Start zmq server
     context = zmq.Context()
-    queue.start_queue(context)
+    queue.init(context)
     socket_router = context.socket(zmq.ROUTER)
-    socket_router.bind(config.get_config_value("server_address"))
+    socket_router.bind(config.get_value("server_address"))
     socket_queue = context.socket(zmq.PULL)
     socket_queue.connect(queue.QUEUE_ADDRESS)
     poller = zmq.Poller()
     poller.register(socket_router, zmq.POLLIN)
     poller.register(socket_queue, zmq.POLLIN)
 
-
     # Start plugins
     plugin.scan_for_plugins()
     plugin.start_plugin_counts()
-    logging.info("Plugins found:")
-    logging.info(plugin.plugins_available())
-    for plin in plugin.plugins_available():
-        logging.info(plin)
+    if(logging.getLogger().getEffectiveLevel() == logging.DEBUG):
+        logging.debug("Plugins found:")
+        logging.debug(plugin.plugins_available())
+        for plin in plugin.plugins_available():
+            logging.debug(plin)
     plugin.scan_for_devices(True)
 
     # Run Loop
@@ -56,7 +56,7 @@ def start():
                 socket_router.send(msg)
     except KeyboardInterrupt:
         socket_router.close()
-    event.kill_events()
+    event.kill_all()
     utils.gevent_join()
     #gevent.shutdown()
     logging.info("Quitting server...")

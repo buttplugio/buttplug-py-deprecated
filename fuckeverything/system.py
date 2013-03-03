@@ -92,7 +92,7 @@ def fe_ping(identity, msg):
     """
     """
     logging.debug("Firing FEPing event for %s", identity)
-    event.fire_event(identity, "FEPing")
+    event.fire(identity, "FEPing")
 
 
 def fe_claim_device(identity, msg):
@@ -122,7 +122,7 @@ def fe_release_device(msg, client):
 
 def fe_register_plugin(identity, msg):
     logging.info("Plugin registering socket %s as %s", identity, msg[1])
-    heartbeat.start_heartbeat(identity)
+    heartbeat.start(identity)
     # If count is true, we have a count process to file off
     if msg[2] is True:
         plugin.add_count_socket(msg[1], identity)

@@ -52,6 +52,8 @@ class Plugin(object):
         self.count_socket = None
         self.plugin_path = os.path.join(config.get_config_dir("plugin"), plugin_dir)
         self.executable_path = os.path.join(config.get_config_dir("plugin"), plugin_dir, info["executable"])
+        self.plugin_path = os.path.join(config.get_dir("plugin"), plugin_dir)
+        self.executable_path = os.path.join(config.get_dir("plugin"), plugin_dir, info["executable"])
         if not os.path.exists(self.executable_path):
             raise PluginException("Cannot find plugin executable: %s" % self.executable_path)
         self.name = info["name"]
@@ -81,8 +83,8 @@ def scan_for_plugins():
     called named what we expect from the PLUGIN_INFO_FILE constant
 
     """
-    for i in os.listdir(config.get_config_dir("plugin")):
-        plugin_file = os.path.join(config.get_config_dir("plugin"), i, Plugin.PLUGIN_INFO_FILE)
+    for i in os.listdir(config.get_dir("plugin")):
+        plugin_file = os.path.join(config.get_dir("plugin"), i, Plugin.PLUGIN_INFO_FILE)
         if not os.path.exists(plugin_file):
             continue
         info = None
@@ -115,7 +117,7 @@ def scan_for_devices(respawn):
         if pobj.count_socket is None:
             continue
         # If we lose our count process, god knows what else has gone wrong. Kill it.
-        queue.add_to_queue(pobj.count_socket, ["FEDeviceCount"])
+        queue.add(pobj.count_socket, ["FEDeviceCount"])
     if respawn:
         gevent.spawn_later(1, scan_for_devices, respawn)
 
@@ -150,7 +152,7 @@ def start_claim_process(name, dev_id):
         return
     plugin = _plugins[name]
     process_id = random_ident()
-    cmd = [plugin.executable_path, "--server_port=%s" % config.get_config_value("server_address"), "--identity=%s" % process_id]
+    cmd = [plugin.executable_path, "--server_port=%s" % config.get_value("server_address"), "--identity=%s" % process_id]
     o = open_process(cmd)
     if not o:
         logging.warning("Not starting claim process")

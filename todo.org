@@ -143,6 +143,7 @@ CLOSED: [2013-03-01 Fri 18:51]
 CLOSED: [2013-03-01 Fri 19:10]
 - State "DONE"       from "TODO"       [2013-03-01 Fri 19:10]
 
+*** TODO Shorten function names for module scoped functions
 *** TODO Make sure client disconnect means claims are released
 *** TODO Handle plugin claim startup errors
 *** TODO Have server do error handling if plugin device handling process doesn't come up in time

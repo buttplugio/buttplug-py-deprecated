@@ -10,20 +10,19 @@ QUEUE_ADDRESS = "inproc://fequeue"
 @utils.gevent_func
 def _send_event_table():
     while True:
-        e = gevent.event.AsyncResult()
-        add_event("*", "FESendEventTable", e)
+        e = add("*", "FESendEventTable")
         try:
-            e.wait()
+            e.get()
         except utils.FEShutdownException:
             return
         # TODO Actually send out our event table
 
 
-def init_event_manager():
-    gevent.spawn(_send_event_table)
+def init():
+    _send_event_table()
 
 
-def add_event(identity, msgtype, event=None):
+def add(identity, msgtype, event=None):
     if event is None:
         event = gevent.event.AsyncResult()
     if identity not in _mvars["_socket_events"]:
@@ -36,22 +35,22 @@ def add_event(identity, msgtype, event=None):
     return event
 
 
-def fire_event(identity, msgtype):
+def fire(identity, msgtype):
     if identity not in _mvars["_socket_events"] and msgtype not in _mvars["_socket_events"][identity]:
         raise ValueError("Event not set!")
     logging.debug("Firing event %s for identity %s", msgtype, identity)
     _mvars["_socket_events"][identity][msgtype].set((identity, msgtype))
-    remove_event(identity, msgtype)
+    remove(identity, msgtype)
 
 
-def kill_events():
+def kill_all():
     logging.debug("Trying to kill all events")
     print _mvars
-    for (identity, types) in _mvars["_socket_events"].items():
-        for (msgtype, event) in types.items():
+    for types in _mvars["_socket_events"].values():
+        for event in types.values():
             if event:
                 event.set_exception(utils.FEShutdownException())
 
 
-def remove_event(identity, msgtype):
+def remove(identity, msgtype):
     del _mvars["_socket_events"][identity][msgtype]
