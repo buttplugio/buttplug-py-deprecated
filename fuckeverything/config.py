@@ -77,3 +77,10 @@ def set_config_value(key, value):
     _config[key] = value
     logging.debug("Setting config value %s to %s", key, _config[key])
     save_config()
+
+
+def get_config_dir(key):
+    if key not in _cdirs.keys():
+        raise KeyError("Config dir %s does not exist!" % key)
+    logging.debug("Config dir %s is %s", key, _cdirs[key])
+    return _cdirs[key]
