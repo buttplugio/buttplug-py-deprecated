@@ -8,7 +8,7 @@ import time
 import msgpack
 import logging
 
-1def start():
+def start():
     """Start server loop"""
     # Bring up logging, fill out configuration values
     logging.basicConfig(level=logging.DEBUG)
