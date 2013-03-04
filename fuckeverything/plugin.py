@@ -2,22 +2,12 @@ import os
 import json
 import gevent
 import logging
+from fuckeverything import utils
+from fuckeverything import heartbeat
+from fuckeverything import event
 from fuckeverything import queue
 from fuckeverything import config
 from fuckeverything import process
-
-# The claim array holds process information for all claims. It is an array of
-# tuples with the following values:
-#
-# - Client ID(s)
-# - Device Bus ID
-# - Process ID
-# - Plugin Object
-#
-# Therefore when we get a Device Bus ID addressed message from a client, we can
-# use the client ID and bus ID to figure out which socket to route the message
-# to. Similarly, when we receive messages from a plugin, we can route to any and
-# all client IDs provided with the proper device bus ID.
 
 
 class Plugin(object):
@@ -26,7 +16,6 @@ class Plugin(object):
 
     def __init__(self, info, plugin_dir):
         self.count_identity = None
-        self.count_socket = None
         self.plugin_path = os.path.join(config.get_dir("plugin"), plugin_dir)
         self.executable_path = os.path.join(config.get_dir("plugin"), plugin_dir, info["executable"])
         if not os.path.exists(self.executable_path):
@@ -34,9 +23,6 @@ class Plugin(object):
         self.name = info["name"]
         self.version = info["version"]
         self.messages = info["messages"]
-        self.device_list = []
-        self.device_sockets = []
-        self.device_processes = {}
 
     def open_count_process(self):
         count_process_cmd = [self.executable_path, "--server_port=%s" % config.get_value("server_address"), "--count"]
@@ -121,20 +107,30 @@ def plugins_available():
     return _plugins.keys()
 
 
-def start_claim_process(name, dev_id):
-    if name not in _plugins.keys():
-        logging.info("Wrong plugin name!")
-        return
-    plugin = _plugins[name]
-    process_id = random_ident()
-    cmd = [plugin.executable_path, "--server_port=%s" % config.get_value("server_address"), "--identity=%s" % process_id]
-    o = open_process(cmd)
-    if not o:
-        logging.warning("Not starting claim process")
-        return None
-    plugin.device_processes[dev_id] = o
-    return process_id
+# def start_claim_process(name, dev_id):
+#     if name not in _plugins.keys():
+#         logging.info("Wrong plugin name!")
+#         return
+#     plugin = _plugins[name]
+#     process_id = random_ident()
+#     cmd = [plugin.executable_path, "--server_port=%s" % config.get_value("server_address"), "--identity=%s" % process_id]
+#     o = open_process(cmd)
+#     if not o:
+#         logging.warning("Not starting claim process")
+#         return None
+#     plugin.device_processes[dev_id] = o
+#     return process_id
 
 
 def add_device_socket(name, identity):
     _plugins[name].device_sockets.append(identity)
+
+
+@utils.gevent_func
+@event.wait_for_msg("FERegisterPlugin")
+def _handle_plugin_registration(identity=None, msg=None):
+    heartbeat.start(identity)
+
+
+def init():
+    _handle_plugin_registration()

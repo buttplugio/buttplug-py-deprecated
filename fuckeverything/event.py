@@ -31,21 +31,28 @@ def add(identity, msgtype, event=None):
         raise ValueError("Event already set!")
     logging.debug("Queuing event %s for identity %s", msgtype, identity)
     _mvars["_socket_events"][identity][msgtype] = event
-    print _mvars
     return event
 
 
 def fire(identity, msgtype):
-    if identity not in _mvars["_socket_events"] and msgtype not in _mvars["_socket_events"][identity]:
-        raise ValueError("Event not set!")
-    logging.debug("Firing event %s for identity %s", msgtype, identity)
-    _mvars["_socket_events"][identity][msgtype].set((identity, msgtype))
-    remove(identity, msgtype)
+    logging.debug("Event %s for %s", msgtype, identity)
+    if identity in _mvars["_socket_events"]:
+        if msgtype in _mvars["_socket_events"][identity]:
+            logging.debug("Firing event %s for identity %s", msgtype, identity)
+            _mvars["_socket_events"][identity][msgtype].set((identity, msgtype))
+            remove(identity, msgtype)
+            return
+    if msgtype in _mvars["_socket_events"]["*"]:
+        logging.debug("Firing event %s for *", msgtype)
+        _mvars["_socket_events"]["*"][msgtype].set((identity, msgtype))
+        remove("*", msgtype)
+    else:
+        #raise ValueError("Event %s on identity %s not set for any handler!" % (msgtype, identity))
+        logging.warning("Event %s on identity %s not set for any handler!" % (msgtype, identity))
 
 
 def kill_all():
     logging.debug("Trying to kill all events")
-    print _mvars
     for types in _mvars["_socket_events"].values():
         for event in types.values():
             if event:
@@ -54,3 +61,17 @@ def kill_all():
 
 def remove(identity, msgtype):
     del _mvars["_socket_events"][identity][msgtype]
+
+
+def wait_for_msg(msgtype):
+    def wrap(f):
+        def wrapped_f(*args):
+            logging.debug("Adding watch for %s", msgtype)
+            e = add("*", msgtype)
+            try:
+                (identity, msg) = e.get()
+            except utils.FEShutdownException:
+                return False
+            return f(identity, msg)
+        return wrapped_f
+    return wrap

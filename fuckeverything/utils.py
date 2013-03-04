@@ -14,7 +14,8 @@ def gevent_join():
 def gevent_func(func):
     def log_run_func(*args, **kwargs):
         logging.debug("gevent spawn: %s", func.__name__)
-        func(*args, **kwargs)
+        while func(*args, **kwargs):
+            continue
         logging.debug("gevent shutdown: %s", func.__name__)
 
     def spawn_func(*args, **kwargs):

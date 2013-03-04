@@ -29,6 +29,8 @@ def start():
     poller.register(socket_queue, zmq.POLLIN)
 
     # Start plugins
+    system.init()
+    plugin.init()
     plugin.scan_for_plugins()
     plugin.start_plugin_counts()
     if(logging.getLogger().getEffectiveLevel() == logging.DEBUG):
@@ -36,7 +38,7 @@ def start():
         logging.debug(plugin.plugins_available())
         for plin in plugin.plugins_available():
             logging.debug(plin)
-    plugin.scan_for_devices(True)
+    #plugin.scan_for_devices(True)
 
     # Run Loop
     try:
