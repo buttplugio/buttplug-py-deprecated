@@ -85,7 +85,6 @@ class FEBase(object):
 
     def close_socket(self, msg=None):
         self.exit_now = True
-        self.send(["FEClose"])
 
     def ping_reply(self, msg):
         self.last_ping = time.time()
