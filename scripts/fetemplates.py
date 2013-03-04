@@ -41,9 +41,7 @@ class FEBase(object):
         gevent.spawn_later(2, self.ping_check)
 
     def ping_check(self):
-        print "Ping test"
         if time.time() - self.last_ping > 3:
-            print "Dead!"
             self.close_socket()
             self.exit_now = True
             return
