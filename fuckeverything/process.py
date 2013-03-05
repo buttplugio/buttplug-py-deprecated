@@ -1,5 +1,4 @@
 import queue
-import gevent
 import subprocess
 import logging
 import string
@@ -43,4 +42,3 @@ def add(cmd):
         return i
     _mvars["processes"][i] = o
     return i
-

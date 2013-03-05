@@ -2,14 +2,25 @@ from fuckeverything import plugin
 from fuckeverything import feinfo
 from fuckeverything import queue
 from fuckeverything import event
-from fuckeverything import heartbeat
 from fuckeverything import utils
+from fuckeverything import client
 import logging
 
+_msg_table = {}
 
-@utils.gevent_func
-@event.wait_for_msg("FEServerInfo")
-def _handle_server_info(identity=None, msg=None):
+
+def close_external(identity):
+    if plugin.is_plugin(identity):
+        pass
+    elif client.is_client(identity):
+        pass
+
+
+def _handle_close(identity, msg):
+    close_external(identity)
+
+
+def _handle_server_info(identity, msg):
     """
     Server Info
     - Server Name (Changable by user)
@@ -22,34 +33,25 @@ def _handle_server_info(identity=None, msg=None):
     return True
 
 
-@utils.gevent_func
-@event.wait_for_msg("FEPluginList")
-def _handle_plugin_list(identity=None, msg=None):
+def _handle_plugin_list(identity, msg):
     queue.add(identity, ["FEPluginList", [{"name": p.plugin_info["name"],
                                            "version": p.plugin_info["version"]}
                                           for p in plugin.plugins_available()]])
     return True
 
 
-@utils.gevent_func
-@event.wait_for_msg("FEDeviceList")
-def _handle_device_list(identity=None, msg=None):
+def _handle_device_list(identity, msg):
     queue.add(identity, ["FEDeviceList", plugin.get_device_list()])
     return True
 
 
-@utils.gevent_func
-@event.wait_for_msg("FEClose")
-def _handle_close(identity=None, msg=None):
-    logging.info("Identity %s closing", identity)
-    return True
-
-
-def init():
-    _handle_device_list()
-    _handle_plugin_list()
-    _handle_server_info()
-    _handle_close()
+_msg_table = {"FEServerInfo": _handle_server_info,
+              "FEPluginList": _handle_plugin_list,
+              "FEDeviceList": _handle_device_list,
+              "FERegisterCountPlugin": plugin.handle_count_plugin,
+              "FERegisterClient": client.handle_client,
+              "FEClaimDevice": plugin.handle_claim_device,
+              "FEClose": _handle_close}
 
 
 def parse_message(identity, msg):
@@ -59,6 +61,9 @@ def parse_message(identity, msg):
     if len(msg) is 0:
         logging.debug("NULL LIST")
         return
-    func_name = msg[0]
-    logging.debug("New message %s", func_name)
-    event.fire(identity, func_name)
+    msg_type = msg[0]
+    logging.debug("New message %s", msg_type)
+    if msg_type in _msg_table.keys():
+        _msg_table[msg_type](identity, msg)
+    else:
+        event.fire(identity, msg_type)

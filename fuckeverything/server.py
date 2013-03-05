@@ -29,8 +29,6 @@ def start():
     poller.register(socket_queue, zmq.POLLIN)
 
     # Start plugins
-    system.init()
-    plugin.init()
     plugin.scan_for_plugins()
     plugin.start_plugin_counts()
     if(logging.getLogger().getEffectiveLevel() == logging.DEBUG):
@@ -60,5 +58,4 @@ def start():
     process.kill_all()
     event.kill_all()
     utils.gevent_join()
-    #gevent.shutdown()
     logging.info("Quitting server...")

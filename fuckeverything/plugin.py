@@ -68,38 +68,6 @@ def start_plugin_counts():
         p.open_count_process()
 
 
-def add_count_socket(name, identity):
-    _plugins[name].count_socket = identity
-
-
-def scan_for_devices(respawn):
-    for pobj in _plugins.values():
-        # Race condition, we may not have registered yet
-        if pobj.count_socket is None:
-            continue
-        # If we lose our count process, god knows what else has gone wrong. Kill it.
-        queue.add(pobj.count_socket, ["FEDeviceCount"])
-    if respawn:
-        gevent.spawn_later(1, scan_for_devices, respawn)
-
-
-def update_device_list(identity, device_list):
-    plugin_key = None
-    for (pname, pobj) in _plugins.items():
-        if pobj.count_socket == identity:
-            plugin_key = pname
-            break
-    _plugins[plugin_key].device_list = device_list
-
-
-def get_device_list():
-    devices = []
-    for (pname, pobj) in _plugins.items():
-        for dev in pobj.device_list:
-            devices.append((pname, dev))
-    return devices
-
-
 def plugins_available():
     """
     Return the list of all plugins available on the system
@@ -107,30 +75,69 @@ def plugins_available():
     return _plugins.keys()
 
 
-# def start_claim_process(name, dev_id):
-#     if name not in _plugins.keys():
-#         logging.info("Wrong plugin name!")
-#         return
-#     plugin = _plugins[name]
-#     process_id = random_ident()
-#     cmd = [plugin.executable_path, "--server_port=%s" % config.get_value("server_address"), "--identity=%s" % process_id]
-#     o = open_process(cmd)
-#     if not o:
-#         logging.warning("Not starting claim process")
-#         return None
-#     plugin.device_processes[dev_id] = o
-#     return process_id
-
-
-def add_device_socket(name, identity):
-    _plugins[name].device_sockets.append(identity)
+@utils.gevent_func
+def handle_count_plugin(identity=None, msg=None):
+    heartbeat.start(identity)
+    while True:
+        e = event.add(identity, "*")
+        try:
+            (identity, msg) = e.get()
+        except utils.FEShutdownException:
+            return
+        msg_type = msg[0]
+        if msg_type == "FEClose":
+            logging.debug("Count Plugin %s closing", identity)
+            break
 
 
 @utils.gevent_func
-@event.wait_for_msg("FERegisterPlugin")
-def _handle_plugin_registration(identity=None, msg=None):
-    heartbeat.start(identity)
+def handle_claim_device(identity=None, msg=None):
+    # Figure out the plugin that owns the device we want
+    p = None
+    dev_id = msg[1]
+
+    # Client to system: bring up device process
+    plugin_id = process.add([p.executable_path, "--server_port=%s" % config.get_value("server_address")])
+    if plugin_id is None:
+        queue.add(identity, ["FEClaimDevice", dev_id, False])
+
+    # Device process to system: Register with known identity
+    e = event.add(plugin_id, "FERegisterClaimPlugin")
+    try:
+        (identity, msg) = e.get()
+    except utils.FEShutdownException:
+        return
+
+    # System to device process: Open device
+    queue.add(plugin_id, ["FEOpenDevice", dev_id])
+    e = event.add(plugin_id, "FEOpenDevice")
+    try:
+        (identity, msg) = e.get()
+    except utils.FEShutdownException:
+        return
+
+    # Device process to system: Open or fail
+    if msg[1] is False:
+        queue.add(plugin_id, ["FEClose"])
+        queue.add(identity, ["FEClaimDevice", dev_id, False])
+        return
+
+    # System to client: confirm device claim
+    queue.add(identity, ["FEClaimDevice", dev_id, True])
+
+    # TODO: Update some sort of system tracking for device/client claim!
 
 
-def init():
-    _handle_plugin_registration()
+@utils.gevent_func
+def handle_release_device(identity=None, msg=None):
+    # Figure out the identity of the process that owns the device
+    p = None
+    dev_id = msg[1]
+
+    # Close the process
+    queue.add(plugin_id, ["FEClose"])
+
+
+def is_plugin(identity):
+    # TODO: Implement
+    return False

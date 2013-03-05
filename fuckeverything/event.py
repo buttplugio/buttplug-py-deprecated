@@ -42,6 +42,11 @@ def fire(identity, msgtype):
             _mvars["_socket_events"][identity][msgtype].set((identity, msgtype))
             remove(identity, msgtype)
             return
+        elif "*" in _mvars["_socket_events"][identity]:
+            logging.debug("Firing event %s for identity %s", msgtype, identity)
+            _mvars["_socket_events"][identity][msgtype].set((identity, msgtype))
+            remove(identity, msgtype)
+            return
     if msgtype in _mvars["_socket_events"]["*"]:
         logging.debug("Firing event %s for *", msgtype)
         _mvars["_socket_events"]["*"][msgtype].set((identity, msgtype))
@@ -63,15 +68,15 @@ def remove(identity, msgtype):
     del _mvars["_socket_events"][identity][msgtype]
 
 
-def wait_for_msg(msgtype):
-    def wrap(f):
-        def wrapped_f(*args):
-            logging.debug("Adding watch for %s", msgtype)
-            e = add("*", msgtype)
-            try:
-                (identity, msg) = e.get()
-            except utils.FEShutdownException:
-                return False
-            return f(identity, msg)
-        return wrapped_f
-    return wrap
+# def wait_for_msg(msgtype):
+#     def wrap(f):
+#         def wrapped_f(*args):
+#             logging.debug("Adding watch for %s", msgtype)
+#             e = add("*", msgtype)
+#             try:
+#                 (identity, msg) = e.get()
+#             except utils.FEShutdownException:
+#                 return False
+#             return f(identity, msg)
+#         return wrapped_f
+#     return wrap

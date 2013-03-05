@@ -143,6 +143,7 @@ CLOSED: [2013-03-01 Fri 18:51]
 CLOSED: [2013-03-01 Fri 19:10]
 - State "DONE"       from "TODO"       [2013-03-01 Fri 19:10]
 
+*** TODO Make sure message requeuing works even when double messages sent
 *** TODO Shorten function names for module scoped functions
 *** TODO Make sure client disconnect means claims are released
 *** TODO Handle plugin claim startup errors
