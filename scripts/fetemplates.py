@@ -49,12 +49,9 @@ class FEBase(object):
 
     def parse_message(self, msg):
         """Parse incoming message"""
-        if msg[0] in self.inmsg.keys():
-            self.inmsg[msg[0]](msg)
-            return
-        # Fucking hack for device IDs
-        elif msg[1] in self.inmsg.keys():
-            self.inmsg[msg[1]](msg)
+        msg_type = msg[1]
+        if msg_type in self.inmsg.keys():
+            self.inmsg[msg_type](msg)
             return
         print msg
         print "No handler for %s messages" % msg[0]
@@ -124,7 +121,7 @@ class FEBase(object):
                     self.socket_client.send(msg)
         except KeyboardInterrupt:
             self.exit_now = True
-        self.socket_client.send(msgpack.packb(["FEClose"]))
+        self.socket_client.send(msgpack.packb(["s", "FEClose"]))
         self.socket_client.close()
         self.socket_queue.close()
         self.socket_out.close()
@@ -137,7 +134,7 @@ class FEClient(FEBase):
         super(FEClient, self).__init__()
 
     def register(self):
-        self.send(["FERegisterClient", self.APP_NAME])
+        self.send(["s", "FERegisterClient", self.APP_NAME])
 
 
 class FEPlugin(FEBase):
@@ -146,8 +143,8 @@ class FEPlugin(FEBase):
         super(FEPlugin, self).__init__()
         self.count_mode = False
         self.device_id = None
-        self.add_handlers({"FEDeviceClaim": self.device_claim,
-                           "FEDeviceRelease": self.device_release})
+        self.add_handlers({"FEPluginOpenDevice": self.open_device,
+                           "FEPluginReleaseDevice": self.release_device})
 
     def setup_parser(self):
         super(FEPlugin, self).setup_parser()
@@ -170,28 +167,13 @@ class FEPlugin(FEBase):
         return True
 
     def register(self):
-        self.send(["FERegisterPlugin", self.APP_NAME, self.count_mode])
+        if self.count_mode:
+            self.send(["s", "FEPluginRegisterCount", self.APP_NAME])
+        else:
+            self.send(["s", "FEPluginRegisterClaim", self.APP_NAME])
 
-    def device_claim(self, msg):
-        # TODO: Implement actual device claiming!
-        if msg[2] not in self.get_device_list():
-            print "Cannot claim!"
-            msglst = list(msg)
-            msglst.append(False)
-            self.send(msglst)
-            return
-        self.device_id = msg[2]
-        msglst = list(msg)
-        msglst.append(True)
-        self.send(msglst)
+    def release_device(self, msg):
+        raise RuntimeError("Define your own damn release_device!")
 
-    def device_release(self, msg):
-        if self.device_id != msg[2]:
-            print "Cannot release!"
-            msg.append(None)
-            self.send(msg)
-            return
-        self.device_id = None
-        msg.append(self.device_id)
-        self.send(msg)
-        self.close_socket()
+    def open_device(self, msg):
+        raise RuntimeError("Define your own damn open_device!")

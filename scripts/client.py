@@ -17,13 +17,13 @@ class FETestClient(FEClient):
         self.device_claim_id = None
         self.add_handlers({"FEServerInfo": self.server_info,
                            "FERegisterClient": self.on_register,
-                           "FEDeviceClaimReply": self.on_device_claim,
+                           "FEClaimDevice": self.on_device_claim,
                            "FEDeviceList": self.device_list,
                            "RawTestMsg": self.raw_test_msg})
 
     def on_register(self, msg):
-        self.send(["FEServerInfo"])
-        self.send(["FEDeviceList"])
+        self.send(["s", "FEServerInfo"])
+        self.send(["s", "FEDeviceList"])
 
     def raw_test_msg(self, msg):
         print msg
@@ -36,7 +36,7 @@ class FETestClient(FEClient):
     def on_device_claim(self, msg):
         print "Claimed!"
         print msg
-        self.device_claim_id = msg[1]
+        self.device_claim_id = msg[2]
         self.run_device_query()
 
     def server_info(self, msg):
@@ -44,7 +44,7 @@ class FETestClient(FEClient):
 
     def device_list(self, msg):
         print msg
-        self.send(["FEClaimDevice", msg[1][0][0], msg[1][0][1]])
+        self.send(["s", "FEClaimDevice", "123"])
 
 
 def main():
