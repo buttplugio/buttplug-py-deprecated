@@ -27,28 +27,29 @@ def _handle_server_info(identity, msg):
     - Server Software Version (static)
     - Server Build Date (static)
     """
-    queue.add(identity, ["FEServerInfo", [{"name": "Fuck Everything",
-                                           "version": feinfo.SERVER_VERSION,
-                                           "date": feinfo.SERVER_DATE}]])
+    queue.add(identity, ["s", "FEServerInfo", [{"name": "Fuck Everything",
+                                                "version": feinfo.SERVER_VERSION,
+                                                "date": feinfo.SERVER_DATE}]])
     return True
 
 
 def _handle_plugin_list(identity, msg):
-    queue.add(identity, ["FEPluginList", [{"name": p.plugin_info["name"],
-                                           "version": p.plugin_info["version"]}
-                                          for p in plugin.plugins_available()]])
+    queue.add(identity, ["s", "FEPluginList", [{"name": p.plugin_info["name"],
+                                                "version": p.plugin_info["version"]}
+                                               for p in plugin.plugins_available()]])
     return True
 
 
 def _handle_device_list(identity, msg):
-    queue.add(identity, ["FEDeviceList", plugin.get_device_list()])
+    queue.add(identity, ["s", "FEDeviceList", plugin._devices])
     return True
 
 
 _msg_table = {"FEServerInfo": _handle_server_info,
               "FEPluginList": _handle_plugin_list,
+              "FEPluginDeviceList": plugin.update_device_list,
               "FEDeviceList": _handle_device_list,
-              "FERegisterCountPlugin": plugin.handle_count_plugin,
+              "FEPluginRegisterCount": plugin.handle_count_plugin,
               "FERegisterClient": client.handle_client,
               "FEClaimDevice": plugin.handle_claim_device,
               "FEClose": _handle_close}
@@ -61,9 +62,15 @@ def parse_message(identity, msg):
     if len(msg) is 0:
         logging.debug("NULL LIST")
         return
-    msg_type = msg[0]
+    msg_address = msg[0]
+    msg_type = msg[1]
     logging.debug("New message %s", msg_type)
-    if msg_type in _msg_table.keys():
-        _msg_table[msg_type](identity, msg)
+    # System Message
+    if msg_address == "s":
+        if msg_type in _msg_table.keys():
+            _msg_table[msg_type](identity, msg)
+        else:
+            event.fire(identity, msg_type)
+    # Client/Plugin Comms forwarding
     else:
-        event.fire(identity, msg_type)
+        plugin.forward_device_msg(identity, msg)

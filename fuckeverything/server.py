@@ -29,6 +29,7 @@ def start():
     poller.register(socket_queue, zmq.POLLIN)
 
     # Start plugins
+    plugin.get_device_list()
     plugin.scan_for_plugins()
     plugin.start_plugin_counts()
     if(logging.getLogger().getEffectiveLevel() == logging.DEBUG):

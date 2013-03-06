@@ -23,22 +23,21 @@ def remove(identity):
 def kill_all():
     for (i, p) in _mvars["processes"].items():
         if p.poll():
-            queue.add(i, "FEClose")
+            queue.add(i, ["s", "FEClose"])
     for (i, p) in _mvars["processes"].items():
         logging.debug("Waiting on process %s to close...", i)
         p.wait()
 
 
-def add(cmd):
-    i = _random_ident()
-    cmd += ["--identity=%s" % i]
+def add(cmd, identity=None):
+    if not identity:
+        identity = _random_ident()
+    cmd += ["--identity=%s" % identity]
     try:
         logging.debug("Plugin Process: Running %s", cmd)
         o = subprocess.Popen(cmd)
     except OSError, e:
-        o = None
-        i = None
         logging.warning("Plugin Process did not execute correctly: %s", e.strerror)
-        return i
-    _mvars["processes"][i] = o
-    return i
+        return None
+    _mvars["processes"][identity] = o
+    return identity

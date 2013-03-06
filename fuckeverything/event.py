@@ -10,7 +10,7 @@ QUEUE_ADDRESS = "inproc://fequeue"
 @utils.gevent_func
 def _send_event_table():
     while True:
-        e = add("*", "FESendEventTable")
+        e = add("s", "FESendEventTable")
         try:
             e.get()
         except utils.FEShutdownException:
@@ -42,15 +42,15 @@ def fire(identity, msgtype):
             _mvars["_socket_events"][identity][msgtype].set((identity, msgtype))
             remove(identity, msgtype)
             return
-        elif "*" in _mvars["_socket_events"][identity]:
+        elif "s" in _mvars["_socket_events"][identity]:
             logging.debug("Firing event %s for identity %s", msgtype, identity)
             _mvars["_socket_events"][identity][msgtype].set((identity, msgtype))
             remove(identity, msgtype)
             return
-    if msgtype in _mvars["_socket_events"]["*"]:
+    if msgtype in _mvars["_socket_events"]["s"]:
         logging.debug("Firing event %s for *", msgtype)
-        _mvars["_socket_events"]["*"][msgtype].set((identity, msgtype))
-        remove("*", msgtype)
+        _mvars["_socket_events"]["s"][msgtype].set((identity, msgtype))
+        remove("s", msgtype)
     else:
         #raise ValueError("Event %s on identity %s not set for any handler!" % (msgtype, identity))
         logging.warning("Event %s on identity %s not set for any handler!" % (msgtype, identity))
@@ -72,7 +72,7 @@ def remove(identity, msgtype):
 #     def wrap(f):
 #         def wrapped_f(*args):
 #             logging.debug("Adding watch for %s", msgtype)
-#             e = add("*", msgtype)
+#             e = add("s", msgtype)
 #             try:
 #                 (identity, msg) = e.get()
 #             except utils.FEShutdownException:

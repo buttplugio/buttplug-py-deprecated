@@ -10,7 +10,7 @@ import logging
 def start(identity):
     while True:
         e = event.add(identity, "FEPing")
-        queue.add(identity, ["FEPing"])
+        queue.add(identity, ["s", "FEPing"])
         try:
             e.get(block=True, timeout=config.get_value("ping_max"))
         except gevent.Timeout:

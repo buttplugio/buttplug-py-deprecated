@@ -32,6 +32,7 @@ class Plugin(object):
             del _plugins[self.name]
 
 _plugins = {}
+_devices = {}
 
 
 class PluginException(Exception):
@@ -63,6 +64,34 @@ def scan_for_plugins():
         _plugins[plugin.name] = plugin
 
 
+@utils.gevent_func
+def get_device_list():
+    while True:
+        for p in _plugins.values():
+            queue.add(p.count_identity, ["s", "FEPluginDeviceList"])
+        # Add a bogus messages called PingWait. We should never get a reply to
+        # this because we never sent it. It just sits in the event table as a
+        # way to do an interruptable sleep before we send our next ping to the
+        # client.
+        e = event.add("DeviceListWait", "FEPingWait")
+        try:
+            e.get(block=True, timeout=config.get_value("ping_rate"))
+        except gevent.Timeout:
+            pass
+        except utils.FEShutdownException:
+            logging.debug("FE Closing, shutting down")
+            break
+        event.remove("DeviceListWait", "FEPingWait")
+
+
+def update_device_list(identity, msg):
+    for p in _plugins.values():
+        if p.count_identity == identity:
+            if p.name in _devices.keys():
+                del _devices[p.name]
+            _devices[p.name] = msg[2]
+
+
 def start_plugin_counts():
     for p in _plugins.values():
         p.open_count_process()
@@ -79,7 +108,7 @@ def plugins_available():
 def handle_count_plugin(identity=None, msg=None):
     heartbeat.start(identity)
     while True:
-        e = event.add(identity, "*")
+        e = event.add(identity, "s")
         try:
             (identity, msg) = e.get()
         except utils.FEShutdownException:
@@ -90,43 +119,94 @@ def handle_count_plugin(identity=None, msg=None):
             break
 
 
+_ctd = {}
+_dtc = {}
+
+
+# Forwarding messages: Because providing security we don't even need matters.
+# Yup.
+def forward_device_msg(identity, msg):
+    to_alias = msg[0]
+    print _ctd
+    print _dtc
+    to_addr = None
+    new_msg = None
+    # TODO: Remove [0], make deal with multiclaims. Someday.
+
+    # Plugins aren't allowed to know who owns them, they just see commands from
+    # the system. Therefore they set their "to" address as "c", and we replace
+    # it with the correct client identity.
+    if to_alias == "c":
+        new_msg = [identity] + list(msg[1:])
+        to_addr = _dtc[identity][0]
+
+    # Clients, on the other hand, only know their device's provided address (bus
+    # address, bluetooth id, etc...). We resolve that to the plugin's socket
+    # identity.
+    elif to_alias in _dtc.keys():
+        # Plugins don't get to know where things come from. Spooooky.
+        new_msg = ["s"] + list(msg[1:])
+        to_addr = _ctd[identity][0]
+    else:
+        logging.warning("No claims between %s and %s!", identity, to_addr)
+        return
+
+    logging.debug("Forwarding message %s to %s", new_msg, to_addr)
+    queue.add(to_addr, new_msg)
+
+
 @utils.gevent_func
 def handle_claim_device(identity=None, msg=None):
     # Figure out the plugin that owns the device we want
     p = None
-    dev_id = msg[1]
+    dev_id = msg[2]
+    for (plugin_name, device_list) in _devices.items():
+        if dev_id in device_list:
+            p = _plugins[plugin_name]
 
-    # Client to system: bring up device process
-    plugin_id = process.add([p.executable_path, "--server_port=%s" % config.get_value("server_address")])
+    if p is None:
+        logging.warning("Cannot find device %s, failing claim", dev_id)
+        queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
+        return
+
+    # Client to system: bring up device process.
+    #
+    # Just name the new plugin process socket identity after the device id,
+    # because why not.
+    plugin_id = process.add([p.executable_path, "--server_port=%s" % config.get_value("server_address")], dev_id)
     if plugin_id is None:
-        queue.add(identity, ["FEClaimDevice", dev_id, False])
+        queue.add(identity, ["s", "FEPluginClaimDevice", dev_id, False])
 
     # Device process to system: Register with known identity
-    e = event.add(plugin_id, "FERegisterClaimPlugin")
+    e = event.add(plugin_id, "FEPluginRegisterClaim")
     try:
-        (identity, msg) = e.get()
+        (i, m) = e.get()
     except utils.FEShutdownException:
         return
 
     # System to device process: Open device
-    queue.add(plugin_id, ["FEOpenDevice", dev_id])
-    e = event.add(plugin_id, "FEOpenDevice")
+    queue.add(plugin_id, ["s", "FEPluginOpenDevice", dev_id])
+    e = event.add(plugin_id, "FEPluginOpenDevice")
     try:
-        (identity, msg) = e.get()
+        (i, m) = e.get()
     except utils.FEShutdownException:
         return
 
     # Device process to system: Open or fail
     if msg[1] is False:
-        queue.add(plugin_id, ["FEClose"])
-        queue.add(identity, ["FEClaimDevice", dev_id, False])
+        queue.add(plugin_id, ["s", "FEClose"])
+        queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
         return
 
     # System to client: confirm device claim
-    queue.add(identity, ["FEClaimDevice", dev_id, True])
+    queue.add(identity, ["s", "FEClaimDevice", dev_id, True])
 
-    # TODO: Update some sort of system tracking for device/client claim!
-
+    if identity not in _ctd.keys():
+        _ctd[identity] = []
+    _ctd[identity].append(dev_id)
+    if dev_id not in _dtc.keys():
+        _dtc[dev_id] = []
+    _dtc[dev_id].append(identity)
 
 @utils.gevent_func
 def handle_release_device(identity=None, msg=None):
@@ -135,7 +215,7 @@ def handle_release_device(identity=None, msg=None):
     dev_id = msg[1]
 
     # Close the process
-    queue.add(plugin_id, ["FEClose"])
+    queue.add(plugin_id, ["s", "FEClose"])
 
 
 def is_plugin(identity):
