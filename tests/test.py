@@ -26,7 +26,7 @@ class ConfigTests(unittest.TestCase):
         """help test, should just bail out."""
         with mock.patch('sys.argv', ['fuckeverything', '-h']):
             try:
-                config.init_config()
+                config.init()
                 self.fail("Not throwing exception to quit program after help list!")
             except SystemExit:
                 pass
@@ -34,7 +34,7 @@ class ConfigTests(unittest.TestCase):
     def testDirectoryCreation(self):
         """create a new config directory and populate it"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-            config.init_config()
+            config.init()
         self.failIf(not os.path.exists(config._cdirs["config"]))
         self.failIf(not os.path.exists(config._cdirs["plugin"]))
 
@@ -42,7 +42,7 @@ class ConfigTests(unittest.TestCase):
         """do not create new directory if it doesn't exist, fail out instead"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir, "--config_no_create_dir"]):
             try:
-                config.init_config()
+                config.init()
                 self.fail("Not throwing exception on missing configuration directories!")
             except RuntimeError:
                 pass
@@ -50,9 +50,9 @@ class ConfigTests(unittest.TestCase):
     def testInvalidConfigValue(self):
         """throw when we get a bad config value"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-            config.init_config()
+            config.init()
         try:
-            config.get_config_value("testing")
+            config.get_value("testing")
             self.fail("Not throwing expection on missing configuration option!")
         except KeyError:
             pass
@@ -60,36 +60,36 @@ class ConfigTests(unittest.TestCase):
     def testValidConfigValue(self):
         """get a matching config value"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-            config.init_config()
-        v = config.get_config_value("server_address")
+            config.init()
+        v = config.get_value("server_address")
         self.failIf(v != config._config["server_address"])
 
     def testConfigFileCreation(self):
         """create config files correctly"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-            config.init_config()
+            config.init()
         self.failIf(not os.path.exists(os.path.join(config._cdirs["config"], "config.json")))
 
     def testConfigFileLoad(self):
         """load config files correctly"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-            config.init_config()
-            config.set_config_value("server_address", "ipc://wat")
+            config.init()
+            config.set_value("server_address", "ipc://wat")
             reload(config)
-            config.init_config()
-            self.failIf(config.get_config_value("server_address") != "ipc://wat")
+            config.init()
+            self.failIf(config.get_value("server_address") != "ipc://wat")
 
     def testInvalidConfigurationFileLoad(self):
         """throw on screwed config files correctly"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-            config.init_config()
-            config.set_config_value("server_address", "ipc://wat")
+            config.init()
+            config.set_value("server_address", "ipc://wat")
             # Insert gibberish!
             with open(os.path.join(config._cdirs["config"], "config.json"), "w") as f:
                 f.write("This is so not some fucking json")
             reload(config)
             try:
-                config.init_config()
+                config.init()
                 self.fail("Didn't fail on gibberish json!")
             except ValueError:
                 pass
@@ -97,14 +97,14 @@ class ConfigTests(unittest.TestCase):
     def testInvalidConfigurationKeyLoad(self):
         """throw on screwed config files correctly"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-            config.init_config()
-            config.set_config_value("server_address", "ipc://wat")
+            config.init()
+            config.set_value("server_address", "ipc://wat")
             # Insert bad key!
             with open(os.path.join(config._cdirs["config"], "config.json"), "w") as f:
                 json.dump({"server_addres": "tcp://127.0.0.1:9389"}, f)
             reload(config)
             try:
-                config.init_config()
+                config.init()
                 self.fail("Didn't fail on gibberish json!")
             except KeyError:
                 pass
@@ -120,7 +120,7 @@ class PluginTests(unittest.TestCase):
     def copyPlugin(self):
         # Copy plugin to directory here
         plugin_path = os.path.join(os.getcwd(), "tests", "example-plugin")
-        self.plugin_dest = os.path.join(config.get_config_dir("plugin"), "example")
+        self.plugin_dest = os.path.join(config.get_dir("plugin"), "example")
         shutil.copytree(plugin_path, self.plugin_dest)
 
     def tearDown(self):
@@ -130,14 +130,14 @@ class PluginTests(unittest.TestCase):
     def testNoPlugins(self):
         """have no plugins"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-            config.init_config()
+            config.init()
         plugin.scan_for_plugins()
         self.failIf(len(plugin.plugins_available()) > 0)
 
     def testOnePluginCorrectJSON(self):
         """have valid plugin"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-            config.init_config()
+            config.init()
         self.copyPlugin()
         plugin.scan_for_plugins()
         self.failIf(len(plugin.plugins_available()) == 0)
@@ -145,7 +145,7 @@ class PluginTests(unittest.TestCase):
     def testOnePluginIncorrectJSON(self):
         """have plugin with invalid json"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-            config.init_config()
+            config.init()
         # Copy plugin to directory here
         self.copyPlugin()
         # Edit json
@@ -157,7 +157,7 @@ class PluginTests(unittest.TestCase):
     def testValidCountProcess(self):
         """have plugin with live count process"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-            config.init_config()
+            config.init()
         self.copyPlugin()
         plugin.scan_for_plugins()
         plugin.start_plugin_counts()
@@ -169,7 +169,7 @@ class PluginTests(unittest.TestCase):
     def testInvalidCountProcess(self):
         """have plugin whose count process doesn't come up"""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-            config.init_config()
+            config.init()
         self.copyPlugin()
         plugin.scan_for_plugins()
         # Fuck with the plugin executable script
