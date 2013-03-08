@@ -20,13 +20,19 @@ def remove(identity):
     pass
 
 
-def kill_all():
-    for (i, p) in _mvars["processes"].items():
-        if p.poll():
-            queue.add(i, ["s", "FEClose"])
-    for (i, p) in _mvars["processes"].items():
-        logging.debug("Waiting on process %s to close...", i)
-        p.wait()
+def kill_all(try_close=True):
+    if try_close:
+        for (i, p) in _mvars["processes"].items():
+            if p.poll():
+                queue.add(i, ["s", "FEClose"])
+        for (i, p) in _mvars["processes"].items():
+            logging.debug("Waiting on process %s to close...", i)
+            p.wait()
+            del _mvars["processes"][i]
+    else:
+        for (i, p) in _mvars["processes"].items():
+            p.kill()
+            del _mvars["processes"][i]
 
 
 def add(cmd, identity=None):

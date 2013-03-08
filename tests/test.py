@@ -9,6 +9,7 @@ import time
 sys.path.append("/home/qdot/code/git-projects/fuckeverything")
 from fuckeverything import config
 from fuckeverything import plugin
+from fuckeverything import process
 # from fuckeverything import queue
 # from fuckeverything import system
 # from fuckeverything import heartbeat
@@ -124,7 +125,8 @@ class PluginTests(unittest.TestCase):
         shutil.copytree(plugin_path, self.plugin_dest)
 
     def tearDown(self):
-        #shutil.rmtree(self.tmpdir)
+        process.kill_all(False)
+        shutil.rmtree(self.tmpdir)
         pass
 
     def testNoPlugins(self):
@@ -162,6 +164,7 @@ class PluginTests(unittest.TestCase):
         plugin.scan_for_plugins()
         plugin.start_plugin_counts()
         # Put a sleep in, so that the count process can actually come up
+        # TODO: Make this a registration test instead of a sleep
         time.sleep(.1)
         # If plugin count process doesn't come up, it's removed from list
         self.failIf(len(plugin.plugins_available()) == 0)
