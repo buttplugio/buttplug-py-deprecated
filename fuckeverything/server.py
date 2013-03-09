@@ -41,6 +41,11 @@ def msg_loop():
         _zmq["router"].send(msg)
 
 
+def shutdown():
+    _zmq["router"].close()
+    _zmq["queue"].close()
+
+
 def start():
     """Start server loop"""
     # Bring up logging, fill out configuration values
@@ -62,7 +67,8 @@ def start():
         while True:
             msg_loop()
     except KeyboardInterrupt:
-        _zmq["router"].close()
+        pass
+    shutdown()
     process.kill_all()
     event.kill_all()
     utils.gevent_join()
