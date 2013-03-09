@@ -65,6 +65,7 @@ def init():
 
 
 def get_value(key):
+    """ Get a value from the config file """
     if key not in _config.keys():
         raise KeyError("Config value %s does not exist!" % key)
     logging.debug("Config value %s is %s", key, _config[key])
@@ -72,6 +73,7 @@ def get_value(key):
 
 
 def set_value(key, value):
+    """ Set a value, save config file """
     if key not in _config.keys():
         raise KeyError("Config value %s does not exist!" % key)
     _config[key] = value
@@ -80,6 +82,7 @@ def set_value(key, value):
 
 
 def get_dir(key):
+    """ Get a directory path, either plugin or config """
     if key not in _cdirs.keys():
         raise KeyError("Config dir %s does not exist!" % key)
     logging.debug("Config dir %s is %s", key, _cdirs[key])
