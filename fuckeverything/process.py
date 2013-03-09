@@ -3,17 +3,9 @@ import subprocess
 import logging
 import string
 import random
+from fuckeverything import utils
 
 _mvars = {"processes": {}}
-
-
-def _random_ident():
-    """Generate a random string of letters and digits to use as zmq router
-    socket identity
-
-    """
-    return ''.join(random.choice(string.ascii_uppercase + string.digits)
-                   for x in range(8))
 
 
 def remove(identity):
@@ -37,7 +29,7 @@ def kill_all(try_close=True):
 
 def add(cmd, identity=None):
     if not identity:
-        identity = _random_ident()
+        identity = utils.random_ident()
     cmd += ["--identity=%s" % identity]
     try:
         logging.debug("Plugin Process: Running %s", cmd)
