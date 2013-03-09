@@ -1,5 +1,5 @@
 ;; http://www.emacswiki.org/emacs/DirectoryVariables
-
+;; http://stackoverflow.com/questions/4012321/how-can-i-access-the-path-to-the-current-directory-in-an-emacs-directory-variabl
 ((nil .
       ((eval . (setq qdot/project-directory (locate-dominating-file buffer-file-name ".dir-locals.el")))))
  (python-mode .
