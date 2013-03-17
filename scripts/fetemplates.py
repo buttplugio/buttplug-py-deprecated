@@ -4,7 +4,7 @@ import random
 import string
 import time
 import gevent
-from gevent_zeromq import zmq
+import zmq.green as zmq
 
 
 def random_ident():
