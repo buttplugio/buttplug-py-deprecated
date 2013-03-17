@@ -6,7 +6,7 @@ from fuckeverything import heartbeat
 from fuckeverything import utils
 from fuckeverything import event
 from fuckeverything import process
-from gevent_zeromq import zmq
+import zmq.green as zmq
 import msgpack
 import logging
 

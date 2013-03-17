@@ -213,7 +213,9 @@ CLOSED: [2013-03-02 Sat 22:11]
 **** DONE Set up gevent per heartbeat
 CLOSED: [2013-03-03 Sun 14:26]
 - State "DONE"       from "TODO"       [2013-03-03 Sun 14:26]
-**** TODO Figure out how to fail?
+**** DONE Figure out how to fail?
+CLOSED: [2013-03-09 Sat 00:29]
+- State "DONE"       from "TODO"       [2013-03-09 Sat 00:29]
 *** Main Server Message Loop
 *** Client Lifetime
 *** Plugin Lifetime

@@ -1,4 +1,4 @@
-from gevent_zeromq import zmq
+import zmq.green as zmq
 import logging
 import msgpack
 

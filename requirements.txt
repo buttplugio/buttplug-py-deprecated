@@ -1,8 +1,7 @@
-fuckeverything
-Cython==0.17.2
-gevent==0.13.8
-msgpack-python==0.2.2
+Cython
+gevent
+msgpack-python
 pyzmq
-gevent_zeromq
 nose
 mock
+

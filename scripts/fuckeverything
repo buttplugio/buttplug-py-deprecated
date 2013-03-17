@@ -2,8 +2,6 @@
 
 import sys
 import fuckeverything.server
-import greenlet
-import hid
 
 def main():
     fuckeverything.server.start()
