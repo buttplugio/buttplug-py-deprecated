@@ -1,11 +1,11 @@
-from fuckeverything import config
-from fuckeverything import plugin
-from fuckeverything import queue
-from fuckeverything import system
-from fuckeverything import heartbeat
-from fuckeverything import utils
-from fuckeverything import event
-from fuckeverything import process
+from fuckeverything.core import config
+from fuckeverything.core import plugin
+from fuckeverything.core import queue
+from fuckeverything.core import system
+from fuckeverything.core import heartbeat
+from fuckeverything.core import utils
+from fuckeverything.core import event
+from fuckeverything.core import process
 import zmq.green as zmq
 import msgpack
 import logging

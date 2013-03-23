@@ -1,7 +1,7 @@
-from fuckeverything import queue
-from fuckeverything import event
-from fuckeverything import config
-from fuckeverything.utils import gevent_func, FEShutdownException
+from fuckeverything.core import queue
+from fuckeverything.core import event
+from fuckeverything.core import config
+from fuckeverything.core.utils import gevent_func, FEShutdownException
 import gevent
 import logging
 

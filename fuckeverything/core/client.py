@@ -1,7 +1,7 @@
 import logging
-from fuckeverything import utils
-from fuckeverything import queue
-from fuckeverything import heartbeat
+from fuckeverything.core import utils
+from fuckeverything.core import queue
+from fuckeverything.core import heartbeat
 
 _clients = []
 

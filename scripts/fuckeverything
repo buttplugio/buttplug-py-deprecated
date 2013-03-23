@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
 import sys
-import fuckeverything.server
+import fuckeverything.core.server
 
 def main():
-    fuckeverything.server.start()
+    fuckeverything.core.server.start()
 
 if __name__ == '__main__':
     sys.exit(main())

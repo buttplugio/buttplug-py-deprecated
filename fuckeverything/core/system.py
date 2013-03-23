@@ -1,9 +1,9 @@
-from fuckeverything import plugin
-from fuckeverything import feinfo
-from fuckeverything import queue
-from fuckeverything import event
-from fuckeverything import utils
-from fuckeverything import client
+from fuckeverything.core import plugin
+from fuckeverything.core import feinfo
+from fuckeverything.core import queue
+from fuckeverything.core import event
+from fuckeverything.core import utils
+from fuckeverything.core import client
 import logging
 
 _msg_table = {}

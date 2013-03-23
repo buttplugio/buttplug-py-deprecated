@@ -1,4 +1,4 @@
-from fuckeverything.templates import base
+from fuckeverything.template import base
 
 
 class FEClient(base.FEBase):
@@ -8,5 +8,4 @@ class FEClient(base.FEBase):
 
     def register(self):
         self.send(["s", "FERegisterClient", self.APP_NAME])
-
 

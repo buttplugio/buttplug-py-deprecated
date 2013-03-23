@@ -1,4 +1,4 @@
-from fuckeverything.templates import base
+from fuckeverything.template import base
 
 
 class FEPlugin(base.FEBase):

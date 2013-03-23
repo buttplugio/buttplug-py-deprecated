@@ -3,7 +3,7 @@ import subprocess
 import logging
 import string
 import random
-from fuckeverything import utils
+from fuckeverything.core import utils
 
 _mvars = {"processes": {}}
 

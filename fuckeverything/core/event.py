@@ -1,7 +1,7 @@
 import gevent
 import logging
 import msgpack
-from fuckeverything import utils
+from fuckeverything.core import utils
 
 _mvars = {"_socket_events": {}}
 QUEUE_ADDRESS = "inproc://fequeue"
