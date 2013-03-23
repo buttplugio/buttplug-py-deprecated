@@ -1,7 +1,8 @@
 #!/usr/bin/python
-from fetemplates import FEClient
 import sys
+from fuckeverything.template.client import FEClient
 import gevent
+
 
 class FETestClient(FEClient):
     """

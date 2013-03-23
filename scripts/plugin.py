@@ -1,6 +1,6 @@
 #!/usr/bin/python
-from fetemplates import FEPlugin
 import sys
+from fuckeverything.template.plugin import FEPlugin
 
 
 class TestPlugin(FEPlugin):
