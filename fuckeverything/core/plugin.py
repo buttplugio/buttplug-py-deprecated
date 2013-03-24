@@ -180,8 +180,14 @@ def handle_claim_device(identity=None, msg=None):
     # Device process to system: Register with known identity
     e = event.add(plugin_id, "FEPluginRegisterClaim")
     try:
-        (i, m) = e.get()
+        (i, m) = e.get(timeout=5)
     except utils.FEShutdownException:
+        # If we shut down now, just drop
+        return
+    except gevent.Timeout:
+        # If we timeout, fail the claim
+        queue.add(plugin_id, ["s", "FEClose"])
+        queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
         return
 
     # System to device process: Open device
@@ -207,6 +213,7 @@ def handle_claim_device(identity=None, msg=None):
     if dev_id not in _dtc.keys():
         _dtc[dev_id] = []
     _dtc[dev_id].append(identity)
+
 
 @utils.gevent_func
 def handle_release_device(identity=None, msg=None):

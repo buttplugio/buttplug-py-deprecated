@@ -18,6 +18,7 @@ from fuckeverything.core import heartbeat
 from fuckeverything.core import queue
 from fuckeverything.core import system
 from fuckeverything.core import server
+from fuckeverything.template.client import FEClient
 
 
 _test_plugin_json = {"name": "Test Plugin",
@@ -35,43 +36,19 @@ def _copy_test_plugin(base_dir):
     shutil.copytree(os.path.join(os.getcwd(), "fuckeverything"), os.path.join(base_dir, "fuckeverything"))
 
 
-class TestSocket(object):
+class TestClient(FEClient):
+
     def __init__(self, port):
-        self.context = zmq.Context()
-        self.identity = utils.random_ident()
-        self.socket_queue = self.context.socket(zmq.PUSH)
-        self.socket_queue.bind("inproc://fe-%s" % (self.identity))
-        self.socket_out = self.context.socket(zmq.PULL)
-        self.socket_out.connect("inproc://fe-%s" % (self.identity))
-        self.socket_client = self.context.socket(zmq.DEALER)
-        self.socket_client.setsockopt(zmq.IDENTITY, self.identity)
-        self.socket_client.connect(port)
+        super(TestClient, self).__init__()
+        self.server_port = port
 
-    def send(self, msg):
-        self.socket_queue.send(msgpack.packb(msg))
+    # Override command line parsing since we don't have one
+    def setup_parser(self):
+        return True
 
-    def parse_message(self, msg):
-        raise RuntimeError("Needs to be defined by test!")
-
-    def run(self):
-        while True:
-            poller = zmq.Poller()
-            poller.register(self.socket_client, zmq.POLLIN)
-            poller.register(self.socket_out, zmq.POLLIN)
-
-            socks = dict(poller.poll(10))
-            if self.socket_client in socks and socks[self.socket_client] == zmq.POLLIN:
-                msg = self.socket_client.recv()
-                self.parse_message(msgpack.unpackb(msg))
-
-            if self.socket_out in socks and socks[self.socket_out] == zmq.POLLIN:
-                msg = self.socket_out.recv()
-                self.socket_client.send(msg)
-
-    def close(self):
-        self.socket_client.close()
-        self.socket_queue.close()
-        self.socket_out.close()
+    # Override command line parsing since we don't have one
+    def parse_arguments(self):
+        return True
 
 
 class ConfigTests(unittest.TestCase):
@@ -228,20 +205,19 @@ class PluginTests(unittest.TestCase):
 
 class HeartbeatTests(unittest.TestCase):
 
-    class HeartbeatTestSocket(TestSocket):
+    class HeartbeatTestSocket(TestClient):
         def __init__(self, port, evt):
             super(HeartbeatTests.HeartbeatTestSocket, self).__init__(port)
             self.ping_count = 0
             self.evt = evt
 
-        def parse_message(self, msg):
-            msg_dest = msg[0]
-            msg_type = msg[1]
-            if msg_type == "FEPing":
-                self.send(["s", "FEPing"])
-                self.ping_count = self.ping_count + 1
-                if self.ping_count == 3:
-                    self.evt.set()
+        # Override ping reply of base class
+        def ping_reply(self, msg):
+            self.last_ping = time.time()
+            self.send(["s", "FEPing"])
+            self.ping_count = self.ping_count + 1
+            if self.ping_count == 3:
+                self.evt.set()
 
     def setUp(self):
         reload(config)
@@ -257,7 +233,6 @@ class HeartbeatTests(unittest.TestCase):
         self.e = gevent.event.Event()
         # Start a new socket
         self.s = HeartbeatTests.HeartbeatTestSocket(config.get_value("server_address"), self.e)
-        # sorten ping rates so things don't take forever
         # Attach to router
         self.r = gevent.spawn(self.s.run)
 

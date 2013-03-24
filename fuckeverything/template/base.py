@@ -31,7 +31,7 @@ class FEBase(object):
         self.server_port = None
         self.last_ping = time.time()
         self.identity = random_ident()
-        self.inmsg = {"FEClose": self.close_socket,
+        self.inmsg = {"FEClose": self.close,
                       "FEPing": self.ping_reply}
         self.context = zmq.Context()
         self.socket_queue = self.context.socket(zmq.PUSH)
@@ -42,7 +42,7 @@ class FEBase(object):
 
     def ping_check(self):
         if time.time() - self.last_ping > 3:
-            self.close_socket()
+            self.close()
             self.exit_now = True
             return
         gevent.spawn_later(1, self.ping_check)
@@ -78,7 +78,7 @@ class FEBase(object):
     def send(self, msg):
         self.socket_queue.send(msgpack.packb(msg))
 
-    def close_socket(self, msg=None):
+    def close(self, msg=None):
         self.exit_now = True
 
     def ping_reply(self, msg):

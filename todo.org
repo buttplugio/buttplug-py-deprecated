@@ -142,21 +142,33 @@ CLOSED: [2013-03-01 Fri 18:51]
 *** DONE Handle plugin count startup errors
 CLOSED: [2013-03-01 Fri 19:10]
 - State "DONE"       from "TODO"       [2013-03-01 Fri 19:10]
-
-*** TODO Make sure message requeuing works even when double messages sent
-*** TODO Shorten function names for module scoped functions
+*** DONE Cross platform cx-freeze testing
+CLOSED: [2013-03-23 Sat 20:18]
+- State "DONE"       from "TODO"       [2013-03-23 Sat 20:18]
+*** DONE Shorten function names for module scoped functions
+CLOSED: [2013-03-23 Sat 20:18]
+- State "DONE"       from "TODO"       [2013-03-23 Sat 20:18]
+*** DONE Handle plugin claim startup errors
+CLOSED: [2013-03-23 Sat 20:20]
+- State "DONE"       from "TODO"       [2013-03-23 Sat 20:20]
+*** DONE Have server do error handling if plugin device handling process doesn't come up in time
+CLOSED: [2013-03-23 Sat 20:24]
+- State "DONE"       from "TODO"       [2013-03-23 Sat 20:24]
+*** CANCELLED Figure out way to clear pyc's properly
+CLOSED: [2013-03-23 Sat 20:28]
+- State "CANCELLED"  from "TODO"       [2013-03-23 Sat 20:28]
+*** DONE Write command line arguments and config file parsing
+CLOSED: [2013-03-23 Sat 20:28]
+- State "DONE"       from "TODO"       [2013-03-23 Sat 20:28]
 *** TODO Make sure client disconnect means claims are released
-*** TODO Handle plugin claim startup errors
-*** TODO Have server do error handling if plugin device handling process doesn't come up in time
+*** TODO Make sure client disconnect removes heartbeat
+*** TODO Make sure message requeuing works even when double messages sent
 *** TODO Register plugin handled messages
 *** TODO Log subprocess output to logging module
 http://www.velocityreviews.com/forums/t612189-subprocess-popen-output-to-logging-streamhandler.html
-*** TODO Figure out way to clear pyc's properly
 *** TODO Figure out how clients will refer to devices they've claimed
 *** TODO Warn clients of disconnect on main process shutdown
-*** TODO Cross platform cx-freeze testing
 *** TODO Assign random names to client sockets?
-*** TODO Write command line arguments and config file parsing
 ** Plugins
 *** DONE Write raw message plugin for RealTouch
 CLOSED: [2012-12-11 Tue 23:50]
