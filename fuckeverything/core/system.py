@@ -4,15 +4,19 @@ from fuckeverything.core import queue
 from fuckeverything.core import event
 from fuckeverything.core import utils
 from fuckeverything.core import client
+from fuckeverything.core import heartbeat
 import logging
 
 _msg_table = {}
 
 
 def close_external(identity):
+    heartbeat.remove(identity)
     if plugin.is_plugin(identity):
+        # Drop claims from clients
         pass
     elif client.is_client(identity):
+        # Drop claims for plugins
         pass
 
 

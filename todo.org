@@ -160,8 +160,11 @@ CLOSED: [2013-03-23 Sat 20:28]
 *** DONE Write command line arguments and config file parsing
 CLOSED: [2013-03-23 Sat 20:28]
 - State "DONE"       from "TODO"       [2013-03-23 Sat 20:28]
+*** DONE Make sure client disconnect removes heartbeat
+CLOSED: [2013-03-23 Sat 23:31]
+- State "DONE"       from "TODO"       [2013-03-23 Sat 23:31]
+*** TODO Add identity to greenlet names if it's a parameter to the function
 *** TODO Make sure client disconnect means claims are released
-*** TODO Make sure client disconnect removes heartbeat
 *** TODO Make sure message requeuing works even when double messages sent
 *** TODO Register plugin handled messages
 *** TODO Log subprocess output to logging module

@@ -7,6 +7,7 @@ import logging
 
 _removal = []
 
+
 def _check_removal(identity):
     if identity in _removal:
         _removal.remove(identity)
@@ -14,7 +15,7 @@ def _check_removal(identity):
     return False
 
 
-@gevent_func
+@gevent_func("heartbeat")
 def start(identity):
     while True:
         if _check_removal(identity):

@@ -4,6 +4,7 @@ import random
 import string
 
 _pool = gevent.pool.Group()
+_live_greenlets = []
 
 
 class FEShutdownException(Exception):
@@ -23,13 +24,20 @@ def gevent_join():
     _pool.join()
 
 
-def gevent_func(func):
-    def log_run_func(*args, **kwargs):
-        logging.debug("gevent spawn: %s", func.__name__)
-        func(*args, **kwargs)
-        logging.debug("gevent shutdown: %s", func.__name__)
+class gevent_func(object):
 
-    def spawn_func(*args, **kwargs):
-        return _pool.spawn(log_run_func, *args, **kwargs)
+    def __init__(self, name):
+        self.name = name
 
-    return spawn_func
+    def __call__(self, func):
+        def log_run_func(*args, **kwargs):
+            logging.debug("gevent spawn: %s", func.__name__)
+            _live_greenlets.append(self.name)
+            func(*args, **kwargs)
+            _live_greenlets.remove(self.name)
+            logging.debug("gevent shutdown: %s", func.__name__)
+
+        def spawn_func(*args, **kwargs):
+            return _pool.spawn(log_run_func, *args, **kwargs)
+
+        return spawn_func

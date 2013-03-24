@@ -7,7 +7,7 @@ _mvars = {"_socket_events": {}}
 QUEUE_ADDRESS = "inproc://fequeue"
 
 
-@utils.gevent_func
+@utils.gevent_func("send_event_table")
 def _send_event_table():
     while True:
         e = add("s", "FESendEventTable")

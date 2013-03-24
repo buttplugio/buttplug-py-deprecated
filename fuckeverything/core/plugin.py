@@ -64,7 +64,7 @@ def scan_for_plugins():
         _plugins[plugin.name] = plugin
 
 
-@utils.gevent_func
+@utils.gevent_func("get_device_list")
 def get_device_list():
     while True:
         for p in _plugins.values():
@@ -104,7 +104,7 @@ def plugins_available():
     return _plugins.keys()
 
 
-@utils.gevent_func
+@utils.gevent_func("handle_count_plugin")
 def handle_count_plugin(identity=None, msg=None):
     heartbeat.start(identity)
     while True:
@@ -155,7 +155,7 @@ def forward_device_msg(identity, msg):
     queue.add(to_addr, new_msg)
 
 
-@utils.gevent_func
+@utils.gevent_func("handle_claim_device")
 def handle_claim_device(identity=None, msg=None):
     # Figure out the plugin that owns the device we want
     p = None
@@ -215,7 +215,7 @@ def handle_claim_device(identity=None, msg=None):
     _dtc[dev_id].append(identity)
 
 
-@utils.gevent_func
+@utils.gevent_func("handle_release_device")
 def handle_release_device(identity=None, msg=None):
     # Figure out the identity of the process that owns the device
     p = None
