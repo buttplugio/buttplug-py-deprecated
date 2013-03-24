@@ -9,16 +9,16 @@ import time
 import msgpack
 import logging
 import gevent
-from gevent_zeromq import zmq
+import zmq.green as zmq
 sys.path.append("/home/qdot/code/git-projects/fuckeverything")
-from fuckeverything import config
-from fuckeverything import plugin
-from fuckeverything import process
-from fuckeverything import utils
-from fuckeverything import heartbeat
-from fuckeverything import queue
-from fuckeverything import system
-from fuckeverything import server
+from fuckeverything.core import config
+from fuckeverything.core import plugin
+from fuckeverything.core import process
+from fuckeverything.core import utils
+from fuckeverything.core import heartbeat
+from fuckeverything.core import queue
+from fuckeverything.core import system
+from fuckeverything.core import server
 
 
 class TestSocket(object):
