@@ -21,6 +21,21 @@ from fuckeverything.core import system
 from fuckeverything.core import server
 
 
+_test_plugin_json = {"name": "Test Plugin",
+                     "version": "0.001",
+                     "executable": "test-plugin",
+                     "messages": ["RawTestMsg", "FEDeviceCount"]}
+
+
+def _copy_test_plugin(base_dir):
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
+    with open(os.path.join(base_dir, "feplugin.json"), "w") as f:
+        json.dump(_test_plugin_json, f)
+    shutil.copy(os.path.join(os.getcwd(), "scripts", "test-plugin"), base_dir)
+    shutil.copytree(os.path.join(os.getcwd(), "fuckeverything"), os.path.join(base_dir, "fuckeverything"))
+
+
 class TestSocket(object):
     def __init__(self, port):
         self.context = zmq.Context()
@@ -157,15 +172,13 @@ class PluginTests(unittest.TestCase):
         reload(config)
         reload(plugin)
         self.tmpdir = tempfile.mkdtemp()
-        self.plugin_dest = ""
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init()
+        self.plugin_dest = os.path.join(config.get_dir("plugin"), "test-plugin")
 
     def copyPlugin(self):
         # Copy plugin to directory here
-        plugin_path = os.path.join(os.getcwd(), "tests", "example-plugin")
-        self.plugin_dest = os.path.join(config.get_dir("plugin"), "example")
-        shutil.copytree(plugin_path, self.plugin_dest)
+        _copy_test_plugin(self.plugin_dest)
 
     def tearDown(self):
         process.kill_all(False)
@@ -209,7 +222,7 @@ class PluginTests(unittest.TestCase):
         self.copyPlugin()
         plugin.scan_for_plugins()
         # Fuck with the plugin executable script
-        with open(os.path.join(self.plugin_dest, "scripts", "plugin.py"), "w") as f:
+        with open(os.path.join(self.plugin_dest, "test-plugin"), "w") as f:
             f.write("This is so not executable")
         plugin.start_plugin_counts()
         self.failIf(len(plugin.plugins_available()) > 0)
