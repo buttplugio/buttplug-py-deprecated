@@ -10,7 +10,6 @@ import msgpack
 import logging
 import gevent
 import zmq.green as zmq
-sys.path.append("/home/qdot/code/git-projects/fuckeverything")
 from fuckeverything.core import config
 from fuckeverything.core import plugin
 from fuckeverything.core import process
@@ -183,7 +182,6 @@ class PluginTests(unittest.TestCase):
     def tearDown(self):
         process.kill_all(False)
         shutil.rmtree(self.tmpdir)
-        pass
 
     def testNoPlugins(self):
         """have no plugins"""
