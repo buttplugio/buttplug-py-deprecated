@@ -120,10 +120,12 @@ class FEBase(object):
                     msg = self.socket_out.recv()
                     self.socket_client.send(msg)
         except KeyboardInterrupt:
-            self.exit_now = True
+            pass
         self.socket_client.send(msgpack.packb(["s", "FEClose"]))
+        # There has got to be a better way to make sure we send close messages. :|
+        gevent.sleep(.1)
         self.socket_client.close()
         self.socket_queue.close()
         self.socket_out.close()
+        self.context.destroy()
         return 0
-

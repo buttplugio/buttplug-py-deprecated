@@ -332,7 +332,10 @@ class ClientTests(unittest.TestCase):
         # Let some stuff happen
         gevent.sleep(.05)
         self.test_socket.close()
-        close_event.get(timeout=1)
+        try:
+            close_event.get(timeout=.5)
+        except gevent.Timeout:
+            self.fail("Close timed out! Never received close message!")
         self.failIf(not close_event.successful())
         system._handle_close(self.test_socket.identity, None)
         gevent.sleep(.05)

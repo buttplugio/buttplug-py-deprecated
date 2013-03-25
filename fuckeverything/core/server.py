@@ -6,6 +6,7 @@ from fuckeverything.core import heartbeat
 from fuckeverything.core import utils
 from fuckeverything.core import event
 from fuckeverything.core import process
+import gevent
 import zmq.green as zmq
 import msgpack
 import logging
@@ -44,7 +45,8 @@ def msg_loop():
 def shutdown():
     _zmq["router"].close()
     _zmq["queue"].close()
-
+    queue.close()
+    _zmq["context"].destroy()
 
 def start():
     """Start server loop"""
