@@ -47,7 +47,7 @@ def init():
     if not os.path.exists(_cdirs["config"]):
         if args.config_no_create_dir:
             raise RuntimeError("Configuration directory does not exist!")
-        logging.debug("Creating directory %s", _cdirs["config_dir"])
+        logging.debug("Creating directory %s", _cdirs["config"])
         os.makedirs(_cdirs["config"])
     if not os.path.exists(os.path.join(_cdirs["config"], "config.json")):
         _save()
