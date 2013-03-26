@@ -122,7 +122,9 @@ class FEBase(object):
         except KeyboardInterrupt:
             pass
         self.socket_client.send(msgpack.packb(["s", "FEClose"]))
-        # There has got to be a better way to make sure we send close messages. :|
+        # There has got to be a better way to make sure we send close messages,
+        # but fuck if I can figure it out. I suppose if we don't, the heartbeat
+        # on the server will take care of it. :|
         gevent.sleep(.1)
         self.socket_client.close()
         self.socket_queue.close()
