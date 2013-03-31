@@ -8,4 +8,3 @@ class FEClient(base.FEBase):
 
     def register(self):
         self.send(["s", "FERegisterClient", self.APP_NAME])
-

@@ -42,6 +42,7 @@ class FEBase(object):
 
     def ping_check(self):
         if time.time() - self.last_ping > 3:
+            print "Server timed out, disconnecting..."
             self.close()
             self.exit_now = True
             return
@@ -53,8 +54,7 @@ class FEBase(object):
         if msg_type in self.inmsg.keys():
             self.inmsg[msg_type](msg)
             return
-        print msg
-        print "No handler for %s messages" % msg[0]
+        print "No handler for %s messages" % msg[1]
 
     def setup_parser(self):
         self.parser = argparse.ArgumentParser(description=self.APP_DESC)
@@ -79,6 +79,7 @@ class FEBase(object):
         self.socket_queue.send(msgpack.packb(msg))
 
     def close(self, msg=None):
+        print "Close requested, disconnecting..."
         self.exit_now = True
 
     def ping_reply(self, msg):
@@ -89,7 +90,7 @@ class FEBase(object):
         pass
 
     def register(self):
-        raise RuntimeError("FEBase should not be used underived!")
+        raise RuntimeError("Must define own register function!")
 
     def run(self):
         """deal with network packets until told to quit"""
@@ -98,17 +99,16 @@ class FEBase(object):
             print "Argument error!"
             return 1
         self.socket_client = self.context.socket(zmq.DEALER)
-        if self.socket_identity:
-            self.socket_client.setsockopt(zmq.IDENTITY, self.socket_identity)
-        else:
-            self.socket_client.setsockopt(zmq.IDENTITY, random_ident())
+        if self.socket_identity is None:
+            self.socket_identity = random_ident()
+        self.socket_client.setsockopt(zmq.IDENTITY, self.socket_identity)
+
         self.socket_client.connect(self.server_port)
         poller = zmq.Poller()
         poller.register(self.socket_client, zmq.POLLIN)
         poller.register(self.socket_out, zmq.POLLIN)
 
         self.register()
-
         try:
             while not self.exit_now:
                 socks = dict(poller.poll(10))

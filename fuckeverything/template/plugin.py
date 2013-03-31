@@ -41,3 +41,7 @@ class FEPlugin(base.FEBase):
 
     def open_device(self, msg):
         raise RuntimeError("Define your own damn open_device!")
+
+    def run(self):
+        base.FEBase.run(self)
+        self.release_device(None)
