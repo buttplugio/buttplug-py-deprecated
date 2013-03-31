@@ -166,6 +166,7 @@ CLOSED: [2013-03-23 Sat 23:31]
 *** DONE Figure out how clients will refer to devices they've claimed
 CLOSED: [2013-03-25 Mon 20:58]
 - State "DONE"       from "TODO"       [2013-03-25 Mon 20:58]
+*** TODO Add a way to know if we're trying to close something that doesn't have a heartbeat
 *** TODO Add ability to use json or msgpack
 *** TODO Add identity to greenlet names if it's a parameter to the function
 *** TODO Make sure client disconnect means claims are released
