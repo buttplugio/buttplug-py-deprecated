@@ -26,7 +26,7 @@ def start(identity):
             e.get(block=True, timeout=config.get_value("ping_max"))
         except gevent.Timeout:
             if not _check_removal(identity):
-                logging.debug("identity %s died", identity)
+                logging.info("Identity %s died", identity)
             return False
         except FEShutdownException:
             logging.debug("FE Closing, shutting down")
