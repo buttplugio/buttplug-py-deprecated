@@ -48,7 +48,9 @@ def shutdown():
     _zmq["queue"].close()
     queue.close()
     _zmq["context"].destroy()
-    process.kill_all()
+    # TODO: Right now we hard kill processes on the way down. This should be
+    # done nicely via FEClose.
+    process.kill_all(False)
     event.kill_all()
     utils.gevent_join()
 
