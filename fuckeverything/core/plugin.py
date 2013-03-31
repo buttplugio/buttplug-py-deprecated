@@ -169,6 +169,12 @@ def handle_claim_device(identity=None, msg=None):
         queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
         return
 
+    # See whether we already have a claim on the device
+    if dev_id in _dtc.keys():
+        logging.warning("Device %s already claimed, failing claim", dev_id)
+        queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
+        return
+
     # Client to system: bring up device process.
     #
     # Just name the new plugin process socket identity after the device id,
@@ -186,9 +192,13 @@ def handle_claim_device(identity=None, msg=None):
         return
     except gevent.Timeout:
         # If we timeout, fail the claim
+        logging.info("Device %s failed to start...", plugin_id)
         queue.add(plugin_id, ["s", "FEClose"])
         queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
         return
+
+    # Add a heartbeat now that the process is up
+    heartbeat.start(plugin_id)
 
     # System to device process: Open device
     queue.add(plugin_id, ["s", "FEPluginOpenDevice", dev_id])
@@ -197,9 +207,9 @@ def handle_claim_device(identity=None, msg=None):
         (i, m) = e.get()
     except utils.FEShutdownException:
         return
-
     # Device process to system: Open or fail
-    if msg[1] is False:
+    if m[3] is False:
+        logging.info("Device %s failed to open...", plugin_id)
         queue.add(plugin_id, ["s", "FEClose"])
         queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
         return
