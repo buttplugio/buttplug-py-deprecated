@@ -101,7 +101,7 @@ def plugins_available():
     """
     Return the list of all plugins available on the system
     """
-    return _plugins.keys()
+    return _plugins.values()
 
 
 @utils.gevent_func("handle_count_plugin")

@@ -163,19 +163,24 @@ CLOSED: [2013-03-23 Sat 20:28]
 *** DONE Make sure client disconnect removes heartbeat
 CLOSED: [2013-03-23 Sat 23:31]
 - State "DONE"       from "TODO"       [2013-03-23 Sat 23:31]
+*** DONE Figure out how clients will refer to devices they've claimed
+CLOSED: [2013-03-25 Mon 20:58]
+- State "DONE"       from "TODO"       [2013-03-25 Mon 20:58]
+*** TODO Add ability to use json or msgpack
 *** TODO Add identity to greenlet names if it's a parameter to the function
 *** TODO Make sure client disconnect means claims are released
 *** TODO Make sure message requeuing works even when double messages sent
 *** TODO Register plugin handled messages
 *** TODO Log subprocess output to logging module
 http://www.velocityreviews.com/forums/t612189-subprocess-popen-output-to-logging-streamhandler.html
-*** TODO Figure out how clients will refer to devices they've claimed
 *** TODO Warn clients of disconnect on main process shutdown
 *** TODO Assign random names to client sockets?
 ** Plugins
 *** DONE Write raw message plugin for RealTouch
 CLOSED: [2012-12-11 Tue 23:50]
-- State "DONE"       from "TODO"       [2012-12-11 Tue 23:50]
+- State "DONE"       from "TODO"       [2012-12-11 Tue 23:50
+*** TODO Make test plugin hold temp files to act like device claims
+*** TODO Add "test" devices to test plugin for testing timeouts, disappears, etc...
 *** TODO Properly handle Unicode Manufacturer and Product strings in USB descriptors
 *** TODO Write game control vibrator plugin
 *** TODO Write socket.io based webvibrator plugin
@@ -185,6 +190,9 @@ CLOSED: [2012-12-11 Tue 23:50]
 *** TODO Write original interactive fleshlight plugin?
 *** TODO Write virtual hole plugin
 *** TODO Write Ju-C Air plugin
+*** TODO Write realtouch plugin
+*** TODO Write vstroker plugin
+*** TODO Write phone sensor plugin
 ** Testing
 *** Core
 **** DONE Help Message

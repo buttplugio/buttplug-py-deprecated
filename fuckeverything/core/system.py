@@ -5,6 +5,7 @@ from fuckeverything.core import event
 from fuckeverything.core import utils
 from fuckeverything.core import client
 from fuckeverything.core import heartbeat
+from collections import defaultdict
 import logging
 
 _msg_table = {}
@@ -38,14 +39,17 @@ def _handle_server_info(identity, msg):
 
 
 def _handle_plugin_list(identity, msg):
-    queue.add(identity, ["s", "FEPluginList", [{"name": p.plugin_info["name"],
-                                                "version": p.plugin_info["version"]}
+    queue.add(identity, ["s", "FEPluginList", [{"name": p.name,
+                                                "version": p.version}
                                                for p in plugin.plugins_available()]])
     return True
 
 
 def _handle_device_list(identity, msg):
-    queue.add(identity, ["s", "FEDeviceList", plugin._devices])
+    devices = []
+    for (k, v) in plugin._devices.items():
+        devices.append({"name": k, "devices": v})
+    queue.add(identity, ["s", "FEDeviceList", devices])
     return True
 
 
@@ -68,7 +72,7 @@ def parse_message(identity, msg):
         return
     msg_address = msg[0]
     msg_type = msg[1]
-    logging.debug("New message %s", msg_type)
+    logging.info("New message %s from %s", msg_type, identity)
     # System Message
     if msg_address == "s":
         if msg_type in _msg_table.keys():
