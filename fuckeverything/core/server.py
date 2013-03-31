@@ -28,7 +28,8 @@ def init():
 
 
 def msg_loop():
-    socks = dict(_zmq["poller"].poll())
+    # Timeout the poll every so often, otherwise things can get stuck
+    socks = dict(_zmq["poller"].poll(timeout=1))
 
     if _zmq["router"] in socks and socks[_zmq["router"]] == zmq.POLLIN:
         identity = _zmq["router"].recv()
@@ -47,11 +48,14 @@ def shutdown():
     _zmq["queue"].close()
     queue.close()
     _zmq["context"].destroy()
+    process.kill_all()
+    event.kill_all()
+    utils.gevent_join()
 
 def start():
     """Start server loop"""
     # Bring up logging, fill out configuration values
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     config.init()
     init()
 
@@ -71,7 +75,4 @@ def start():
     except KeyboardInterrupt:
         pass
     shutdown()
-    process.kill_all()
-    event.kill_all()
-    utils.gevent_join()
     logging.info("Quitting server...")
