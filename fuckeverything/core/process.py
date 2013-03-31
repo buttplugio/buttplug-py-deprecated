@@ -32,7 +32,7 @@ def add(cmd, identity=None):
         identity = utils.random_ident()
     cmd += ["--identity=%s" % identity]
     try:
-        logging.debug("Plugin Process: Running %s", cmd)
+        logging.info("Plugin Process: Running %s", cmd)
         o = subprocess.Popen(cmd)
     except OSError, e:
         logging.warning("Plugin Process did not execute correctly: %s", e.strerror)
