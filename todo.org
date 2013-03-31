@@ -180,7 +180,10 @@ http://www.velocityreviews.com/forums/t612189-subprocess-popen-output-to-logging
 *** DONE Write raw message plugin for RealTouch
 CLOSED: [2012-12-11 Tue 23:50]
 - State "DONE"       from "TODO"       [2012-12-11 Tue 23:50
-*** TODO Make test plugin hold temp files to act like device claims
+*** DONE Make test plugin hold temp files to act like device claims
+CLOSED: [2013-03-31 Sun 11:47]
+- State "DONE"       from "TODO"       [2013-03-31 Sun 11:47]
+*** TODO Make plugin count start failure cause tests to fail
 *** TODO Add "test" devices to test plugin for testing timeouts, disappears, etc...
 *** TODO Properly handle Unicode Manufacturer and Product strings in USB descriptors
 *** TODO Write game control vibrator plugin
