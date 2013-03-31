@@ -34,22 +34,23 @@ def add(identity, msgtype, event=None):
     return event
 
 
-def fire(identity, msgtype):
+def fire(identity, msg):
+    msgtype = msg[1]
     logging.debug("Event %s for %s", msgtype, identity)
     if identity in _mvars["_socket_events"]:
         if msgtype in _mvars["_socket_events"][identity]:
             logging.debug("Firing event %s for identity %s", msgtype, identity)
-            _mvars["_socket_events"][identity][msgtype].set((identity, msgtype))
+            _mvars["_socket_events"][identity][msgtype].set((identity, msg))
             remove(identity, msgtype)
             return
         elif "s" in _mvars["_socket_events"][identity]:
             logging.debug("Firing event %s for identity %s", msgtype, identity)
-            _mvars["_socket_events"][identity][msgtype].set((identity, msgtype))
+            _mvars["_socket_events"][identity][msgtype].set((identity, msg))
             remove(identity, msgtype)
             return
     if msgtype in _mvars["_socket_events"]["s"]:
         logging.debug("Firing event %s for *", msgtype)
-        _mvars["_socket_events"]["s"][msgtype].set((identity, msgtype))
+        _mvars["_socket_events"]["s"][msgtype].set((identity, msg))
         remove("s", msgtype)
     else:
         #raise ValueError("Event %s on identity %s not set for any handler!" % (msgtype, identity))
