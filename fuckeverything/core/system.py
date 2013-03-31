@@ -72,13 +72,14 @@ def parse_message(identity, msg):
         return
     msg_address = msg[0]
     msg_type = msg[1]
-    logging.info("New message %s from %s", msg_type, identity)
+    if msg_type not in ["FEPing", "FEPluginDeviceList"]:
+        logging.info("New message %s from %s", msg_type, identity)
     # System Message
     if msg_address == "s":
         if msg_type in _msg_table.keys():
             _msg_table[msg_type](identity, msg)
         else:
-            event.fire(identity, msg_type)
+            event.fire(identity, msg)
     # Client/Plugin Comms forwarding
     else:
         plugin.forward_device_msg(identity, msg)
