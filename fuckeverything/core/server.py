@@ -2,10 +2,7 @@ from fuckeverything.core import config
 from fuckeverything.core import plugin
 from fuckeverything.core import queue
 from fuckeverything.core import system
-from fuckeverything.core import heartbeat
 from fuckeverything.core import utils
-from fuckeverything.core import event
-from fuckeverything.core import process
 import gevent
 import zmq.green as zmq
 import msgpack
@@ -44,31 +41,22 @@ def msg_loop():
 
 
 def shutdown():
+    utils.killjoin_greenlets()
     _zmq["router"].close()
     _zmq["queue"].close()
     queue.close()
     _zmq["context"].destroy()
-    # TODO: Right now we hard kill processes on the way down. This should be
-    # done nicely via FEClose.
-    process.kill_all(False)
-    event.kill_all()
-    utils.gevent_join()
+
 
 def start():
     """Start server loop"""
     # Bring up logging, fill out configuration values
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     config.init()
     init()
 
     # Start plugins
-    plugin.get_device_list()
     plugin.scan_for_plugins()
-    plugin.start_plugin_counts()
-    logging.debug("Plugins found:")
-    logging.debug(plugin.plugins_available())
-    for plin in plugin.plugins_available():
-        logging.debug(plin)
 
     # Run Loop
     try:

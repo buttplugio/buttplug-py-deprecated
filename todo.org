@@ -166,7 +166,9 @@ CLOSED: [2013-03-23 Sat 23:31]
 *** DONE Figure out how clients will refer to devices they've claimed
 CLOSED: [2013-03-25 Mon 20:58]
 - State "DONE"       from "TODO"       [2013-03-25 Mon 20:58]
-*** TODO Add a way to know if we're trying to close something that doesn't have a heartbeat
+*** DONE Add a way to know if we're trying to close something that doesn't have a heartbeat
+CLOSED: [2013-03-31 Sun 23:16]
+- State "DONE"       from "TODO"       [2013-03-31 Sun 23:16]
 *** TODO Add ability to use json or msgpack
 *** TODO Add identity to greenlet names if it's a parameter to the function
 *** TODO Make sure client disconnect means claims are released
@@ -183,6 +185,9 @@ CLOSED: [2012-12-11 Tue 23:50]
 *** DONE Make test plugin hold temp files to act like device claims
 CLOSED: [2013-03-31 Sun 11:47]
 - State "DONE"       from "TODO"       [2013-03-31 Sun 11:47]
+*** DONE Move process to plugins, since no one else ever spawns a process
+CLOSED: [2013-03-31 Sun 23:16]
+- State "DONE"       from "TODO"       [2013-03-31 Sun 23:16]
 *** TODO Make plugin count start failure cause tests to fail
 *** TODO Add "test" devices to test plugin for testing timeouts, disappears, etc...
 *** TODO Properly handle Unicode Manufacturer and Product strings in USB descriptors

@@ -4,25 +4,11 @@ from fuckeverything.core import queue
 from fuckeverything.core import event
 from fuckeverything.core import utils
 from fuckeverything.core import client
-from fuckeverything.core import heartbeat
 from collections import defaultdict
 import logging
 
+
 _msg_table = {}
-
-
-def close_external(identity):
-    heartbeat.remove(identity)
-    if plugin.is_plugin(identity):
-        # Drop claims from clients
-        pass
-    elif client.is_client(identity):
-        # Drop claims for plugins
-        pass
-
-
-def _handle_close(identity, msg):
-    close_external(identity)
 
 
 def _handle_server_info(identity, msg):
@@ -55,12 +41,10 @@ def _handle_device_list(identity, msg):
 
 _msg_table = {"FEServerInfo": _handle_server_info,
               "FEPluginList": _handle_plugin_list,
-              "FEPluginDeviceList": plugin.update_device_list,
               "FEDeviceList": _handle_device_list,
-              "FEPluginRegisterCount": plugin.handle_count_plugin,
               "FERegisterClient": client.handle_client,
               "FEClaimDevice": plugin.handle_claim_device,
-              "FEClose": _handle_close}
+              "FEClose": utils.remove_identity_greenlet}
 
 
 def parse_message(identity, msg):
@@ -72,8 +56,8 @@ def parse_message(identity, msg):
         return
     msg_address = msg[0]
     msg_type = msg[1]
-    if msg_type not in ["FEPing", "FEPluginDeviceList"]:
-        logging.info("New message %s from %s", msg_type, identity)
+    # if msg_type not in ["FEPing", "FEPluginDeviceList"]:
+    logging.info("New message %s from %s", msg_type, identity)
     # System Message
     if msg_address == "s":
         if msg_type in _msg_table.keys():

@@ -2,12 +2,11 @@ import os
 import json
 import gevent
 import logging
+from gevent import subprocess
 from fuckeverything.core import utils
-from fuckeverything.core import heartbeat
 from fuckeverything.core import event
 from fuckeverything.core import queue
 from fuckeverything.core import config
-from fuckeverything.core import process
 
 
 class Plugin(object):
@@ -15,7 +14,6 @@ class Plugin(object):
     PLUGIN_REQUIRED_KEYS = [u"name", u"version", u"executable", u"messages"]
 
     def __init__(self, info, plugin_dir):
-        self.count_identity = None
         self.plugin_path = os.path.join(config.get_dir("plugin"), plugin_dir)
         self.executable_path = os.path.join(config.get_dir("plugin"), plugin_dir, info["executable"])
         if not os.path.exists(self.executable_path):
@@ -24,12 +22,6 @@ class Plugin(object):
         self.version = info["version"]
         self.messages = info["messages"]
 
-    def open_count_process(self):
-        count_process_cmd = [self.executable_path, "--server_port=%s" % config.get_value("server_address"), "--count"]
-        self.count_identity = process.add(count_process_cmd)
-        if not self.count_identity:
-            logging.warning("Count process unable to start. Removing plugin from plugin list.")
-            del _plugins[self.name]
 
 _plugins = {}
 _devices = {}
@@ -41,8 +33,9 @@ class PluginException(Exception):
 
 
 def scan_for_plugins():
-    """Look through config'd plugin directory for any directory with a file
-    called named what we expect from the PLUGIN_INFO_FILE constant
+    """Look through config'd plugin directory for any directory with a file named
+    "feplugin.json". Fill in an plugin object, and pass to _run_count_plugin to
+    handle lifetime.
 
     """
     for i in os.listdir(config.get_dir("plugin")):
@@ -61,40 +54,70 @@ def scan_for_plugins():
         if info["name"] in _plugins.keys():
             raise PluginException("Plugin Collision! Two plugins named %s" % info["name"])
         plugin = Plugin(info, i)
-        _plugins[plugin.name] = plugin
+        _run_count_plugin(plugin)
 
 
-@utils.gevent_func("get_device_list")
-def get_device_list():
+def _start_process(cmd, identity):
+    cmd += ["--identity=%s" % identity]
+    logging.info("Starting process %s", cmd)
+    try:
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except OSError, e:
+        logging.warning("Plugin Process did not execute correctly: %s", e.strerror)
+        return None
+    return proc
+
+
+@utils.gevent_func("run_count_plugin")
+def _run_count_plugin(plugin):
+    count_identity = utils.random_ident()
+    e = event.add(count_identity, "FEPluginRegisterCount")
+    count_process_cmd = [plugin.executable_path, "--server_port=%s" % config.get_value("server_address"), "--count"]
+    count_process = _start_process(count_process_cmd, count_identity)
+    if not count_process:
+        logging.warning("Count process unable to start. Removing plugin %s from plugin list.", plugin.name)
+        return
+
+    try:
+        e.get(block=True, timeout=1)
+    except gevent.Timeout:
+        logging.info("Count process for %s never registered, shutting down and removing plugin", plugin.name)
+        return
+    except gevent.GreenletExit:
+        logging.debug("FE Closing, shutting down")
+        return
+    logging.info("Count process for %s up on identity %s", plugin.name, count_identity)
+    utils.add_identity_greenlet(count_identity, gevent.getcurrent())
+    hb = utils.heartbeat(count_identity, gevent.getcurrent())
+    _plugins[plugin.name] = plugin
     while True:
-        for p in _plugins.values():
-            queue.add(p.count_identity, ["s", "FEPluginDeviceList"])
-        # Add a bogus messages called PingWait. We should never get a reply to
-        # this because we never sent it. It just sits in the event table as a
-        # way to do an interruptable sleep before we send our next ping to the
-        # client.
-        e = event.add("DeviceListWait", "FEPingWait")
+        queue.add(count_identity, ["s", "FEPluginDeviceList"])
+        e = event.add(count_identity, "FEPluginDeviceList")
         try:
-            e.get(block=True, timeout=config.get_value("ping_rate"))
+            (i, msg) = e.get(block=True, timeout=1)
         except gevent.Timeout:
-            pass
-        except utils.FEShutdownException:
+            logging.info("Count process for %s timed out, shutting down and removing plugin", plugin.name)
+            break
+        except gevent.GreenletExit:
             logging.debug("FE Closing, shutting down")
             break
-        event.remove("DeviceListWait", "FEPingWait")
+        _devices[plugin.name] = msg[2]
+        # TODO: Make this a configuration value
+        try:
+            gevent.sleep(1)
+        except gevent.GreenletExit:
+            break
+    if not hb.ready():
+        hb.kill()
+    utils.remove_identity_greenlet(count_identity)
+    # TODO: If a count process goes down, does every associated device go with it?
+    del _plugins[plugin.name]
+    queue.add(count_identity, ["s", "FEClose"])
 
 
-def update_device_list(identity, msg):
-    for p in _plugins.values():
-        if p.count_identity == identity:
-            if p.name in _devices.keys():
-                del _devices[p.name]
-            _devices[p.name] = msg[2]
-
-
-def start_plugin_counts():
-    for p in _plugins.values():
-        p.open_count_process()
+@utils.gevent_func("run_count_plugin")
+def _run_device_plugin(plugin):
+    pass
 
 
 def plugins_available():
@@ -102,21 +125,6 @@ def plugins_available():
     Return the list of all plugins available on the system
     """
     return _plugins.values()
-
-
-@utils.gevent_func("handle_count_plugin")
-def handle_count_plugin(identity=None, msg=None):
-    heartbeat.start(identity)
-    while True:
-        e = event.add(identity, "s")
-        try:
-            (identity, msg) = e.get()
-        except utils.FEShutdownException:
-            return
-        msg_type = msg[0]
-        if msg_type == "FEClose":
-            logging.debug("Count Plugin %s closing", identity)
-            break
 
 
 _ctd = {}
@@ -186,6 +194,7 @@ def handle_claim_device(identity=None, msg=None):
     # Device process to system: Register with known identity
     e = event.add(plugin_id, "FEPluginRegisterClaim")
     try:
+        # TODO: Make device open timeout a config option
         (i, m) = e.get(timeout=5)
     except utils.FEShutdownException:
         # If we shut down now, just drop
@@ -198,7 +207,7 @@ def handle_claim_device(identity=None, msg=None):
         return
 
     # Add a heartbeat now that the process is up
-    heartbeat.start(plugin_id)
+    heartbeat.start(plugin_id, gevent.getcurrent())
 
     # System to device process: Open device
     queue.add(plugin_id, ["s", "FEPluginOpenDevice", dev_id])
@@ -235,6 +244,3 @@ def handle_release_device(identity=None, msg=None):
     queue.add(plugin_id, ["s", "FEClose"])
 
 
-def is_plugin(identity):
-    # TODO: Implement
-    return False
