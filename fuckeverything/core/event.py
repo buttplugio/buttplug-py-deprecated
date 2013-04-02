@@ -37,7 +37,7 @@ def fire(identity, msg):
         _mvars["_socket_events"]["s"][msgtype].set((identity, msg))
         remove("s", msgtype)
     else:
-        logging.warning("Event %s on identity %s not set for any handler!" % (msgtype, identity))
+        logging.warning("Event %s on identity %s not set for any handler!", msgtype, identity)
 
 
 def remove(identity, msgtype):

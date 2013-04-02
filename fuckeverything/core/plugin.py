@@ -68,7 +68,7 @@ def _start_process(cmd, identity):
     return proc
 
 
-@utils.gevent_func("run_count_plugin")
+@utils.gevent_func("run_count_plugin", "plugin")
 def _run_count_plugin(plugin):
     count_identity = utils.random_ident()
     e = event.add(count_identity, "FEPluginRegisterCount")
@@ -83,8 +83,8 @@ def _run_count_plugin(plugin):
     except gevent.Timeout:
         logging.info("Count process for %s never registered, shutting down and removing plugin", plugin.name)
         return
-    except gevent.GreenletExit:
-        logging.debug("FE Closing, shutting down")
+    except utils.FEGreenletExit:
+        logging.debug("Shutting down count process for %s", plugin.name)
         return
     logging.info("Count process for %s up on identity %s", plugin.name, count_identity)
     utils.add_identity_greenlet(count_identity, gevent.getcurrent())
@@ -98,26 +98,26 @@ def _run_count_plugin(plugin):
         except gevent.Timeout:
             logging.info("Count process for %s timed out, shutting down and removing plugin", plugin.name)
             break
-        except gevent.GreenletExit:
-            logging.debug("FE Closing, shutting down")
+        except utils.FEGreenletExit:
+            logging.debug("Shutting down count process for %s", plugin.name)
             break
         _devices[plugin.name] = msg[2]
         # TODO: Make this a configuration value
         try:
             gevent.sleep(1)
-        except gevent.GreenletExit:
+        except utils.FEGreenletExit:
+            logging.debug("Shutting down count process for %s", plugin.name)
             break
+
+    # Heartbeat may already be dead if we're shutting down, so check first
     if not hb.ready():
-        hb.kill()
-    utils.remove_identity_greenlet(count_identity)
+        hb.kill(exception=utils.FEGreenletExit, block=True, timeout=1)
+    # Remove ourselves, but don't kill since we're already shutting down
+    utils.remove_identity_greenlet(count_identity, kill_greenlet=False)
     # TODO: If a count process goes down, does every associated device go with it?
     del _plugins[plugin.name]
     queue.add(count_identity, ["s", "FEClose"])
-
-
-@utils.gevent_func("run_count_plugin")
-def _run_device_plugin(plugin):
-    pass
+    logging.debug("Count process %s for %s exiting...", count_identity, plugin.name)
 
 
 def plugins_available():
@@ -163,8 +163,20 @@ def forward_device_msg(identity, msg):
     queue.add(to_addr, new_msg)
 
 
-@utils.gevent_func("handle_claim_device")
-def handle_claim_device(identity=None, msg=None):
+def kill_claims(identity):
+    if identity not in _ctd:
+        logging.warning("No client %s is known to claim a device!", identity)
+        return
+    for dev_id in _ctd[identity]:
+        g = utils.get_identity_greenlet(dev_id)
+        if g is None:
+            logging.warning("Device %s is not bound to client %s", dev_id, identity)
+            continue
+        g.kill(exception=utils.FEGreenletExit, timeout=1, block=True)
+
+
+@utils.gevent_func("run_device_plugin", "device")
+def run_device_plugin(identity, msg):
     # Figure out the plugin that owns the device we want
     p = None
     dev_id = msg[2]
@@ -187,39 +199,41 @@ def handle_claim_device(identity=None, msg=None):
     #
     # Just name the new plugin process socket identity after the device id,
     # because why not.
-    plugin_id = process.add([p.executable_path, "--server_port=%s" % config.get_value("server_address")], dev_id)
-    if plugin_id is None:
-        queue.add(identity, ["s", "FEPluginClaimDevice", dev_id, False])
+    device_process = _start_process([p.executable_path, "--server_port=%s" % config.get_value("server_address")], dev_id)
 
     # Device process to system: Register with known identity
-    e = event.add(plugin_id, "FEPluginRegisterClaim")
+    e = event.add(dev_id, "FEPluginRegisterClaim")
     try:
         # TODO: Make device open timeout a config option
         (i, m) = e.get(timeout=5)
-    except utils.FEShutdownException:
+    except utils.FEGreenletExit:
         # If we shut down now, just drop
         return
     except gevent.Timeout:
         # If we timeout, fail the claim
-        logging.info("Device %s failed to start...", plugin_id)
-        queue.add(plugin_id, ["s", "FEClose"])
+        logging.info("Device %s failed to start...", dev_id)
+        queue.add(dev_id, ["s", "FEClose"])
         queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
         return
 
+    utils.add_identity_greenlet(dev_id, gevent.getcurrent())
+
     # Add a heartbeat now that the process is up
-    heartbeat.start(plugin_id, gevent.getcurrent())
+    hb = utils.heartbeat(dev_id, gevent.getcurrent())
 
     # System to device process: Open device
-    queue.add(plugin_id, ["s", "FEPluginOpenDevice", dev_id])
-    e = event.add(plugin_id, "FEPluginOpenDevice")
+    queue.add(dev_id, ["s", "FEPluginOpenDevice", dev_id])
+    e = event.add(dev_id, "FEPluginOpenDevice")
     try:
         (i, m) = e.get()
-    except utils.FEShutdownException:
+    except utils.FEGreenletExit:
+        queue.add(dev_id, ["s", "FEClose"])
         return
+
     # Device process to system: Open or fail
     if m[3] is False:
-        logging.info("Device %s failed to open...", plugin_id)
-        queue.add(plugin_id, ["s", "FEClose"])
+        logging.info("Device %s failed to open...", dev_id)
+        queue.add(dev_id, ["s", "FEClose"])
         queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
         return
 
@@ -233,14 +247,19 @@ def handle_claim_device(identity=None, msg=None):
         _dtc[dev_id] = []
     _dtc[dev_id].append(identity)
 
+    while True:
+        try:
+            gevent.sleep(1)
+        except utils.FEGreenletExit:
+            break
 
-@utils.gevent_func("handle_release_device")
-def handle_release_device(identity=None, msg=None):
-    # Figure out the identity of the process that owns the device
-    p = None
-    dev_id = msg[1]
+    if not hb.ready():
+        hb.kill(exception=utils.FEGreenletExit, block=True, timeout=1)
 
-    # Close the process
-    queue.add(plugin_id, ["s", "FEClose"])
+    _ctd[identity].remove(dev_id)
+    del _dtc[dev_id]
 
-
+    # Remove ourselves, but don't kill since we're already shutting down
+    utils.remove_identity_greenlet(dev_id, kill_greenlet=False)
+    queue.add(dev_id, ["s", "FEClose"])
+    logging.debug("Device keeper %s exiting...", dev_id)

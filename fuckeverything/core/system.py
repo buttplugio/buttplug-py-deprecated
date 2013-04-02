@@ -39,12 +39,16 @@ def _handle_device_list(identity, msg):
     return True
 
 
+def _handle_close(identity, msg):
+    utils.get_identity_greenlet(identity).kill(timeout=1, block=True, exception=utils.FEGreenletExit)
+
+
 _msg_table = {"FEServerInfo": _handle_server_info,
               "FEPluginList": _handle_plugin_list,
               "FEDeviceList": _handle_device_list,
               "FERegisterClient": client.handle_client,
-              "FEClaimDevice": plugin.handle_claim_device,
-              "FEClose": utils.remove_identity_greenlet}
+              "FEClaimDevice": plugin.run_device_plugin,
+              "FEClose": _handle_close}
 
 
 def parse_message(identity, msg):

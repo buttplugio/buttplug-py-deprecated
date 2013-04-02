@@ -41,7 +41,8 @@ def msg_loop():
 
 
 def shutdown():
-    utils.killjoin_greenlets()
+    utils.killjoin_greenlets("plugin")
+    utils.killjoin_greenlets("client")
     _zmq["router"].close()
     _zmq["queue"].close()
     queue.close()
@@ -54,7 +55,6 @@ def start():
     logging.basicConfig(level=logging.DEBUG)
     config.init()
     init()
-
     # Start plugins
     plugin.scan_for_plugins()
 

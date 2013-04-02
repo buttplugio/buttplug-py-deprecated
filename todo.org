@@ -169,8 +169,15 @@ CLOSED: [2013-03-25 Mon 20:58]
 *** DONE Add a way to know if we're trying to close something that doesn't have a heartbeat
 CLOSED: [2013-03-31 Sun 23:16]
 - State "DONE"       from "TODO"       [2013-03-31 Sun 23:16]
-*** TODO Spin msg loop for a bit on exit to make sure everything closes
-*** TODO Make sure plugin processes close on exit, warn otherwise
+*** DONE Make sure plugin processes close on exit, warn otherwise
+CLOSED: [2013-04-01 Mon 20:06]
+- State "DONE"       from "TODO"       [2013-04-01 Mon 20:06]
+*** DONE Warn clients of disconnect on main process shutdown
+CLOSED: [2013-04-01 Mon 21:00]
+- State "DONE"       from "TODO"       [2013-04-01 Mon 21:00]
+*** DONE Spin msg loop for a bit on exit to make sure everything closes
+CLOSED: [2013-04-01 Mon 21:00]
+- State "DONE"       from "TODO"       [2013-04-01 Mon 21:00]
 *** TODO Convert device claim function into full device plugin process lifetime
 *** TODO Convert client function into full client connection lifetime
 *** TODO Add ability to use json or msgpack
@@ -180,7 +187,6 @@ CLOSED: [2013-03-31 Sun 23:16]
 *** TODO Register plugin handled messages
 *** TODO Log subprocess output to logging module
 http://www.velocityreviews.com/forums/t612189-subprocess-popen-output-to-logging-streamhandler.html
-*** TODO Warn clients of disconnect on main process shutdown
 *** TODO Assign random names to client sockets?
 ** Plugins
 *** DONE Write raw message plugin for RealTouch
