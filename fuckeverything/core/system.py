@@ -40,7 +40,9 @@ def _handle_device_list(identity, msg):
 
 
 def _handle_close(identity, msg):
-    utils.get_identity_greenlet(identity).kill(timeout=1, block=True, exception=utils.FEGreenletExit)
+    g = utils.get_identity_greenlet(identity)
+    if g is not None:
+        g.kill(timeout=1, block=True, exception=utils.FEGreenletExit)
 
 
 _msg_table = {"FEServerInfo": _handle_server_info,
