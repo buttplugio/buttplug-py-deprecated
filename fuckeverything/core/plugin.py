@@ -53,8 +53,7 @@ def scan_for_plugins():
             raise PluginException("Invalid Plugin")
         if info["name"] in _plugins.keys():
             raise PluginException("Plugin Collision! Two plugins named %s" % info["name"])
-        plugin = Plugin(info, i)
-        _run_count_plugin(plugin)
+        _run_count_plugin(Plugin(info, i))
 
 
 def _start_process(cmd, identity):

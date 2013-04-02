@@ -178,11 +178,17 @@ CLOSED: [2013-04-01 Mon 21:00]
 *** DONE Spin msg loop for a bit on exit to make sure everything closes
 CLOSED: [2013-04-01 Mon 21:00]
 - State "DONE"       from "TODO"       [2013-04-01 Mon 21:00]
-*** TODO Convert device claim function into full device plugin process lifetime
-*** TODO Convert client function into full client connection lifetime
+*** DONE Convert device claim function into full device plugin process lifetime
+CLOSED: [2013-04-02 Tue 10:42]
+- State "DONE"       from "TODO"       [2013-04-02 Tue 10:42]
+*** DONE Convert client function into full client connection lifetime
+CLOSED: [2013-04-02 Tue 10:42]
+- State "DONE"       from "TODO"       [2013-04-02 Tue 10:42]
+*** DONE Make sure client disconnect means claims are released
+CLOSED: [2013-04-02 Tue 10:42]
+- State "DONE"       from "TODO"       [2013-04-02 Tue 10:42]
 *** TODO Add ability to use json or msgpack
 *** TODO Add identity to greenlet names if it's a parameter to the function
-*** TODO Make sure client disconnect means claims are released
 *** TODO Make sure message requeuing works even when double messages sent
 *** TODO Register plugin handled messages
 *** TODO Log subprocess output to logging module
