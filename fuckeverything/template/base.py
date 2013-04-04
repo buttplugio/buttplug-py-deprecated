@@ -7,15 +7,6 @@ import gevent
 import zmq.green as zmq
 
 
-def random_ident():
-    """Generate a random string of letters and digits to use as zmq router
-    socket identity
-
-    """
-    return ''.join(random.choice(string.ascii_uppercase + string.digits)
-                   for x in range(8))
-
-
 class FEBase(object):
 
     APP_NAME = "Default application"
@@ -30,7 +21,7 @@ class FEBase(object):
         self.socket_identity = None
         self.server_port = None
         self.last_ping = time.time()
-        self.identity = random_ident()
+        self.identity = self.random_ident()
         self.inmsg = {"FEClose": self.close,
                       "FEPing": self.ping_reply}
         self.context = zmq.Context()
@@ -39,6 +30,14 @@ class FEBase(object):
         self.socket_out = self.context.socket(zmq.PULL)
         self.socket_out.connect("inproc://fe-%s" % (self.identity))
         gevent.spawn_later(2, self.ping_check)
+
+    def random_ident(self):
+        """Generate a random string of letters and digits to use as zmq router
+        socket identity
+
+        """
+        return ''.join(random.choice(string.ascii_uppercase + string.digits)
+                       for x in range(8))
 
     def ping_check(self):
         if time.time() - self.last_ping > 3:
@@ -99,8 +98,6 @@ class FEBase(object):
             print "Argument error!"
             return 1
         self.socket_client = self.context.socket(zmq.DEALER)
-        if self.socket_identity is None:
-            self.socket_identity = random_ident()
         self.socket_client.setsockopt(zmq.IDENTITY, self.socket_identity)
 
         self.socket_client.connect(self.server_port)

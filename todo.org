@@ -204,6 +204,7 @@ CLOSED: [2013-03-31 Sun 11:47]
 *** DONE Move process to plugins, since no one else ever spawns a process
 CLOSED: [2013-03-31 Sun 23:16]
 - State "DONE"       from "TODO"       [2013-03-31 Sun 23:16]
+*** TODO Add test to crash server, make sure processes die correctly
 *** TODO Make plugin count start failure cause tests to fail
 *** TODO Add "test" devices to test plugin for testing timeouts, disappears, etc...
 *** TODO Properly handle Unicode Manufacturer and Product strings in USB descriptors
