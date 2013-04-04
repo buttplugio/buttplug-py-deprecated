@@ -301,165 +301,66 @@ class EventTests(unittest.TestCase):
         event.fire("testing", ["testing", "testing"])
         self.failIf(not e.successful(), "Event did not fire!")
 
-# class ClientTests(unittest.TestCase):
 
-#     class ClientTestSocket(TestClient):
-#         def __init__(self, port):
-#             super(ClientTests.ClientTestSocket, self).__init__(port)
+class ClaimFlowTests(unittest.TestCase):
+    class ClaimFlowTestSocket(TestClient):
+        def __init__(self, port):
+            super(ClaimFlowTests.ClaimFlowTestSocket, self).__init__(port)
 
-#     def start(self):
-#         self.server_loop_trigger = gevent.event.Event()
-#         def server_loop():
-#             while not self.server_loop_trigger.is_set():
-#                 server.msg_loop()
-#         self.server_greenlet = gevent.spawn(server_loop)
+        def get_device_list(self):
+            self.send(["s", "FEDeviceList"])
 
-#         # Start a new socket
-#         self.test_socket = ClientTests.ClientTestSocket(config.get_value("server_address"))
-#         # Attach to router
-#         self.test_socket_greenlet = gevent.spawn(self.test_socket.run)
+    def copyPlugin(self):
+        # Copy plugin to directory here
+        _copy_test_plugin(self.plugin_dest)
 
-#     def setUp(self):
-#         reload(config)
-#         reload(server)
-#         reload(heartbeat)
-#         reload(system)
-#         self.tmpdir = tempfile.mkdtemp(prefix="fetest-")
-#         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-#             config.init()
-#         # Set ping rates REALLY low so these will move quickly
-#         config.set_value("ping_rate", .01)
-#         config.set_value("ping_max", .05)
-#         self.test_socket = None
-#         self.test_socket_greenlet = None
-#         self.server_greenlet = None
-#         self.server_loop_trigger = None
-#         server.init()
+    def setUp(self):
+        reload(config)
+        reload(plugin)
+        reload(server)
+        self.tmpdir = tempfile.mkdtemp(prefix="fetest-")
+        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+            config.init()
+        self.plugin_dest = os.path.join(config.get_dir("plugin"), "test-plugin")
+        self.server_loop_trigger = gevent.event.Event()
+        self.copyPlugin()
+        plugin.scan_for_plugins()
 
-#     def tearDown(self):
-#         shutil.rmtree(self.tmpdir)
-#         if self.test_socket is not None:
-#             self.test_socket.close()
-#         self.server_loop_trigger.set()
-#         self.server_greenlet.join()
-#         server.shutdown()
+        def server_loop():
+            server.init()
+            while not self.server_loop_trigger.is_set():
+                server.msg_loop()
+            server.shutdown()
+        self.server_greenlet = gevent.spawn(server_loop)
 
-#     # def testClientPingTimeout(self):
-#     #     """Connect client, ping once, then timeout"""
-#     #     pass
-#     # TODO: Maybe move this to be a heartbeat test? Everything goes through the
-#     # same close function
-#     def testClientLogonLogoffHeartbeat(self):
-#         """Connect client, ping, disconnect client, test for heartbeat removal"""
-#         self.start()
-#         del system._msg_table["FEClose"]
-#         close_event = event.add("s", "FEClose")
-#         # Let some stuff happen
-#         gevent.sleep(.05)
-#         self.test_socket.close()
-#         try:
-#             close_event.get(timeout=.5)
-#         except gevent.Timeout:
-#             self.fail("Close timed out! Never received close message!")
-#         self.failIf(not close_event.successful())
-#         system._handle_close(self.test_socket.identity, None)
-#         gevent.sleep(.05)
-#         self.test_socket_greenlet.kill()
-#         self.server_greenlet.kill()
-#         self.failIf(len(utils._live_greenlets) > 0)
+        # Start a new socket
+        self.test_socket = ClaimFlowTests.ClaimFlowTestSocket(config.get_value("server_address"))
+        # Attach to router
+        self.test_socket_greenlet = gevent.spawn(self.test_socket.run)
 
-# #     def testClientClaimCleanup(self):
-# #         """Connect client, ping, claim a device, disconnect, test for claim removal"""
-# #         pass
+    def tearDown(self):
+        self.server_loop_trigger.set()
+        self.server_greenlet.join()
+        shutil.rmtree(self.tmpdir)
 
+    def testClientDeviceListFetch(self):
+        """Connect client, fetch device list"""
+        # TODO: Figure out a better way to make sure we have a plugin ready to go
+        gevent.sleep(.1)
+        e = gevent.event.AsyncResult()
+        def device_list(msg):
+            e.set(msg)
+        self.test_socket.inmsg["FEDeviceList"] = device_list
+        self.test_socket.get_device_list()
+        list_msg = None
+        try:
+            list_msg = e.get(block=True, timeout=1)
+        except gevent.Timeout:
+            self.fail("Timed out waiting for device list!")
 
-# class ClaimFlowTests(unittest.TestCase):
-#     class ClaimFlowTestSocket(TestClient):
-#         def __init__(self, port):
-#             super(ClaimFlowTests.ClaimFlowTestSocket, self).__init__(port)
-
-#     def copyPlugin(self):
-#         # Copy plugin to directory here
-#         _copy_test_plugin(self.plugin_dest)
-
-#     def setUp(self):
-#         reload(config)
-#         reload(server)
-#         reload(heartbeat)
-#         reload(system)
-#         reload(process)
-#         reload(utils)
-#         reload(event)
-#         reload(plugin)
-#         reload(queue)
-#         self.tmpdir = tempfile.mkdtemp(prefix="fetest-")
-#         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
-#             config.init()
-#         # Set ping rates REALLY low so these will move quickly
-#         config.set_value("ping_rate", .01)
-#         config.set_value("ping_max", .05)
-#         self.server_greenlet = None
-#         self.plugin_dest = os.path.join(config.get_dir("plugin"), "test-plugin")
-#         self.copyPlugin()
-#         server.init()
-#         plugin.get_device_list()
-#         plugin.scan_for_plugins()
-#         plugin.start_plugin_counts()
-
-#         self.server_loop_trigger = gevent.event.Event()
-
-#         def server_loop():
-#             while not self.server_loop_trigger.is_set():
-#                 server.msg_loop()
-#         self.server_greenlet = gevent.spawn(server_loop)
-
-#         # Start a new socket
-#         self.test_socket = ClaimFlowTests.ClaimFlowTestSocket(config.get_value("server_address"))
-#         # Attach to router
-#         self.test_socket_greenlet = gevent.spawn(self.test_socket.run)
-
-#     def tearDown(self):
-#         shutil.rmtree(self.tmpdir)
-#         if self.test_socket is not None:
-#             self.test_socket.close()
-#         self.server_loop_trigger.set()
-#         self.server_greenlet.join()
-#         server.shutdown()
-
-#     def testClientDeviceListFetch(self):
-#         """Connect client, fetch device list"""
-
-#         u = plugin.update_device_list
-#         tr = gevent.event.Event()
-
-#         def run_update_event(identity, msg):
-#             u(identity, msg)
-#             tr.set()
-#             plugin.update_device_list = u
-#         plugin.update_device_list = run_update_event
-
-#         try:
-#             tr.wait(timeout=1)
-#         except gevent.Timeout:
-#             self.fail("Device list update timeout!")
-
-#         e = gevent.event.AsyncResult()
-
-#         def device_list(msg):
-#             e.set(msg)
-#         print "SENDING"
-#         self.test_socket.add_handlers({"FEDeviceList": device_list})
-#         self.test_socket.send(["s", "FEDeviceList"])
-#         msg = None
-#         try:
-#             msg = e.get(timeout=1)
-#         except gevent.Timeout:
-#             self.fail("Device list return timeout!")
-#         self.test_socket.close()
-#         self.test_socket_greenlet.join()
-#         self.failIf(msg is None)
-#         self.failIf(msg[1] != "FEDeviceList")
-#         self.failIf("TestSuccessfulOpen" not in msg[2][0]["devices"])
+        self.failIf(list_msg is None)
+        self.failIf(list_msg[1] != "FEDeviceList")
+        self.failIf("TestSuccessfulOpen" not in list_msg[2][0]["devices"])
 #     # def testClaimValidDevice(self):
 #     #     """Claim a device"""
 #     #     self.test_socket.send(["s", "FEClaimDevice", ""])
