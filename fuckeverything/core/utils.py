@@ -37,25 +37,21 @@ def killjoin_greenlets(pool):
         _pools[pool].join()
 
 
-class gevent_func(object):
-    def __init__(self, name, pool):
-        self.name = name
-        self.pool = pool
-        if self.pool not in _pools.keys():
-            _pools[self.pool] = gevent.pool.Group()
+def spawn_gevent_func(name, pool, func, *args, **kwargs):
+    if pool not in _pools.keys():
+        _pools[pool] = gevent.pool.Group()
 
-    def __call__(self, func):
-        def log_run_func(*args, **kwargs):
-            logging.debug("gevent spawn: %s", func.__name__)
-            _live_greenlets.append(self.name)
+    def log_run_func(*args, **kwargs):
+        try:
+            logging.debug("gevent spawn: %s", name)
+            _live_greenlets.append(name)
             func(*args, **kwargs)
-            _live_greenlets.remove(self.name)
-            logging.debug("gevent shutdown: %s", func.__name__)
+            _live_greenlets.remove(name)
+            logging.debug("gevent shutdown: %s", name)
+        except FEGreenletExit:
+            logging.error("%s did not correctly handle FEGreenletExit!", name)
 
-        def spawn_func(*args, **kwargs):
-            return _pools[self.pool].spawn(log_run_func, *args, **kwargs)
-
-        return spawn_func
+    return _pools[pool].spawn(log_run_func, *args, **kwargs)
 
 
 _id_greenlet = {}
@@ -80,7 +76,6 @@ def remove_identity_greenlet(identity, msg=None, kill_greenlet=True):
     del _id_greenlet[identity]
 
 
-@gevent_func("heartbeat", "heartbeat")
 def heartbeat(identity, greenlet):
     while not greenlet.ready():
         e = event.add(identity, "FEPing")
@@ -112,3 +107,7 @@ def heartbeat(identity, greenlet):
             logging.debug("Heartbeat for %s exiting...", identity)
             return
         event.remove(identity, "FEPingWait")
+
+
+def spawn_heartbeat(identity, greenlet):
+    return spawn_gevent_func("heartbeat-%s" % identity, "heartbeat", heartbeat, identity, greenlet)

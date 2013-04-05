@@ -39,6 +39,7 @@ def scan_for_plugins():
 
     """
     for i in os.listdir(config.get_dir("plugin")):
+        print "FOUND A PLUGIN?!"
         plugin_file = os.path.join(config.get_dir("plugin"), i, Plugin.PLUGIN_INFO_FILE)
         if not os.path.exists(plugin_file):
             continue
@@ -53,7 +54,7 @@ def scan_for_plugins():
             raise PluginException("Invalid Plugin")
         if info["name"] in _plugins.keys():
             raise PluginException("Plugin Collision! Two plugins named %s" % info["name"])
-        _run_count_plugin(Plugin(info, i))
+        utils.spawn_gevent_func("run_count_plugin: %s" % info["name"], "plugin", _run_count_plugin, Plugin(info, i))
 
 
 def _start_process(cmd, identity):
@@ -67,7 +68,6 @@ def _start_process(cmd, identity):
     return proc
 
 
-@utils.gevent_func("run_count_plugin", "plugin")
 def _run_count_plugin(plugin):
     count_identity = utils.random_ident()
     e = event.add(count_identity, "FEPluginRegisterCount")
@@ -87,7 +87,7 @@ def _run_count_plugin(plugin):
         return
     logging.info("Count process for %s up on identity %s", plugin.name, count_identity)
     utils.add_identity_greenlet(count_identity, gevent.getcurrent())
-    hb = utils.heartbeat(count_identity, gevent.getcurrent())
+    hb = utils.spawn_heartbeat(count_identity, gevent.getcurrent())
     _plugins[plugin.name] = plugin
     while True:
         queue.add(count_identity, ["s", "FEPluginDeviceList"])
@@ -174,7 +174,6 @@ def kill_claims(identity):
         g.kill(exception=utils.FEGreenletExit, timeout=1, block=True)
 
 
-@utils.gevent_func("run_device_plugin", "device")
 def run_device_plugin(identity, msg):
     # Figure out the plugin that owns the device we want
     p = None
@@ -218,7 +217,7 @@ def run_device_plugin(identity, msg):
     utils.add_identity_greenlet(dev_id, gevent.getcurrent())
 
     # Add a heartbeat now that the process is up
-    hb = utils.heartbeat(dev_id, gevent.getcurrent())
+    hb = utils.spawn_heartbeat(dev_id, gevent.getcurrent())
 
     # System to device process: Open device
     queue.add(dev_id, ["s", "FEPluginOpenDevice", dev_id])

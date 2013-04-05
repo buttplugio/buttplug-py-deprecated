@@ -155,8 +155,8 @@ class PluginTests(unittest.TestCase):
 
         def server_loop():
             server.init()
-            while not self.server_loop_trigger.is_set():
-                server.msg_loop()
+            utils.spawn_gevent_func("main socket loop", "main", server.msg_loop)
+            self.server_loop_trigger.wait()
             server.shutdown()
         self.server_greenlet = gevent.spawn(server_loop)
 
@@ -171,14 +171,9 @@ class PluginTests(unittest.TestCase):
 
     def testNoPlugins(self):
         """have no plugins"""
-        has_plugin = False
-
-        def plugin_test(plugin):
-            has_plugin = True
-        plugin._run_count_plugin = plugin_test
         plugin.scan_for_plugins()
         # If we've actually started any greenlets, fail
-        self.failIf(has_plugin)
+        self.failIf("plugin" in utils._pools.keys() and len(utils._pools["plugin"]) > 0)
 
     def testOnePluginCorrectJSON(self):
         """have valid plugin, with a valid count process"""
@@ -243,8 +238,8 @@ class HeartbeatTests(unittest.TestCase):
 
         def server_loop():
             server.init()
-            while not self.server_loop_trigger.is_set():
-                server.msg_loop()
+            utils.spawn_gevent_func("main socket loop", "main", server.msg_loop)
+            self.server_loop_trigger.wait()
             server.shutdown()
         self.server_greenlet = gevent.spawn(server_loop)
 
@@ -278,7 +273,7 @@ class HeartbeatTests(unittest.TestCase):
                 gevent.sleep(1000)
             except utils.FEGreenletExit:
                 pass
-        hb = utils.heartbeat("Does not matter", self.test_socket_greenlet)
+        hb = utils.spawn_heartbeat("Does not matter", self.test_socket_greenlet)
         hb.join(timeout=.5)
         self.failIf(not hb.successful(), "Heartbeat did not exit!")
 
@@ -328,8 +323,8 @@ class ClaimFlowTests(unittest.TestCase):
 
         def server_loop():
             server.init()
-            while not self.server_loop_trigger.is_set():
-                server.msg_loop()
+            utils.spawn_gevent_func("main socket loop", "main", server.msg_loop)
+            self.server_loop_trigger.wait()
             server.shutdown()
         self.server_greenlet = gevent.spawn(server_loop)
 
@@ -403,10 +398,6 @@ class ClaimFlowTests(unittest.TestCase):
 
 
 # # class ProcessTests(unittest.TestCase):
-# #     pass
-
-
-# # class QueueTests(unittest.TestCase):
 # #     pass
 
 

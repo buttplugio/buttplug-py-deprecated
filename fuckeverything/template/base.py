@@ -29,7 +29,6 @@ class FEBase(object):
         self.socket_queue.bind("inproc://fe-%s" % (self.identity))
         self.socket_out = self.context.socket(zmq.PULL)
         self.socket_out.connect("inproc://fe-%s" % (self.identity))
-        gevent.spawn_later(2, self.ping_check)
 
     def random_ident(self):
         """Generate a random string of letters and digits to use as zmq router
@@ -97,8 +96,11 @@ class FEBase(object):
         if not self.parse_arguments():
             print "Argument error!"
             return 1
+        gevent.spawn_later(2, self.ping_check)
         self.socket_client = self.context.socket(zmq.DEALER)
         self.socket_client.setsockopt(zmq.IDENTITY, self.socket_identity)
+        # Hang around for a tiny bit before closing, just to clear out
+        self.socket_client.setsockopt(zmq.LINGER, 100)
 
         self.socket_client.connect(self.server_port)
         poller = zmq.Poller()
@@ -119,10 +121,6 @@ class FEBase(object):
         except KeyboardInterrupt:
             pass
         self.socket_client.send(msgpack.packb(["s", "FEClose"]))
-        # There has got to be a better way to make sure we send close messages,
-        # but fuck if I can figure it out. I suppose if we don't, the heartbeat
-        # on the server will take care of it. :|
-        gevent.sleep(.1)
         self.socket_client.close()
         self.socket_queue.close()
         self.socket_out.close()

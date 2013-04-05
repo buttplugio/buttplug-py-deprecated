@@ -1,10 +1,30 @@
 #!/usr/bin/python
 
 import sys
-import fuckeverything.core.server
+import logging
+import gevent
+from fuckeverything.core import server, config, utils, plugin
+
 
 def main():
-    fuckeverything.core.server.start()
+    """Start server loop"""
+    # Bring up logging, fill out configuration values
+    logging.basicConfig(level=logging.DEBUG)
+    config.init()
+    server.init()
+    # Start plugins
+    plugin.scan_for_plugins()
+
+    utils.spawn_gevent_func("main socket loop", "main", server.msg_loop)
+    # Run Loop
+    try:
+        while True:
+            gevent.sleep(1000)
+    except KeyboardInterrupt:
+        pass
+    server.shutdown()
+    logging.info("Quitting server...")
+
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -5,9 +5,8 @@ from fuckeverything.core import plugin
 from fuckeverything.core import queue
 
 
-@utils.gevent_func("client", "client")
 def handle_client(identity, msg):
-    hb = utils.heartbeat(identity, gevent.getcurrent())
+    hb = utils.spawn_heartbeat(identity, gevent.getcurrent())
     utils.add_identity_greenlet(identity, gevent.getcurrent())
     # Let the client know we're aware of it
     queue.add(identity, ["s", "FERegisterClient", True])

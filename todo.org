@@ -187,9 +187,13 @@ CLOSED: [2013-04-02 Tue 10:42]
 *** DONE Make sure client disconnect means claims are released
 CLOSED: [2013-04-02 Tue 10:42]
 - State "DONE"       from "TODO"       [2013-04-02 Tue 10:42]
+*** DONE Make sure message requeuing works even when double messages sent
+CLOSED: [2013-04-04 Thu 21:05]
+- State "DONE"       from "TODO"       [2013-04-04 Thu 21:05]
+*** DONE Add identity to greenlet names if it's a parameter to the function
+CLOSED: [2013-04-04 Thu 22:54]
+- State "DONE"       from "TODO"       [2013-04-04 Thu 22:54]
 *** TODO Add ability to use json or msgpack
-*** TODO Add identity to greenlet names if it's a parameter to the function
-*** TODO Make sure message requeuing works even when double messages sent
 *** TODO Register plugin handled messages
 *** TODO Log subprocess output to logging module
 http://www.velocityreviews.com/forums/t612189-subprocess-popen-output-to-logging-streamhandler.html

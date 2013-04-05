@@ -11,6 +11,12 @@ import logging
 _msg_table = {}
 
 
+def close_internal(identity, msg):
+    g = utils.get_identity_greenlet(identity)
+    if g is not None:
+        g.kill(timeout=1, block=True, exception=utils.FEGreenletExit)
+
+
 def _handle_server_info(identity, msg):
     """
     Server Info
@@ -40,16 +46,28 @@ def _handle_device_list(identity, msg):
 
 
 def _handle_close(identity, msg):
-    g = utils.get_identity_greenlet(identity)
-    if g is not None:
-        g.kill(timeout=1, block=True, exception=utils.FEGreenletExit)
+    utils.spawn_gevent_func("close and block: %s" % identity,
+                            "main", close_internal,
+                            identity, msg)
+
+
+def _handle_claim_device(identity, msg):
+    utils.spawn_gevent_func("claim_device: %s" % msg[2],
+                            "device", plugin.run_device_plugin,
+                            identity, msg)
+
+
+def _handle_client(identity, msg):
+    utils.spawn_gevent_func("client: %s" % identity,
+                            "client", client.handle_client,
+                            identity, msg)
 
 
 _msg_table = {"FEServerInfo": _handle_server_info,
               "FEPluginList": _handle_plugin_list,
               "FEDeviceList": _handle_device_list,
-              "FERegisterClient": client.handle_client,
-              "FEClaimDevice": plugin.run_device_plugin,
+              "FERegisterClient": _handle_client,
+              "FEClaimDevice": _handle_claim_device,
               "FEClose": _handle_close}
 
 
