@@ -193,10 +193,11 @@ CLOSED: [2013-04-04 Thu 21:05]
 *** DONE Add identity to greenlet names if it's a parameter to the function
 CLOSED: [2013-04-04 Thu 22:54]
 - State "DONE"       from "TODO"       [2013-04-04 Thu 22:54]
-*** TODO Add ability to use json or msgpack
-*** TODO Register plugin handled messages
+*** TODO Add server tests for process/pool cleanup on shutdown
 *** TODO Log subprocess output to logging module
 http://www.velocityreviews.com/forums/t612189-subprocess-popen-output-to-logging-streamhandler.html
+*** TODO Register plugin handled messages
+*** TODO Add ability to use json or msgpack
 *** TODO Assign random names to client sockets?
 ** Plugins
 *** DONE Write raw message plugin for RealTouch

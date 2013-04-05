@@ -54,6 +54,7 @@ class ConfigTests(unittest.TestCase):
 
     def setUp(self):
         reload(config)
+        reload(utils)
         self.tmpdir = tempfile.mkdtemp(prefix="fetest-")
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init()
@@ -147,6 +148,7 @@ class PluginTests(unittest.TestCase):
         reload(config)
         reload(plugin)
         reload(server)
+        reload(utils)
         self.tmpdir = tempfile.mkdtemp(prefix="fetest-")
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init()
@@ -156,6 +158,7 @@ class PluginTests(unittest.TestCase):
         def server_loop():
             server.init()
             utils.spawn_gevent_func("main socket loop", "main", server.msg_loop)
+            gevent.sleep()
             self.server_loop_trigger.wait()
             server.shutdown()
         self.server_greenlet = gevent.spawn(server_loop)
@@ -173,7 +176,7 @@ class PluginTests(unittest.TestCase):
         """have no plugins"""
         plugin.scan_for_plugins()
         # If we've actually started any greenlets, fail
-        self.failIf("plugin" in utils._pools.keys() and len(utils._pools["plugin"]) > 0)
+        self.failIf("plugin" in utils._pools.keys())
 
     def testOnePluginCorrectJSON(self):
         """have valid plugin, with a valid count process"""
@@ -227,6 +230,7 @@ class HeartbeatTests(unittest.TestCase):
     def setUp(self):
         reload(config)
         reload(server)
+        reload(utils)
         self.tmpdir = tempfile.mkdtemp(prefix="fetest-")
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init()
@@ -239,8 +243,10 @@ class HeartbeatTests(unittest.TestCase):
         def server_loop():
             server.init()
             utils.spawn_gevent_func("main socket loop", "main", server.msg_loop)
+            gevent.sleep()
             self.server_loop_trigger.wait()
             server.shutdown()
+
         self.server_greenlet = gevent.spawn(server_loop)
 
         # Start a new socket
@@ -313,6 +319,7 @@ class ClaimFlowTests(unittest.TestCase):
         reload(config)
         reload(plugin)
         reload(server)
+        reload(utils)
         self.tmpdir = tempfile.mkdtemp(prefix="fetest-")
         with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
             config.init()
@@ -324,6 +331,7 @@ class ClaimFlowTests(unittest.TestCase):
         def server_loop():
             server.init()
             utils.spawn_gevent_func("main socket loop", "main", server.msg_loop)
+            gevent.sleep()
             self.server_loop_trigger.wait()
             server.shutdown()
         self.server_greenlet = gevent.spawn(server_loop)

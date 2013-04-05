@@ -39,7 +39,6 @@ def scan_for_plugins():
 
     """
     for i in os.listdir(config.get_dir("plugin")):
-        print "FOUND A PLUGIN?!"
         plugin_file = os.path.join(config.get_dir("plugin"), i, Plugin.PLUGIN_INFO_FILE)
         if not os.path.exists(plugin_file):
             continue

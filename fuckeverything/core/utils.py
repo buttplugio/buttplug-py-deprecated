@@ -35,6 +35,7 @@ def killjoin_greenlets(pool):
     except gevent.Timeout:
         logging.warning("Timed out (gevent bug?), cleaning up manually")
         _pools[pool].join()
+    del _pools[pool]
 
 
 def spawn_gevent_func(name, pool, func, *args, **kwargs):
