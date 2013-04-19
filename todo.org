@@ -199,6 +199,7 @@ http://www.velocityreviews.com/forums/t612189-subprocess-popen-output-to-logging
 *** TODO Register plugin handled messages
 *** TODO Add ability to use json or msgpack
 *** TODO Assign random names to client sockets?
+*** TODO How to deal with plugins like websocket, where we don't want process per device?
 ** Plugins
 *** DONE Write raw message plugin for RealTouch
 CLOSED: [2012-12-11 Tue 23:50]
