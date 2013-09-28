@@ -1,6 +1,7 @@
 Cython
 # https://github.com/surfly/gevent/archive/1.0rc2.tar.gz
-gevent
+# gevent
+git+git://github.com/surfly/gevent.git@1.0rc3#egg=gevent
 msgpack-python
 pyzmq
 nose
