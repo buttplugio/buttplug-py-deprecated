@@ -4,8 +4,8 @@ import argparse
 import logging
 from os.path import expanduser
 
-_cdirs = {"config": os.path.join(expanduser("~"), ".fuckeverything"),
-          "plugin": os.path.join(expanduser("~"), ".fuckeverything", "plugins")}
+_cdirs = {"config": os.path.join(expanduser("~"), ".buttplug"),
+          "plugin": os.path.join(expanduser("~"), ".buttplug", "plugins")}
 
 _default_server_addr = "tcp://127.0.0.1:9389"
 
@@ -32,7 +32,7 @@ def _save():
 
 def init():
     """Initialize configuration values for server"""
-    parser = argparse.ArgumentParser(description="FuckEverything")
+    parser = argparse.ArgumentParser(description="Buttplug")
     parser.add_argument('--server_address', metavar='addr', type=str,
                         help='Address to listen on', default=_config["server_address"])
     parser.add_argument('--config_dir', metavar='path', type=str,

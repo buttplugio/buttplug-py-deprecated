@@ -1,2 +1,2 @@
-from fuckeverything import core
-from fuckeverything import template
+from buttplug import core
+from buttplug import template

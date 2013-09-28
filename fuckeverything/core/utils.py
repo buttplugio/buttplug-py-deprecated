@@ -2,9 +2,9 @@ import logging
 import gevent.pool
 import random
 from gevent import subprocess
-from fuckeverything.core import event
-from fuckeverything.core import queue
-from fuckeverything.core import config
+from buttplug.core import event
+from buttplug.core import queue
+from buttplug.core import config
 
 _pools = {}
 _live_greenlets = []

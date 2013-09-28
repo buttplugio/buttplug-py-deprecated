@@ -4,3 +4,4 @@ build
 cxdist
 dist
 fe-test-env
+bp-test-env

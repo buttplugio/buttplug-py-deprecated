@@ -1,4 +1,4 @@
-from fuckeverything.template import base
+from buttplug.template import base
 
 
 class FEPlugin(base.FEBase):

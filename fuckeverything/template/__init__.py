@@ -1,2 +1,2 @@
-from fuckeverything.template import client
-from fuckeverything.template import plugin
+from buttplug.template import client
+from buttplug.template import plugin

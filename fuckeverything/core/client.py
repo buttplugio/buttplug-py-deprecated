@@ -1,8 +1,8 @@
 import logging
 import gevent
-from fuckeverything.core import utils
-from fuckeverything.core import plugin
-from fuckeverything.core import queue
+from buttplug.core import utils
+from buttplug.core import plugin
+from buttplug.core import queue
 
 
 def handle_client(identity, msg):

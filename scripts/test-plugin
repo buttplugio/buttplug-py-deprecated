@@ -1,9 +1,10 @@
-#!/usr/bin/python
+#!/home/qdot/code/git-projects/buttplug/fe-test-env/bin/python
 import sys
+sys.path.append("/home/qdot/code/git-projects/buttplug/")
 import os
 import tempfile
 import shutil
-from fuckeverything.template.plugin import FEPlugin
+from buttplug.template.plugin import FEPlugin
 
 
 class TestPlugin(FEPlugin):

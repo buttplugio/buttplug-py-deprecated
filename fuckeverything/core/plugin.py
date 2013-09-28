@@ -3,10 +3,10 @@ import json
 import gevent
 import logging
 from gevent import subprocess
-from fuckeverything.core import utils
-from fuckeverything.core import event
-from fuckeverything.core import queue
-from fuckeverything.core import config
+from buttplug.core import utils
+from buttplug.core import event
+from buttplug.core import queue
+from buttplug.core import config
 
 
 class Plugin(object):

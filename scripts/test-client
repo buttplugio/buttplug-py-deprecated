@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import sys
-from fuckeverything.template.client import FEClient
+sys.path.append("/home/qdot/code/git-projects/buttplug")
+from buttplug.template.client import FEClient
 import gevent
 
 

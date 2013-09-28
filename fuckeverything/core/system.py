@@ -1,9 +1,9 @@
-from fuckeverything.core import plugin
-from fuckeverything.core import feinfo
-from fuckeverything.core import queue
-from fuckeverything.core import event
-from fuckeverything.core import utils
-from fuckeverything.core import client
+from buttplug.core import plugin
+from buttplug.core import feinfo
+from buttplug.core import queue
+from buttplug.core import event
+from buttplug.core import utils
+from buttplug.core import client
 from collections import defaultdict
 import logging
 

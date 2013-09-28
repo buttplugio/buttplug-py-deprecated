@@ -1,9 +1,9 @@
 #!/usr/bin/python
-
 import sys
 import logging
 import gevent
-from fuckeverything.core import server, config, utils, plugin
+sys.path.append("/home/qdot/code/git-projects/buttplug/")
+from buttplug.core import server, config, utils, plugin
 
 
 def main():

@@ -1,8 +1,8 @@
-from fuckeverything.core import config
-from fuckeverything.core import plugin
-from fuckeverything.core import queue
-from fuckeverything.core import system
-from fuckeverything.core import utils
+from buttplug.core import config
+from buttplug.core import plugin
+from buttplug.core import queue
+from buttplug.core import system
+from buttplug.core import utils
 import gevent
 import zmq.green as zmq
 import msgpack
