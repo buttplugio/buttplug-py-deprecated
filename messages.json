@@ -1,0 +1,44 @@
+{
+  "version" : 1.0,
+  "messages" : {
+    "BPClaimDevice" : {
+      "Description":"Sent from client to server to start device claim"
+    },
+    "BPClose" : {
+      "description":"Close connect between server and plugin/client"
+    },
+    "BPDeviceList" : {
+      "description":"Send a device list to the client"
+    },
+    "BPPing" : {
+      "description":"Ping message between plugin/client and server for heartbeat"
+    },
+    "BPPingWait" : {
+      "description":"Internal message"
+    },
+    "BPPluginDeviceList" : {
+      "description":"List of devices available from plugin"
+    },
+    "BPPluginList" : {
+      "description":"List of available plugins"
+    },
+    "BPPluginOpenDevice" : {
+      "description":"Request from server to plugin to open device"
+    },
+    "BPPluginRegisterClaim" : {
+      "description":"Sent from server to new plugin process to let it know it will be handling device claiming"
+    },
+    "BPPluginRegisterCount" : {
+      "description":"Sent from server to new plugin process to let it know it will be handling device counting"
+    },
+    "BPPluginReleaseDevice" : {
+      "description":"Sent from server to plugin process to close a device and stop plugin process"
+    },
+    "BPRegisterClient" : {
+      "description":"Request to begin communication with a client"
+    },
+    "BPServerInfo" : {
+      "description":"Return server information (version, message template, etc)"
+    }
+  }
+}
