@@ -13,9 +13,6 @@
     "BPPing" : {
       "description":"Ping message between plugin/client and server for heartbeat"
     },
-    "BPPingWait" : {
-      "description":"Internal message"
-    },
     "BPPluginDeviceList" : {
       "description":"List of devices available from plugin"
     },

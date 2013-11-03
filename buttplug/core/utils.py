@@ -95,20 +95,11 @@ def heartbeat(identity, greenlet):
             logging.debug("Heartbeat for %s exiting...", identity)
             return
 
-        # Add a bogus messages called PingWait. We should never get a reply to
-        # this because we never sent it. It just sits in the event table as a
-        # way to do an interruptable sleep before we send our next ping to the
-        # client.
-        e = event.add(identity, "BPPingWait")
         try:
-            e.get(block=True, timeout=config.get_value("ping_rate"))
-        except gevent.Timeout:
-            pass
+            gevent.sleep(config.get_value("ping_rate"))
         except BPGreenletExit:
             logging.debug("Heartbeat for %s exiting...", identity)
             return
-        event.remove(identity, "BPPingWait")
-
 
 def spawn_heartbeat(identity, greenlet):
     return spawn_gevent_func("heartbeat-%s" % identity, "heartbeat", heartbeat, identity, greenlet)
