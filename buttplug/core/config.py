@@ -13,9 +13,11 @@ _config = {"server_address": _default_server_addr,
            "ping_rate": 1,
            "ping_max": 3}
 
+CONFIG_FILENAME = "config.json"
+
 def _load():
-    logging.debug("Loading JSON Config from %s", os.path.join(_cdirs["config"], "config.json"))
-    with open(os.path.join(_cdirs["config"], "config.json"), "r+") as f:
+    logging.debug("Loading JSON Config from %s", os.path.join(_cdirs["config"], CONFIG_FILENAME))
+    with open(os.path.join(_cdirs["config"], CONFIG_FILENAME), "r+") as f:
         j = json.load(f)
         for (k, v) in j.items():
             if k in _config:
@@ -25,8 +27,8 @@ def _load():
 
 
 def _save():
-    logging.debug("Saving JSON Config to %s", os.path.join(_cdirs["config"], "config.json"))
-    with open(os.path.join(_cdirs["config"], "config.json"), "w") as f:
+    logging.debug("Saving JSON Config to %s", os.path.join(_cdirs["config"], CONFIG_FILENAME))
+    with open(os.path.join(_cdirs["config"], CONFIG_FILENAME), "w") as f:
         json.dump(_config, f)
 
 
@@ -49,7 +51,7 @@ def init():
             raise RuntimeError("Configuration directory does not exist!")
         logging.debug("Creating directory %s", _cdirs["config"])
         os.makedirs(_cdirs["config"])
-    if not os.path.exists(os.path.join(_cdirs["config"], "config.json")):
+    if not os.path.exists(os.path.join(_cdirs["config"], CONFIG_FILENAME)):
         _save()
     else:
         _load()

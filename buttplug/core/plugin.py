@@ -10,7 +10,7 @@ from buttplug.core import config
 
 
 class Plugin(object):
-    PLUGIN_INFO_FILE = "feplugin.json"
+    PLUGIN_INFO_FILE = "bdplugin.json"
     PLUGIN_REQUIRED_KEYS = [u"name", u"version", u"executable", u"messages"]
 
     def __init__(self, info, plugin_dir):
@@ -34,7 +34,7 @@ class PluginException(Exception):
 
 def scan_for_plugins():
     """Look through config'd plugin directory for any directory with a file named
-    "feplugin.json". Fill in an plugin object, and pass to _run_count_plugin to
+    "bdplugin.json". Fill in an plugin object, and pass to _run_count_plugin to
     handle lifetime.
 
     """

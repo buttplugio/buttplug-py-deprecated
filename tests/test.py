@@ -29,7 +29,7 @@ _test_plugin_json = {"name": "Test Plugin",
 def _copy_test_plugin(base_dir):
     if not os.path.exists(base_dir):
         os.makedirs(base_dir)
-    with open(os.path.join(base_dir, "feplugin.json"), "w") as f:
+    with open(os.path.join(base_dir, plugin.Plugin.PLUGIN_INFO_FILE), "w") as f:
         json.dump(_test_plugin_json, f)
     shutil.copy(os.path.join(os.getcwd(), "scripts", "test-plugin"), base_dir)
     shutil.copytree(os.path.join(os.getcwd(), "buttplug"), os.path.join(base_dir, "buttplug"))
@@ -104,7 +104,7 @@ class ConfigTests(unittest.TestCase):
 
     def testConfigFileCreation(self):
         """create config files correctly"""
-        self.failIf(not os.path.exists(os.path.join(config._cdirs["config"], "config.json")))
+        self.failIf(not os.path.exists(os.path.join(config._cdirs["config"], config.CONFIG_FILENAME)))
 
     def testConfigFileLoad(self):
         """load config files correctly"""
@@ -118,7 +118,7 @@ class ConfigTests(unittest.TestCase):
         """throw on screwed config files correctly"""
         config.set_value("server_address", "ipc://wat")
         # Insert gibberish!
-        with open(os.path.join(config._cdirs["config"], "config.json"), "w") as f:
+        with open(os.path.join(config._cdirs["config"], config.CONFIG_FILENAME), "w") as f:
             f.write("This is so not some fucking json")
         reload(config)
         with mock.patch('sys.argv', ['buttplug', '--config_dir', self.tmpdir]):
@@ -132,7 +132,7 @@ class ConfigTests(unittest.TestCase):
         """throw on screwed config files correctly"""
         config.set_value("server_address", "ipc://wat")
         # Insert bad key!
-        with open(os.path.join(config._cdirs["config"], "config.json"), "w") as f:
+        with open(os.path.join(config._cdirs["config"], config.CONFIG_FILENAME), "w") as f:
             json.dump({"server_addres": "tcp://127.0.0.1:9389"}, f)
         reload(config)
         with mock.patch('sys.argv', ['buttplug', '--config_dir', self.tmpdir]):
@@ -190,7 +190,7 @@ class PluginTests(unittest.TestCase):
         # Copy plugin to directory here
         self.copyPlugin()
         # Edit json
-        with open(os.path.join(self.plugin_dest, "feplugin.json"), "w") as f:
+        with open(os.path.join(self.plugin_dest, plugin.Plugin.PLUGIN_INFO_FILE), "w") as f:
             f.write("This is so not some fucking json")
         plugin.scan_for_plugins()
         gevent.sleep(.3)
@@ -363,6 +363,7 @@ class ClaimFlowTests(unittest.TestCase):
 
         self.failIf(list_msg is None)
         self.failIf(list_msg[1] != "BPDeviceList")
+        print list_msg
         self.failIf("TestSuccessfulOpen" not in list_msg[2][0]["devices"])
 #     # def testClaimValidDevice(self):
 #     #     """Claim a device"""
