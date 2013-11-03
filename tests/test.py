@@ -10,14 +10,14 @@ import msgpack
 import logging
 import gevent
 import zmq.green as zmq
-from fuckeverything.core import config
-from fuckeverything.core import plugin
-from fuckeverything.core import utils
-from fuckeverything.core import queue
-from fuckeverything.core import system
-from fuckeverything.core import event
-from fuckeverything.core import server
-from fuckeverything.template.client import FEClient
+from buttplug.core import config
+from buttplug.core import plugin
+from buttplug.core import utils
+from buttplug.core import queue
+from buttplug.core import system
+from buttplug.core import event
+from buttplug.core import server
+from buttplug.template.client import FEClient
 
 
 _test_plugin_json = {"name": "Test Plugin",
@@ -32,7 +32,7 @@ def _copy_test_plugin(base_dir):
     with open(os.path.join(base_dir, "feplugin.json"), "w") as f:
         json.dump(_test_plugin_json, f)
     shutil.copy(os.path.join(os.getcwd(), "scripts", "test-plugin"), base_dir)
-    shutil.copytree(os.path.join(os.getcwd(), "fuckeverything"), os.path.join(base_dir, "fuckeverything"))
+    shutil.copytree(os.path.join(os.getcwd(), "buttplug"), os.path.join(base_dir, "buttplug"))
 
 
 class TestClient(FEClient):
@@ -56,7 +56,7 @@ class ConfigTests(unittest.TestCase):
         reload(config)
         reload(utils)
         self.tmpdir = tempfile.mkdtemp(prefix="fetest-")
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+        with mock.patch('sys.argv', ['buttplug', '--config_dir', self.tmpdir]):
             config.init()
 
     def tearDown(self):
@@ -65,7 +65,7 @@ class ConfigTests(unittest.TestCase):
     def testHelp(self):
         """help test, should just bail out."""
         reload(config)
-        with mock.patch('sys.argv', ['fuckeverything', '-h']):
+        with mock.patch('sys.argv', ['buttplug', '-h']):
             try:
                 config.init()
                 self.fail("Not throwing exception to quit program after help list!")
@@ -74,7 +74,7 @@ class ConfigTests(unittest.TestCase):
 
     def testDirectoryCreation(self):
         """create a new config directory and populate it"""
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+        with mock.patch('sys.argv', ['buttplug', '--config_dir', self.tmpdir]):
             config.init()
         self.failIf(not os.path.exists(config._cdirs["config"]))
         self.failIf(not os.path.exists(config._cdirs["plugin"]))
@@ -82,7 +82,7 @@ class ConfigTests(unittest.TestCase):
     def testDirectoryNoCreation(self):
         """do not create new directory if it doesn't exist, fail out instead"""
         reload(config)
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir + "abc", "--config_no_create_dir"]):
+        with mock.patch('sys.argv', ['buttplug', '--config_dir', self.tmpdir + "abc", "--config_no_create_dir"]):
             try:
                 config.init()
                 self.fail("Not throwing exception on missing configuration directories!")
@@ -110,7 +110,7 @@ class ConfigTests(unittest.TestCase):
         """load config files correctly"""
         config.set_value("server_address", "ipc://wat")
         reload(config)
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+        with mock.patch('sys.argv', ['buttplug', '--config_dir', self.tmpdir]):
             config.init()
             self.failIf(config.get_value("server_address") != "ipc://wat")
 
@@ -121,7 +121,7 @@ class ConfigTests(unittest.TestCase):
         with open(os.path.join(config._cdirs["config"], "config.json"), "w") as f:
             f.write("This is so not some fucking json")
         reload(config)
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+        with mock.patch('sys.argv', ['buttplug', '--config_dir', self.tmpdir]):
             try:
                 config.init()
                 self.fail("Didn't fail on gibberish json!")
@@ -135,7 +135,7 @@ class ConfigTests(unittest.TestCase):
         with open(os.path.join(config._cdirs["config"], "config.json"), "w") as f:
             json.dump({"server_addres": "tcp://127.0.0.1:9389"}, f)
         reload(config)
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+        with mock.patch('sys.argv', ['buttplug', '--config_dir', self.tmpdir]):
             try:
                 config.init()
                 self.fail("Didn't fail on gibberish json!")
@@ -150,7 +150,7 @@ class PluginTests(unittest.TestCase):
         reload(server)
         reload(utils)
         self.tmpdir = tempfile.mkdtemp(prefix="fetest-")
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+        with mock.patch('sys.argv', ['buttplug', '--config_dir', self.tmpdir]):
             config.init()
         self.plugin_dest = os.path.join(config.get_dir("plugin"), "test-plugin")
         self.server_loop_trigger = gevent.event.Event()
@@ -232,7 +232,7 @@ class HeartbeatTests(unittest.TestCase):
         reload(server)
         reload(utils)
         self.tmpdir = tempfile.mkdtemp(prefix="fetest-")
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+        with mock.patch('sys.argv', ['buttplug', '--config_dir', self.tmpdir]):
             config.init()
         # Set ping rates REALLY low so these will move quickly
         config.set_value("ping_rate", .01)
@@ -321,7 +321,7 @@ class ClaimFlowTests(unittest.TestCase):
         reload(server)
         reload(utils)
         self.tmpdir = tempfile.mkdtemp(prefix="fetest-")
-        with mock.patch('sys.argv', ['fuckeverything', '--config_dir', self.tmpdir]):
+        with mock.patch('sys.argv', ['buttplug', '--config_dir', self.tmpdir]):
             config.init()
         self.plugin_dest = os.path.join(config.get_dir("plugin"), "test-plugin")
         self.server_loop_trigger = gevent.event.Event()

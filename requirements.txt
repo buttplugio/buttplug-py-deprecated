@@ -7,3 +7,7 @@ pyzmq
 nose
 mock
 
+# Emacs development packages
+elpy
+rope
+jedi
