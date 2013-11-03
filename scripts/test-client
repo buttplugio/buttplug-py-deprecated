@@ -1,31 +1,30 @@
-#!/usr/bin/python
 import sys
 sys.path.append("/home/qdot/code/git-projects/buttplug")
-from buttplug.template.client import FEClient
+from buttplug.template.client import BPClient
 import gevent
 
 
-class FETestClient(FEClient):
+class BPTestClient(BPClient):
     """
     """
 
     APP_NAME = "TestClient"
-    APP_DESCRIPTION = "Client for testing FE Server capabilities"
+    APP_DESCRIPTION = "Client for testing BP Server capabilities"
 
     def __init__(self, ):
         """
         """
-        super(FETestClient, self).__init__()
+        super(BPTestClient, self).__init__()
         self.device_claim_id = None
-        self.add_handlers({"FEServerInfo": self.server_info,
-                           "FERegisterClient": self.on_register,
-                           "FEClaimDevice": self.on_device_claim,
-                           "FEDeviceList": self.device_list,
+        self.add_handlers({"BPServerInfo": self.server_info,
+                           "BPRegisterClient": self.on_register,
+                           "BPClaimDevice": self.on_device_claim,
+                           "BPDeviceList": self.device_list,
                            "RawTestMsg": self.raw_test_msg})
 
     def on_register(self, msg):
-        self.send(["s", "FEServerInfo"])
-        self.send(["s", "FEDeviceList"])
+        self.send(["s", "BPServerInfo"])
+        self.send(["s", "BPDeviceList"])
 
     def raw_test_msg(self, msg):
         print msg
@@ -46,12 +45,12 @@ class FETestClient(FEClient):
 
     def device_list(self, msg):
         print msg
-        self.send(["s", "FEClaimDevice", "123"])
+        self.send(["s", "BPClaimDevice", "123"])
 
 
 def main():
-    """Main function for FE Plugin"""
-    c = FETestClient()
+    """Main function for BP Plugin"""
+    c = BPTestClient()
     return c.run()
 
 

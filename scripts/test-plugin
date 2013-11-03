@@ -1,19 +1,19 @@
-#!/home/qdot/code/git-projects/buttplug/fe-test-env/bin/python
+#!/home/qdot/venvs/bp/bin/python
 import sys
 sys.path.append("/home/qdot/code/git-projects/buttplug/")
 import os
 import tempfile
 import shutil
-from buttplug.template.plugin import FEPlugin
+from buttplug.template.plugin import BPPlugin
 
 
-class TestPlugin(FEPlugin):
+class TestPlugin(BPPlugin):
     APP_NAME = "Test Plugin"
-    APP_DESC = "Test for FE Server Plugin System"
+    APP_DESC = "Test for BP Server Plugin System"
 
     def __init__(self):
         super(TestPlugin, self).__init__()
-        self.add_handlers({"FEPluginDeviceList": self.send_device_list_msg,
+        self.add_handlers({"BPPluginDeviceList": self.send_device_list_msg,
                            "RawTestMsg": self.raw_test_msg})
         self.device_id = None
 
@@ -30,7 +30,7 @@ class TestPlugin(FEPlugin):
             os.unlink(self.device_file_name)
 
     def send_device_list_msg(self, msg):
-        self.send(["s", "FEPluginDeviceList", self.get_device_list()])
+        self.send(["s", "BPPluginDeviceList", self.get_device_list()])
 
     def get_device_list(self):
         """Returns the device list for the plugin"""
@@ -44,13 +44,13 @@ class TestPlugin(FEPlugin):
         (from_addr, msg_type, device_name) = msg
         self.device_file_name = os.path.join(tempfile.gettempdir(), "fe-%s" % (device_name))
         if os.path.exists(self.device_file_name):
-            self.send(["s", "FEPluginOpenDevice", device_name, False])
+            self.send(["s", "BPPluginOpenDevice", device_name, False])
             return
         open(self.device_file_name, "w").close()
-        self.send(["s", "FEPluginOpenDevice", device_name, True])
+        self.send(["s", "BPPluginOpenDevice", device_name, True])
 
 def main():
-    """Main function for FE Plugin"""
+    """Main function for BP Plugin"""
     t = TestPlugin()
     return t.run()
 
