@@ -193,6 +193,7 @@ CLOSED: [2013-04-04 Thu 21:05]
 *** DONE Add identity to greenlet names if it's a parameter to the function
 CLOSED: [2013-04-04 Thu 22:54]
 - State "DONE"       from "TODO"       [2013-04-04 Thu 22:54]
+*** TODO Make a message template for the server
 *** TODO Add server tests for process/pool cleanup on shutdown
 *** TODO Log subprocess output to logging module
 http://www.velocityreviews.com/forums/t612189-subprocess-popen-output-to-logging-streamhandler.html

@@ -1,5 +1,4 @@
 * FE Overview
-
 ** Rationale
 
 I've been digitally pontificating about sex and technology since
