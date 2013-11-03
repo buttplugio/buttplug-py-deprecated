@@ -1,11 +1,11 @@
 from buttplug.template import base
 
 
-class FEClient(base.FEBase):
+class BPClient(base.BPBase):
 
     def __init__(self):
-        super(FEClient, self).__init__()
+        super(BPClient, self).__init__()
         self.socket_identity = self.random_ident()
 
     def register(self):
-        self.send(["s", "FERegisterClient", self.APP_NAME])
+        self.send(["s", "BPRegisterClient", self.APP_NAME])

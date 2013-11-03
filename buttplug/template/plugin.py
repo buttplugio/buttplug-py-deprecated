@@ -1,17 +1,17 @@
 from buttplug.template import base
 
 
-class FEPlugin(base.FEBase):
+class BPPlugin(base.BPBase):
 
     def __init__(self):
-        super(FEPlugin, self).__init__()
+        super(BPPlugin, self).__init__()
         self.count_mode = False
         self.device_id = None
-        self.add_handlers({"FEPluginOpenDevice": self.open_device,
-                           "FEPluginReleaseDevice": self.release_device})
+        self.add_handlers({"BPPluginOpenDevice": self.open_device,
+                           "BPPluginReleaseDevice": self.release_device})
 
     def setup_parser(self):
-        super(FEPlugin, self).setup_parser()
+        super(BPPlugin, self).setup_parser()
         self.parser.add_argument('--count', action='store_true', help="count mode "
                                  "means that process will only be used to keep device "
                                  "counts")
@@ -22,7 +22,7 @@ class FEPlugin(base.FEBase):
         raise RuntimeError("Define your own damn get_device_list!")
 
     def parse_arguments(self):
-        r = super(FEPlugin, self).parse_arguments()
+        r = super(BPPlugin, self).parse_arguments()
         if not r:
             return r
         if self.args.count is True:
@@ -32,9 +32,9 @@ class FEPlugin(base.FEBase):
 
     def register(self):
         if self.count_mode:
-            self.send(["s", "FEPluginRegisterCount", self.APP_NAME])
+            self.send(["s", "BPPluginRegisterCount", self.APP_NAME])
         else:
-            self.send(["s", "FEPluginRegisterClaim", self.APP_NAME])
+            self.send(["s", "BPPluginRegisterClaim", self.APP_NAME])
 
     def release_device(self, msg):
         raise RuntimeError("Define your own damn release_device!")
@@ -43,5 +43,5 @@ class FEPlugin(base.FEBase):
         raise RuntimeError("Define your own damn open_device!")
 
     def run(self):
-        base.FEBase.run(self)
+        base.BPBase.run(self)
         self.release_device(None)

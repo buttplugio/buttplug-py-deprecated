@@ -17,13 +17,13 @@ from buttplug.core import queue
 from buttplug.core import system
 from buttplug.core import event
 from buttplug.core import server
-from buttplug.template.client import FEClient
+from buttplug.template.client import BPClient
 
 
 _test_plugin_json = {"name": "Test Plugin",
                      "version": "0.001",
                      "executable": "test-plugin",
-                     "messages": ["RawTestMsg", "FEDeviceCount"]}
+                     "messages": ["RawTestMsg", "BPDeviceCount"]}
 
 
 def _copy_test_plugin(base_dir):
@@ -35,7 +35,7 @@ def _copy_test_plugin(base_dir):
     shutil.copytree(os.path.join(os.getcwd(), "buttplug"), os.path.join(base_dir, "buttplug"))
 
 
-class TestClient(FEClient):
+class TestClient(BPClient):
 
     def __init__(self, port):
         super(TestClient, self).__init__()
@@ -218,7 +218,7 @@ class HeartbeatTests(unittest.TestCase):
         # Override ping reply of base class
         def ping_reply(self, msg):
             self.last_ping = time.time()
-            self.send(["s", "FEPing"])
+            self.send(["s", "BPPing"])
             self.ping_count = self.ping_count + 1
             if self.ping_count == 3:
                 self.evt.set()
@@ -269,7 +269,7 @@ class HeartbeatTests(unittest.TestCase):
         """Tests heartbeat failure"""
         def no_ping(msg):
             pass
-        self.test_socket.inmsg["FEPing"] = no_ping
+        self.test_socket.inmsg["BPPing"] = no_ping
         self.failIf(self.trigger.wait(timeout=.5), "Did not close before timeout!")
 
     def testRemoveHeartbeat(self):
@@ -277,7 +277,7 @@ class HeartbeatTests(unittest.TestCase):
         def sleeplet():
             try:
                 gevent.sleep(1000)
-            except utils.FEGreenletExit:
+            except utils.BPGreenletExit:
                 pass
         hb = utils.spawn_heartbeat("Does not matter", self.test_socket_greenlet)
         hb.join(timeout=.5)
@@ -309,7 +309,7 @@ class ClaimFlowTests(unittest.TestCase):
             super(ClaimFlowTests.ClaimFlowTestSocket, self).__init__(port)
 
         def get_device_list(self):
-            self.send(["s", "FEDeviceList"])
+            self.send(["s", "BPDeviceList"])
 
     def copyPlugin(self):
         # Copy plugin to directory here
@@ -353,7 +353,7 @@ class ClaimFlowTests(unittest.TestCase):
         e = gevent.event.AsyncResult()
         def device_list(msg):
             e.set(msg)
-        self.test_socket.inmsg["FEDeviceList"] = device_list
+        self.test_socket.inmsg["BPDeviceList"] = device_list
         self.test_socket.get_device_list()
         list_msg = None
         try:
@@ -362,11 +362,11 @@ class ClaimFlowTests(unittest.TestCase):
             self.fail("Timed out waiting for device list!")
 
         self.failIf(list_msg is None)
-        self.failIf(list_msg[1] != "FEDeviceList")
+        self.failIf(list_msg[1] != "BPDeviceList")
         self.failIf("TestSuccessfulOpen" not in list_msg[2][0]["devices"])
 #     # def testClaimValidDevice(self):
 #     #     """Claim a device"""
-#     #     self.test_socket.send(["s", "FEClaimDevice", ""])
+#     #     self.test_socket.send(["s", "BPClaimDevice", ""])
 #     #     # We're in the ctd and dtc dicts
 #     #     # We've got a heartbeat
 

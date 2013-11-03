@@ -7,7 +7,7 @@ import gevent
 import zmq.green as zmq
 
 
-class FEBase(object):
+class BPBase(object):
 
     APP_NAME = "Default application"
     APP_DESC = "Default description"
@@ -22,8 +22,8 @@ class FEBase(object):
         self.server_port = None
         self.last_ping = time.time()
         self.identity = self.random_ident()
-        self.inmsg = {"FEClose": self.close,
-                      "FEPing": self.ping_reply}
+        self.inmsg = {"BPClose": self.close,
+                      "BPPing": self.ping_reply}
         self.context = zmq.Context()
         self.socket_queue = self.context.socket(zmq.PUSH)
         self.socket_queue.bind("inproc://fe-%s" % (self.identity))
@@ -120,7 +120,7 @@ class FEBase(object):
                     self.socket_client.send(msg)
         except KeyboardInterrupt:
             pass
-        self.socket_client.send(msgpack.packb(["s", "FEClose"]))
+        self.socket_client.send(msgpack.packb(["s", "BPClose"]))
         self.socket_client.close()
         self.socket_queue.close()
         self.socket_out.close()

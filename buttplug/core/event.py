@@ -1,6 +1,5 @@
 import gevent
 import logging
-import msgpack
 
 _mvars = {"_socket_events": {}}
 QUEUE_ADDRESS = "inproc://fequeue"

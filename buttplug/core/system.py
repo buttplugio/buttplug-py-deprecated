@@ -14,7 +14,7 @@ _msg_table = {}
 def close_internal(identity, msg):
     g = utils.get_identity_greenlet(identity)
     if g is not None:
-        g.kill(timeout=1, block=True, exception=utils.FEGreenletExit)
+        g.kill(timeout=1, block=True, exception=utils.BPGreenletExit)
 
 
 def _handle_server_info(identity, msg):
@@ -24,14 +24,14 @@ def _handle_server_info(identity, msg):
     - Server Software Version (static)
     - Server Build Date (static)
     """
-    queue.add(identity, ["s", "FEServerInfo", [{"name": "Fuck Everything",
+    queue.add(identity, ["s", "BPServerInfo", [{"name": "Fuck Everything",
                                                 "version": feinfo.SERVER_VERSION,
                                                 "date": feinfo.SERVER_DATE}]])
     return True
 
 
 def _handle_plugin_list(identity, msg):
-    queue.add(identity, ["s", "FEPluginList", [{"name": p.name,
+    queue.add(identity, ["s", "BPPluginList", [{"name": p.name,
                                                 "version": p.version}
                                                for p in plugin.plugins_available()]])
     return True
@@ -41,7 +41,7 @@ def _handle_device_list(identity, msg):
     devices = []
     for (k, v) in plugin._devices.items():
         devices.append({"name": k, "devices": v})
-    queue.add(identity, ["s", "FEDeviceList", devices])
+    queue.add(identity, ["s", "BPDeviceList", devices])
     return True
 
 
@@ -63,12 +63,12 @@ def _handle_client(identity, msg):
                             identity, msg)
 
 
-_msg_table = {"FEServerInfo": _handle_server_info,
-              "FEPluginList": _handle_plugin_list,
-              "FEDeviceList": _handle_device_list,
-              "FERegisterClient": _handle_client,
-              "FEClaimDevice": _handle_claim_device,
-              "FEClose": _handle_close}
+_msg_table = {"BPServerInfo": _handle_server_info,
+              "BPPluginList": _handle_plugin_list,
+              "BPDeviceList": _handle_device_list,
+              "BPRegisterClient": _handle_client,
+              "BPClaimDevice": _handle_claim_device,
+              "BPClose": _handle_close}
 
 
 def parse_message(identity, msg):
@@ -80,7 +80,7 @@ def parse_message(identity, msg):
         return
     msg_address = msg[0]
     msg_type = msg[1]
-    # if msg_type not in ["FEPing", "FEPluginDeviceList"]:
+    # if msg_type not in ["BPPing", "BPPluginDeviceList"]:
     logging.info("New message %s from %s", msg_type, identity)
     # System Message
     if msg_address == "s":

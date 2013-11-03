@@ -41,7 +41,7 @@ def msg_loop():
                 msg = _zmq["queue"].recv()
                 _zmq["router"].send(identity, zmq.SNDMORE)
                 _zmq["router"].send(msg)
-    except utils.FEGreenletExit:
+    except utils.BPGreenletExit:
         pass
 
 

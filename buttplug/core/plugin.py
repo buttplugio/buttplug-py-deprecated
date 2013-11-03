@@ -28,7 +28,7 @@ _devices = {}
 
 
 class PluginException(Exception):
-    """Exceptions having to do with FE plugins"""
+    """Exceptions having to do with BP plugins"""
     pass
 
 
@@ -69,7 +69,7 @@ def _start_process(cmd, identity):
 
 def _run_count_plugin(plugin):
     count_identity = utils.random_ident()
-    e = event.add(count_identity, "FEPluginRegisterCount")
+    e = event.add(count_identity, "BPPluginRegisterCount")
     count_process_cmd = [plugin.executable_path, "--server_port=%s" % config.get_value("server_address"), "--count"]
     count_process = _start_process(count_process_cmd, count_identity)
     if not count_process:
@@ -81,7 +81,7 @@ def _run_count_plugin(plugin):
     except gevent.Timeout:
         logging.info("Count process for %s never registered, shutting down and removing plugin", plugin.name)
         return
-    except utils.FEGreenletExit:
+    except utils.BPGreenletExit:
         logging.debug("Shutting down count process for %s", plugin.name)
         return
     logging.info("Count process for %s up on identity %s", plugin.name, count_identity)
@@ -89,32 +89,32 @@ def _run_count_plugin(plugin):
     hb = utils.spawn_heartbeat(count_identity, gevent.getcurrent())
     _plugins[plugin.name] = plugin
     while True:
-        queue.add(count_identity, ["s", "FEPluginDeviceList"])
-        e = event.add(count_identity, "FEPluginDeviceList")
+        queue.add(count_identity, ["s", "BPPluginDeviceList"])
+        e = event.add(count_identity, "BPPluginDeviceList")
         try:
             (i, msg) = e.get(block=True, timeout=1)
         except gevent.Timeout:
             logging.info("Count process for %s timed out, shutting down and removing plugin", plugin.name)
             break
-        except utils.FEGreenletExit:
+        except utils.BPGreenletExit:
             logging.debug("Shutting down count process for %s", plugin.name)
             break
         _devices[plugin.name] = msg[2]
         # TODO: Make this a configuration value
         try:
             gevent.sleep(1)
-        except utils.FEGreenletExit:
+        except utils.BPGreenletExit:
             logging.debug("Shutting down count process for %s", plugin.name)
             break
 
     # Heartbeat may already be dead if we're shutting down, so check first
     if not hb.ready():
-        hb.kill(exception=utils.FEGreenletExit, block=True, timeout=1)
+        hb.kill(exception=utils.BPGreenletExit, block=True, timeout=1)
     # Remove ourselves, but don't kill since we're already shutting down
     utils.remove_identity_greenlet(count_identity, kill_greenlet=False)
     # TODO: If a count process goes down, does every associated device go with it?
     del _plugins[plugin.name]
-    queue.add(count_identity, ["s", "FEClose"])
+    queue.add(count_identity, ["s", "BPClose"])
     logging.debug("Count process %s for %s exiting...", count_identity, plugin.name)
 
 
@@ -170,7 +170,7 @@ def kill_claims(identity):
         if g is None:
             logging.warning("Device %s is not bound to client %s", dev_id, identity)
             continue
-        g.kill(exception=utils.FEGreenletExit, timeout=1, block=True)
+        g.kill(exception=utils.BPGreenletExit, timeout=1, block=True)
 
 
 def run_device_plugin(identity, msg):
@@ -183,13 +183,13 @@ def run_device_plugin(identity, msg):
 
     if p is None:
         logging.warning("Cannot find device %s, failing claim", dev_id)
-        queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
+        queue.add(identity, ["s", "BPClaimDevice", dev_id, False])
         return
 
     # See whether we already have a claim on the device
     if dev_id in _dtc.keys():
         logging.warning("Device %s already claimed, failing claim", dev_id)
-        queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
+        queue.add(identity, ["s", "BPClaimDevice", dev_id, False])
         return
 
     # Client to system: bring up device process.
@@ -199,18 +199,18 @@ def run_device_plugin(identity, msg):
     device_process = _start_process([p.executable_path, "--server_port=%s" % config.get_value("server_address")], dev_id)
 
     # Device process to system: Register with known identity
-    e = event.add(dev_id, "FEPluginRegisterClaim")
+    e = event.add(dev_id, "BPPluginRegisterClaim")
     try:
         # TODO: Make device open timeout a config option
         (i, m) = e.get(timeout=5)
-    except utils.FEGreenletExit:
+    except utils.BPGreenletExit:
         # If we shut down now, just drop
         return
     except gevent.Timeout:
         # If we timeout, fail the claim
         logging.info("Device %s failed to start...", dev_id)
-        queue.add(dev_id, ["s", "FEClose"])
-        queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
+        queue.add(dev_id, ["s", "BPClose"])
+        queue.add(identity, ["s", "BPClaimDevice", dev_id, False])
         return
 
     utils.add_identity_greenlet(dev_id, gevent.getcurrent())
@@ -219,23 +219,23 @@ def run_device_plugin(identity, msg):
     hb = utils.spawn_heartbeat(dev_id, gevent.getcurrent())
 
     # System to device process: Open device
-    queue.add(dev_id, ["s", "FEPluginOpenDevice", dev_id])
-    e = event.add(dev_id, "FEPluginOpenDevice")
+    queue.add(dev_id, ["s", "BPPluginOpenDevice", dev_id])
+    e = event.add(dev_id, "BPPluginOpenDevice")
     try:
         (i, m) = e.get()
-    except utils.FEGreenletExit:
-        queue.add(dev_id, ["s", "FEClose"])
+    except utils.BPGreenletExit:
+        queue.add(dev_id, ["s", "BPClose"])
         return
 
     # Device process to system: Open or fail
     if m[3] is False:
         logging.info("Device %s failed to open...", dev_id)
-        queue.add(dev_id, ["s", "FEClose"])
-        queue.add(identity, ["s", "FEClaimDevice", dev_id, False])
+        queue.add(dev_id, ["s", "BPClose"])
+        queue.add(identity, ["s", "BPClaimDevice", dev_id, False])
         return
 
     # System to client: confirm device claim
-    queue.add(identity, ["s", "FEClaimDevice", dev_id, True])
+    queue.add(identity, ["s", "BPClaimDevice", dev_id, True])
 
     if identity not in _ctd.keys():
         _ctd[identity] = []
@@ -247,16 +247,16 @@ def run_device_plugin(identity, msg):
     while True:
         try:
             gevent.sleep(1)
-        except utils.FEGreenletExit:
+        except utils.BPGreenletExit:
             break
 
     if not hb.ready():
-        hb.kill(exception=utils.FEGreenletExit, block=True, timeout=1)
+        hb.kill(exception=utils.BPGreenletExit, block=True, timeout=1)
 
     _ctd[identity].remove(dev_id)
     del _dtc[dev_id]
 
     # Remove ourselves, but don't kill since we're already shutting down
     utils.remove_identity_greenlet(dev_id, kill_greenlet=False)
-    queue.add(dev_id, ["s", "FEClose"])
+    queue.add(dev_id, ["s", "BPClose"])
     logging.debug("Device keeper %s exiting...", dev_id)

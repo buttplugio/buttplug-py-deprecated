@@ -10,7 +10,7 @@ _pools = {}
 _live_greenlets = []
 
 
-class FEGreenletExit(Exception):
+class BPGreenletExit(Exception):
     pass
 
 
@@ -31,7 +31,7 @@ def killjoin_greenlets(pool):
         # For some reason even though we tell kill to block, it still times out
         # with a weirdly low timeout value. Therefore, we watch for a timeout
         # exception and wait for a join manually if that happens.
-        _pools[pool].kill(timeout=1, block=True, exception=FEGreenletExit)
+        _pools[pool].kill(timeout=1, block=True, exception=BPGreenletExit)
     except gevent.Timeout:
         logging.warning("Timed out (gevent bug?), cleaning up manually")
         _pools[pool].join()
@@ -49,8 +49,8 @@ def spawn_gevent_func(name, pool, func, *args, **kwargs):
             func(*args, **kwargs)
             _live_greenlets.remove(name)
             logging.debug("gevent shutdown: %s", name)
-        except FEGreenletExit:
-            logging.error("%s did not correctly handle FEGreenletExit!", name)
+        except BPGreenletExit:
+            logging.error("%s did not correctly handle BPGreenletExit!", name)
 
     return _pools[pool].spawn(log_run_func, *args, **kwargs)
 
@@ -73,21 +73,21 @@ def remove_identity_greenlet(identity, msg=None, kill_greenlet=True):
         logging.warning("Trying to remove identity %s which is not in id-greenlet table!", identity)
         return
     if kill_greenlet and not _id_greenlet[identity].ready():
-        _id_greenlet[identity].kill(timeout=1, block=True, exception=FEGreenletExit)
+        _id_greenlet[identity].kill(timeout=1, block=True, exception=BPGreenletExit)
     del _id_greenlet[identity]
 
 
 def heartbeat(identity, greenlet):
     while not greenlet.ready():
-        e = event.add(identity, "FEPing")
-        queue.add(identity, ["s", "FEPing"])
+        e = event.add(identity, "BPPing")
+        queue.add(identity, ["s", "BPPing"])
         try:
             e.get(block=True, timeout=config.get_value("ping_max"))
         except gevent.Timeout:
             logging.info("Identity %s died via heartbeat", identity)
             greenlet.kill()
             return
-        except FEGreenletExit:
+        except BPGreenletExit:
             logging.debug("Heartbeat for %s exiting...", identity)
             return
 
@@ -99,15 +99,15 @@ def heartbeat(identity, greenlet):
         # this because we never sent it. It just sits in the event table as a
         # way to do an interruptable sleep before we send our next ping to the
         # client.
-        e = event.add(identity, "FEPingWait")
+        e = event.add(identity, "BPPingWait")
         try:
             e.get(block=True, timeout=config.get_value("ping_rate"))
         except gevent.Timeout:
             pass
-        except FEGreenletExit:
+        except BPGreenletExit:
             logging.debug("Heartbeat for %s exiting...", identity)
             return
-        event.remove(identity, "FEPingWait")
+        event.remove(identity, "BPPingWait")
 
 
 def spawn_heartbeat(identity, greenlet):
