@@ -57,7 +57,7 @@ class BPBase(object):
     def setup_parser(self):
         self.parser = argparse.ArgumentParser(description=self.APP_DESC)
         self.parser.add_argument('--server_port', metavar='p', type=str, help='port '
-                                 'FuckEverything service is listening on', required=True)
+                                 'Service is listening on', required=True)
         self.add_other_arguments()
 
     def parse_arguments(self):

@@ -15,14 +15,14 @@ if sys.platform == "win32":
     # windows.
     include_files.append(("c:/Python27/Lib/site-packages/pyzmq-13.0.0-py2.7-win32.egg/zmq/libzmq.pyd", "libzmq.pyd"))
 
-setup(name='FuckEverything',
+setup(name='Buttplug',
       version='0.01',
-      description='FuckEverything Sex Toy Control Server',
+      description='Buttplug Sex Toy Control Server',
       author='Kyle Machulis',
       author_email='kyle@nonpolynomial.com',
       url='http://www.feverything.com/',
-      packages=['fuckeverything'],
-      scripts=['scripts/fuckeverything', 'scripts/test-plugin', 'scripts/test-client'],
+      packages=['buttplug'],
+      scripts=['scripts/buttplug', 'scripts/test-plugin', 'scripts/test-client'],
       options={"build_exe": {"includes": includes, "include_files": include_files}},
-      executables=[Executable("scripts/fuckeverything", base=base), Executable("scripts/test-client", base=base), Executable("scripts/test-plugin", base=base)]
+      executables=[Executable("scripts/buttplug", base=base), Executable("scripts/test-client", base=base), Executable("scripts/test-plugin", base=base)]
 )

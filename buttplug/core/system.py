@@ -24,7 +24,7 @@ def _handle_server_info(identity, msg):
     - Server Build Date (static)
     """
     queue.add(identity, ["s", "BPServerInfo",
-                         [{"name": "Fuck Everything",
+                         [{"name": "Buttplug",
                            "version": feinfo.SERVER_VERSION,
                            "date": feinfo.SERVER_DATE}]])
     return True
