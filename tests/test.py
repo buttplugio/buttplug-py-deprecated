@@ -19,12 +19,10 @@ from buttplug.core import event
 from buttplug.core import server
 from buttplug.template.client import BPClient
 
-
 _test_plugin_json = {"name": "Test Plugin",
                      "version": "0.001",
                      "executable": "test-plugin",
                      "messages": ["RawTestMsg", "BPDeviceCount"]}
-
 
 def _copy_test_plugin(base_dir):
     if not os.path.exists(base_dir):

@@ -4,7 +4,6 @@ from buttplug.core import queue
 from buttplug.core import event
 from buttplug.core import utils
 from buttplug.core import client
-from collections import defaultdict
 import logging
 
 
@@ -24,16 +23,18 @@ def _handle_server_info(identity, msg):
     - Server Software Version (static)
     - Server Build Date (static)
     """
-    queue.add(identity, ["s", "BPServerInfo", [{"name": "Fuck Everything",
-                                                "version": feinfo.SERVER_VERSION,
-                                                "date": feinfo.SERVER_DATE}]])
+    queue.add(identity, ["s", "BPServerInfo",
+                         [{"name": "Fuck Everything",
+                           "version": feinfo.SERVER_VERSION,
+                           "date": feinfo.SERVER_DATE}]])
     return True
 
 
 def _handle_plugin_list(identity, msg):
-    queue.add(identity, ["s", "BPPluginList", [{"name": p.name,
-                                                "version": p.version}
-                                               for p in plugin.plugins_available()]])
+    queue.add(identity, ["s", "BPPluginList",
+                         [{"name": p.name,
+                           "version": p.version}
+                          for p in plugin.plugins_available()]])
     return True
 
 

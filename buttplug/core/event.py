@@ -19,41 +19,48 @@ def add(identity, msgtype, event=None):
 
 def fire(identity, msg):
     msgtype = msg[1]
+    se = _mvars["_socket_events"]
     logging.debug("Event %s for %s", msgtype, identity)
-    if identity in _mvars["_socket_events"]:
-        if msgtype in _mvars["_socket_events"][identity]:
+    if identity in se:
+        if msgtype in se[identity]:
             logging.debug("Firing event %s for identity %s", msgtype, identity)
-            _mvars["_socket_events"][identity][msgtype].set((identity, msg))
+            se[identity][msgtype].set((identity, msg))
             # If no one is waiting, drop message
-            if identity not in _mvars["_socket_events"]:
-                logging.info("No identity waiting on %s for %s, dropping...", msgtype, identity)
+            if identity not in se:
+                logging.info("No identity waiting on %s for %s, dropping...",
+                             msgtype, identity)
                 return
-            if msgtype not in _mvars["_socket_events"][identity]:
-                logging.info("No identity waiting on %s for %s, dropping...", msgtype, identity)
+            if msgtype not in se[identity]:
+                logging.info("No identity waiting on %s for %s, dropping...",
+                             msgtype, identity)
                 return
             remove(identity, msgtype)
             return
-        elif "s" in _mvars["_socket_events"][identity]:
+        elif "s" in se[identity]:
             logging.debug("Firing event %s for identity %s", msgtype, identity)
             # If no one is waiting, drop message
-            if identity not in _mvars["_socket_events"]:
-                logging.info("No identity waiting on %s for %s, dropping...", msgtype, identity)
+            if identity not in se:
+                logging.info("No identity waiting on %s for %s, dropping...",
+                             msgtype, identity)
                 return
-            if msgtype not in _mvars["_socket_events"][identity]:
-                logging.info("No identity waiting on %s for %s, dropping...", msgtype, identity)
+            if msgtype not in se[identity]:
+                logging.info("No identity waiting on %s for %s, dropping...",
+                             msgtype, identity)
                 return
-            _mvars["_socket_events"][identity][msgtype].set((identity, msg))
+            se[identity][msgtype].set((identity, msg))
             remove(identity, msgtype)
             return
-    if "s" in _mvars["_socket_events"] and msgtype in _mvars["_socket_events"]["s"]:
+    if "s" in se and msgtype in se["s"]:
         logging.debug("Firing event %s for *", msgtype)
-        if msgtype not in _mvars["_socket_events"]["s"]:
-            logging.info("No identity waiting on %s for %s, dropping...", msgtype, identity)
+        if msgtype not in se["s"]:
+            logging.info("No identity waiting on %s for %s, dropping...",
+                         msgtype, identity)
             return
-        _mvars["_socket_events"]["s"][msgtype].set((identity, msg))
+        se["s"][msgtype].set((identity, msg))
         remove("s", msgtype)
     else:
-        logging.warning("Event %s on identity %s not set for any handler!", msgtype, identity)
+        logging.warning("Event %s on identity %s not set for any handler!",
+                        msgtype, identity)
 
 
 def remove(identity, msgtype):

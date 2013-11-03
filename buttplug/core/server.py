@@ -1,12 +1,9 @@
 from buttplug.core import config
-from buttplug.core import plugin
 from buttplug.core import queue
 from buttplug.core import system
 from buttplug.core import utils
-import gevent
 import zmq.green as zmq
 import msgpack
-import logging
 
 # Name a global one underscore off from a module? Why not.
 _zmq = {}

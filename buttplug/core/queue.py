@@ -1,5 +1,4 @@
 import zmq.green as zmq
-import logging
 import msgpack
 
 _mvars = {"_socket_queue": None}

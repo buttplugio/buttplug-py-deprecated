@@ -15,19 +15,23 @@ _config = {"server_address": _default_server_addr,
 
 CONFIG_FILENAME = "config.json"
 
+
 def _load():
-    logging.debug("Loading JSON Config from %s", os.path.join(_cdirs["config"], CONFIG_FILENAME))
+    logging.debug("Loading JSON Config from %s", os.path.join(_cdirs["config"],
+                                                              CONFIG_FILENAME))
     with open(os.path.join(_cdirs["config"], CONFIG_FILENAME), "r+") as f:
         j = json.load(f)
         for (k, v) in j.items():
             if k in _config:
                 _config[k] = v
             else:
-                raise KeyError("Unexpected key %s found in configuration file!" % k)
+                raise KeyError("Unexpected key %s found in configuration file!"
+                               % k)
 
 
 def _save():
-    logging.debug("Saving JSON Config to %s", os.path.join(_cdirs["config"], CONFIG_FILENAME))
+    logging.debug("Saving JSON Config to %s", os.path.join(_cdirs["config"],
+                                                           CONFIG_FILENAME))
     with open(os.path.join(_cdirs["config"], CONFIG_FILENAME), "w") as f:
         json.dump(_config, f)
 
@@ -36,9 +40,11 @@ def init():
     """Initialize configuration values for server"""
     parser = argparse.ArgumentParser(description="Buttplug")
     parser.add_argument('--server_address', metavar='addr', type=str,
-                        help='Address to listen on', default=_config["server_address"])
+                        help='Address to listen on',
+                        default=_config["server_address"])
     parser.add_argument('--config_dir', metavar='path', type=str,
-                        help='configuration directory', default=_cdirs["config"])
+                        help='configuration directory',
+                        default=_cdirs["config"])
     parser.add_argument('--config_no_create_dir', action="store_true",
                         help='configuration directory')
     args = parser.parse_args()

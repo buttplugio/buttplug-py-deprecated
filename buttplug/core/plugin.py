@@ -15,9 +15,11 @@ class Plugin(object):
 
     def __init__(self, info, plugin_dir):
         self.plugin_path = os.path.join(config.get_dir("plugin"), plugin_dir)
-        self.executable_path = os.path.join(config.get_dir("plugin"), plugin_dir, info["executable"])
+        self.executable_path = os.path.join(config.get_dir("plugin"),
+                                            plugin_dir, info["executable"])
         if not os.path.exists(self.executable_path):
-            raise PluginException("Cannot find plugin executable: %s" % self.executable_path)
+            raise PluginException("Cannot find plugin executable: " +
+                                  self.executable_path)
         self.name = info["name"]
         self.version = info["version"]
         self.messages = info["messages"]
@@ -33,13 +35,14 @@ class PluginException(Exception):
 
 
 def scan_for_plugins():
-    """Look through config'd plugin directory for any directory with a file named
+    """Look through plugin directory for any directory with a file named
     "bdplugin.json". Fill in an plugin object, and pass to _run_count_plugin to
     handle lifetime.
 
     """
     for i in os.listdir(config.get_dir("plugin")):
-        plugin_file = os.path.join(config.get_dir("plugin"), i, Plugin.PLUGIN_INFO_FILE)
+        plugin_file = os.path.join(config.get_dir("plugin"), i,
+                                   Plugin.PLUGIN_INFO_FILE)
         if not os.path.exists(plugin_file):
             continue
         info = None
@@ -52,17 +55,21 @@ def scan_for_plugins():
         if not set(Plugin.PLUGIN_REQUIRED_KEYS).issubset(set(info.keys())):
             raise PluginException("Invalid Plugin")
         if info["name"] in _plugins.keys():
-            raise PluginException("Plugin Collision! Two plugins named %s" % info["name"])
-        utils.spawn_gevent_func("run_count_plugin: %s" % info["name"], "plugin", _run_count_plugin, Plugin(info, i))
+            raise PluginException("Plugin Collision! Two plugins named " +
+                                  info["name"])
+        utils.spawn_gevent_func("run_count_plugin: %s" % info["name"],
+                                "plugin", _run_count_plugin, Plugin(info, i))
 
 
 def _start_process(cmd, identity):
     cmd += ["--identity=%s" % identity]
     logging.info("Starting process %s", cmd)
     try:
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
     except OSError, e:
-        logging.warning("Plugin Process did not execute correctly: %s", e.strerror)
+        logging.warning("Plugin Process did not execute correctly: %s",
+                        e.strerror)
         return None
     return proc
 
@@ -70,21 +77,25 @@ def _start_process(cmd, identity):
 def _run_count_plugin(plugin):
     count_identity = utils.random_ident()
     e = event.add(count_identity, "BPPluginRegisterCount")
-    count_process_cmd = [plugin.executable_path, "--server_port=%s" % config.get_value("server_address"), "--count"]
+    count_process_cmd = [plugin.executable_path, "--server_port=%s" %
+                         config.get_value("server_address"), "--count"]
     count_process = _start_process(count_process_cmd, count_identity)
     if not count_process:
-        logging.warning("Count process unable to start. Removing plugin %s from plugin list.", plugin.name)
+        logging.warning("%s count process unable to start. removing.",
+                        plugin.name)
         return
 
     try:
         e.get(block=True, timeout=1)
     except gevent.Timeout:
-        logging.info("Count process for %s never registered, shutting down and removing plugin", plugin.name)
+        logging.info("%s count process never registered, removing.",
+                     plugin.name)
         return
     except utils.BPGreenletExit:
         logging.debug("Shutting down count process for %s", plugin.name)
         return
-    logging.info("Count process for %s up on identity %s", plugin.name, count_identity)
+    logging.info("Count process for %s up on identity %s", plugin.name,
+                 count_identity)
     utils.add_identity_greenlet(count_identity, gevent.getcurrent())
     hb = utils.spawn_heartbeat(count_identity, gevent.getcurrent())
     _plugins[plugin.name] = plugin
@@ -94,7 +105,7 @@ def _run_count_plugin(plugin):
         try:
             (i, msg) = e.get(block=True, timeout=1)
         except gevent.Timeout:
-            logging.info("Count process for %s timed out, shutting down and removing plugin", plugin.name)
+            logging.info("%s count process timed out, removing.", plugin.name)
             break
         except utils.BPGreenletExit:
             logging.debug("Shutting down count process for %s", plugin.name)
@@ -112,10 +123,12 @@ def _run_count_plugin(plugin):
         hb.kill(exception=utils.BPGreenletExit, block=True, timeout=1)
     # Remove ourselves, but don't kill since we're already shutting down
     utils.remove_identity_greenlet(count_identity, kill_greenlet=False)
-    # TODO: If a count process goes down, does every associated device go with it?
+    # TODO: If a count process goes down, does every associated device go with
+    # it?
     del _plugins[plugin.name]
     queue.add(count_identity, ["s", "BPClose"])
-    logging.debug("Count process %s for %s exiting...", count_identity, plugin.name)
+    logging.debug("Count process %s for %s exiting...", count_identity,
+                  plugin.name)
 
 
 def plugins_available():
@@ -146,9 +159,8 @@ def forward_device_msg(identity, msg):
         new_msg = [identity] + list(msg[1:])
         to_addr = _dtc[identity][0]
 
-    # Clients, on the other hand, only know their device's provided address (bus
-    # address, bluetooth id, etc...). We resolve that to the plugin's socket
-    # identity.
+    # Client only know their device's provided address (bus address, bluetooth
+    # id, etc...). We resolve that to the plugin's socket identity.
     elif to_alias in _dtc.keys():
         # Plugins don't get to know where things come from. Spooooky.
         new_msg = ["s"] + list(msg[1:])
@@ -168,7 +180,8 @@ def kill_claims(identity):
     for dev_id in _ctd[identity]:
         g = utils.get_identity_greenlet(dev_id)
         if g is None:
-            logging.warning("Device %s is not bound to client %s", dev_id, identity)
+            logging.warning("Device %s is not bound to client %s", dev_id,
+                            identity)
             continue
         g.kill(exception=utils.BPGreenletExit, timeout=1, block=True)
 
@@ -196,7 +209,13 @@ def run_device_plugin(identity, msg):
     #
     # Just name the new plugin process socket identity after the device id,
     # because why not.
-    device_process = _start_process([p.executable_path, "--server_port=%s" % config.get_value("server_address")], dev_id)
+    device_process = _start_process([p.executable_path, "--server_port=%s" %
+                                     config.get_value("server_address")],
+                                    dev_id)
+    if not device_process:
+        logging.warning("%s device process unable to start. removing.",
+                        p.name)
+        return
 
     # Device process to system: Register with known identity
     e = event.add(dev_id, "BPPluginRegisterClaim")

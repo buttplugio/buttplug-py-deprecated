@@ -1,7 +1,6 @@
 import logging
 import gevent.pool
 import random
-from gevent import subprocess
 from buttplug.core import event
 from buttplug.core import queue
 from buttplug.core import config
@@ -70,10 +69,11 @@ def get_identity_greenlet(identity):
 
 def remove_identity_greenlet(identity, msg=None, kill_greenlet=True):
     if identity not in _id_greenlet.keys():
-        logging.warning("Trying to remove identity %s which is not in id-greenlet table!", identity)
+        logging.warning("Trying to remove non-existent greenlet %s!", identity)
         return
     if kill_greenlet and not _id_greenlet[identity].ready():
-        _id_greenlet[identity].kill(timeout=1, block=True, exception=BPGreenletExit)
+        _id_greenlet[identity].kill(timeout=1, block=True,
+                                    exception=BPGreenletExit)
     del _id_greenlet[identity]
 
 
@@ -101,5 +101,7 @@ def heartbeat(identity, greenlet):
             logging.debug("Heartbeat for %s exiting...", identity)
             return
 
+
 def spawn_heartbeat(identity, greenlet):
-    return spawn_gevent_func("heartbeat-%s" % identity, "heartbeat", heartbeat, identity, greenlet)
+    return spawn_gevent_func("heartbeat-%s" % identity, "heartbeat", heartbeat,
+                             identity, greenlet)
