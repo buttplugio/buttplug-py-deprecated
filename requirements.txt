@@ -6,7 +6,7 @@ msgpack-python
 pyzmq
 nose
 mock
-
+gevent-websocket
 # Emacs development packages
 elpy
 rope

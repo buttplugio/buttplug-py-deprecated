@@ -2,11 +2,15 @@ from buttplug.core import config
 from buttplug.core import queue
 from buttplug.core import system
 from buttplug.core import utils
+from buttplug.core import wsclient
 import zmq.green as zmq
 import msgpack
+from gevent.pywsgi import WSGIServer
+from geventwebsocket.handler import WebSocketHandler
 
 # Name a global one underscore off from a module? Why not.
 _zmq = {}
+_ws_server = None
 
 
 def init():
@@ -20,7 +24,14 @@ def init():
     _zmq["poller"] = zmq.Poller()
     _zmq["poller"].register(_zmq["router"], zmq.POLLIN)
     _zmq["poller"].register(_zmq["queue"], zmq.POLLIN)
+    init_ws()
 
+
+def init_ws():
+    _ws_server = WSGIServer(('', 9390),
+                            wsclient.WebSocketClient(_zmq["context"]),
+                            handler_class=WebSocketHandler)
+    _ws_server.start()
 
 def msg_loop():
     try:
