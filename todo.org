@@ -1,269 +1,146 @@
-* FuckEverything
-** Features
-*** Pluggable communications modules
-*** Cross-platform communication
-*** Local client-server architecture
-*** Hot-pluggable devices
-** Packets
-*** Format
-**** OSC? msgpack?
-**** How to notify developers of packet types?
-*** Types
-**** Client Ping
-**** Device List
-**** Device Claim
-**** Device Addition
-**** Device Removal
-**** Device Command Status
-**** Raw Device - Real Touch
-**** Raw Device - Virtual Hole
-**** 1D vector input - Speed
-**** 2D vector input - Direction/Speed
-**** 2D vector input - Absolute Position/Speed
-**** Accelerometer output 
-**** Gyro output
-**** Pressure output?
-**** ?D vector output?
-** Program Setup
-*** Networking core
-**** Twisted
-**** Creates new client every connection
-*** Client
-**** Takes data from outside apps, translates, routes to app as needed
-*** Device Manager
-**** Single manager for whole program
-**** Deals with who can access what device, hotplugging, etc...
-*** Plugins
-**** The portion that talks to hardware
-**** Hotpluggable/upgradable
-**** Each device on own thread?
-* Video Subclient
-** Features
-*** Encode animated gifs
-*** Encode youtube videos
-*** Encode any media available
-*** User accounts on central database
-*** Upload/Download encoding information to central database
-*** Replay encoding information on multiple output devices, synced with videos
-*** Replay encoding information without video
-*** Visualization of encoding information, with editor
-*** Manual encoding tools
-*** Plugin system for new hardware/encoding GUIs
-** Versions
-*** 0.1 - OpenFrameworks + RealTouch + Animated gifs + OpenCV
-**** TODO Load an animated gif
-**** TODO Display animated gif
-**** TODO Apply simple optical flow on a per frame basis, averaged across the image
-**** TODO Replay flow information to RealTouch, sending one network frame per animation, with haptic information for real touch
-*** 0.2 - Qt
-**** TODO Create simple GUI for loading/playing gifs
-** Subprojects
-*** Web Backend for pattern sharing
-*** Qt based cross-platform RealTouch network server
-* ZeroMQ/Protocol Design
-- Server runs a single ROUTER socket
-- Both clients and plugins are DEALER sockets with random identities
-** Plugin
-- On discovery, server starts instance of all plugins as "counters" for device updates
-- On plugin process startup:
-  - Plugin sends registration to server, saying whether it's in count mode or device mode
-  - If in count mode, plugin only takes "DeviceCount" and "ClosePlugin" messages
-  - If in device mode, plugin expects to open a device, transfer data to/from it, close device, and close itself
-- On device claim:
-  - If not multicast, start new plugin process
-  - If multicast, check if process exists already. If so, add claim counter.
-- On server shutdown:
-  - Send "ClosePlugin" to plugin
-  - Wait until a timeout for a join
-** Client
-- On client connect, client sends over a ClientRegistration message to register itself with the server
-- Client can then query for device info, claim devices etc...
-- To end session, client sends CloseClient message to server
-** Process heartbeat
-- Add both client and plugin sockets to heartbeat manager on registration
-- Server initiates heartbeat, client replies
-- On timeout from client to server, disconnect client
-- On timeout from server to client, ?!?
-- On CloseClient message, remove client socket from heartbeat list
-* Messages
-** System Messages
-*** FEGetServerInfo
-*** FEDeviceCount
-*** FEDeviceClaim
-*** FEDeviceRelease
-*** FEDeviceList
-*** FECloseConnection
-*** FEClientRegistration
-*** FEPluginRegistration
-*** FEServerInfo
-*** FEPluginList
-*** FEPing
-*** FESetConfigValue
-*** FEGetConfigValue
-** Plugin Messages
-*** RealTouchCDKStr
-*** VStrokerRaw
-*** USBHIDVibrationRaw
-*** 3AxisAccelmRange
-*** 3AxisAccelm
-*** 1DMovement
-*** 2DMovement
-* Configuration Values
-** Server Name - RW
-** Server Address - RW
-** Plugins Directory - RW
-* Filters
-
-A way to translate between messages without changing drivers
-* Data Passing
-** Device message from plugin (socket identity) to router
-Router needs to resolve plugin socket identity to connected client identities
-** Device message from client (socket identity, device id) to router
-Router needs to turn device id into plugin socket identity, verify
-that client socket identity has claim on device id
-* Tasks
-** Core
-*** CANCELLED Figure out issues with TCP send not working on OS X until next packet sent
+* Core
+** CANCELLED Figure out issues with TCP send not working on OS X until next packet sent
 CLOSED: [2012-12-23 Sun 18:39]
 - State "CANCELLED"  from "TODO"       [2012-12-23 Sun 18:39] \\
   Moved to zmq
-*** DONE Make plugins use zeromq and run as processes instead of being imported code
+** DONE Make plugins use zeromq and run as processes instead of being imported code
 CLOSED: [2012-12-25 Tue 22:29]
 - State "DONE"       from "TODO"       [2012-12-25 Tue 22:29]
-*** DONE Server should define identity for plugins
+** DONE Server should define identity for plugins
 CLOSED: [2012-12-25 Tue 22:39]
 - State "DONE"       from "TODO"       [2012-12-25 Tue 22:39]
-*** DONE Make plugins shutdown if main process crashes
+** DONE Make plugins shutdown if main process crashes
 CLOSED: [2013-03-01 Fri 18:32]
 - State "DONE"       from "TODO"       [2013-03-01 Fri 18:32]
-*** DONE Move logging from prints to logging module
+** DONE Move logging from prints to logging module
 CLOSED: [2013-03-01 Fri 18:51]
 - State "DONE"       from "TODO"       [2013-03-01 Fri 18:51]
-*** DONE Handle plugin count startup errors
+** DONE Handle plugin count startup errors
 CLOSED: [2013-03-01 Fri 19:10]
 - State "DONE"       from "TODO"       [2013-03-01 Fri 19:10]
-*** DONE Cross platform cx-freeze testing
+** DONE Cross platform cx-freeze testing
 CLOSED: [2013-03-23 Sat 20:18]
 - State "DONE"       from "TODO"       [2013-03-23 Sat 20:18]
-*** DONE Shorten function names for module scoped functions
+** DONE Shorten function names for module scoped functions
 CLOSED: [2013-03-23 Sat 20:18]
 - State "DONE"       from "TODO"       [2013-03-23 Sat 20:18]
-*** DONE Handle plugin claim startup errors
+** DONE Handle plugin claim startup errors
 CLOSED: [2013-03-23 Sat 20:20]
 - State "DONE"       from "TODO"       [2013-03-23 Sat 20:20]
-*** DONE Have server do error handling if plugin device handling process doesn't come up in time
+** DONE Have server do error handling if plugin device handling process doesn't come up in time
 CLOSED: [2013-03-23 Sat 20:24]
 - State "DONE"       from "TODO"       [2013-03-23 Sat 20:24]
-*** CANCELLED Figure out way to clear pyc's properly
+** CANCELLED Figure out way to clear pyc's properly
 CLOSED: [2013-03-23 Sat 20:28]
 - State "CANCELLED"  from "TODO"       [2013-03-23 Sat 20:28]
-*** DONE Write command line arguments and config file parsing
+** DONE Write command line arguments and config file parsing
 CLOSED: [2013-03-23 Sat 20:28]
 - State "DONE"       from "TODO"       [2013-03-23 Sat 20:28]
-*** DONE Make sure client disconnect removes heartbeat
+** DONE Make sure client disconnect removes heartbeat
 CLOSED: [2013-03-23 Sat 23:31]
 - State "DONE"       from "TODO"       [2013-03-23 Sat 23:31]
-*** DONE Figure out how clients will refer to devices they've claimed
+** DONE Figure out how clients will refer to devices they've claimed
 CLOSED: [2013-03-25 Mon 20:58]
 - State "DONE"       from "TODO"       [2013-03-25 Mon 20:58]
-*** DONE Add a way to know if we're trying to close something that doesn't have a heartbeat
+** DONE Add a way to know if we're trying to close something that doesn't have a heartbeat
 CLOSED: [2013-03-31 Sun 23:16]
 - State "DONE"       from "TODO"       [2013-03-31 Sun 23:16]
-*** DONE Make sure plugin processes close on exit, warn otherwise
+** DONE Make sure plugin processes close on exit, warn otherwise
 CLOSED: [2013-04-01 Mon 20:06]
 - State "DONE"       from "TODO"       [2013-04-01 Mon 20:06]
-*** DONE Warn clients of disconnect on main process shutdown
+** DONE Warn clients of disconnect on main process shutdown
 CLOSED: [2013-04-01 Mon 21:00]
 - State "DONE"       from "TODO"       [2013-04-01 Mon 21:00]
-*** DONE Spin msg loop for a bit on exit to make sure everything closes
+** DONE Spin msg loop for a bit on exit to make sure everything closes
 CLOSED: [2013-04-01 Mon 21:00]
 - State "DONE"       from "TODO"       [2013-04-01 Mon 21:00]
-*** DONE Convert device claim function into full device plugin process lifetime
+** DONE Convert device claim function into full device plugin process lifetime
 CLOSED: [2013-04-02 Tue 10:42]
 - State "DONE"       from "TODO"       [2013-04-02 Tue 10:42]
-*** DONE Convert client function into full client connection lifetime
+** DONE Convert client function into full client connection lifetime
 CLOSED: [2013-04-02 Tue 10:42]
 - State "DONE"       from "TODO"       [2013-04-02 Tue 10:42]
-*** DONE Make sure client disconnect means claims are released
+** DONE Make sure client disconnect means claims are released
 CLOSED: [2013-04-02 Tue 10:42]
 - State "DONE"       from "TODO"       [2013-04-02 Tue 10:42]
-*** DONE Make sure message requeuing works even when double messages sent
+** DONE Make sure message requeuing works even when double messages sent
 CLOSED: [2013-04-04 Thu 21:05]
 - State "DONE"       from "TODO"       [2013-04-04 Thu 21:05]
-*** DONE Add identity to greenlet names if it's a parameter to the function
+** DONE Add identity to greenlet names if it's a parameter to the function
 CLOSED: [2013-04-04 Thu 22:54]
 - State "DONE"       from "TODO"       [2013-04-04 Thu 22:54]
-*** TODO Make a message template for the server
-*** TODO Add server tests for process/pool cleanup on shutdown
-*** TODO Log subprocess output to logging module
+** TODO Make a message template for the server
+** TODO Add client websocket access via argument
+** TODO Add server tests for process/pool cleanup on shutdown
+** TODO Log subprocess output to logging module
 http://www.velocityreviews.com/forums/t612189-subprocess-popen-output-to-logging-streamhandler.html
-*** TODO Register plugin handled messages
-*** TODO Add ability to use json or msgpack
-*** TODO Assign random names to client sockets?
-*** TODO How to deal with plugins like websocket, where we don't want process per device?
-** Plugins
-*** DONE Write raw message plugin for RealTouch
+** TODO Register plugin handled messages
+** TODO Add ability to use json or msgpack
+** TODO Assign random names to client sockets?
+** TODO How to deal with plugins like websocket, where we don't want process per device?
+* Plugins
+** DONE Write raw message plugin for RealTouch
 CLOSED: [2012-12-11 Tue 23:50]
 - State "DONE"       from "TODO"       [2012-12-11 Tue 23:50
-*** DONE Make test plugin hold temp files to act like device claims
+** DONE Make test plugin hold temp files to act like device claims
 CLOSED: [2013-03-31 Sun 11:47]
 - State "DONE"       from "TODO"       [2013-03-31 Sun 11:47]
-*** DONE Move process to plugins, since no one else ever spawns a process
+** DONE Move process to plugins, since no one else ever spawns a process
 CLOSED: [2013-03-31 Sun 23:16]
 - State "DONE"       from "TODO"       [2013-03-31 Sun 23:16]
-*** TODO Add test to crash server, make sure processes die correctly
-*** TODO Make plugin count start failure cause tests to fail
-*** TODO Add "test" devices to test plugin for testing timeouts, disappears, etc...
-*** TODO Properly handle Unicode Manufacturer and Product strings in USB descriptors
-*** TODO Write game control vibrator plugin
-*** TODO Write socket.io based webvibrator plugin
-*** TODO Find wiimote library for python
-*** TODO Write trancevibe plugin
-*** TODO Write Pen15 board plugin
-*** TODO Write original interactive fleshlight plugin?
-*** TODO Write virtual hole plugin
-*** TODO Write Ju-C Air plugin
-*** TODO Write realtouch plugin
-*** TODO Write vstroker plugin
-*** TODO Write phone sensor plugin
-** Testing
-*** Core
-**** DONE Help Message
+** TODO Add test to crash server, make sure processes die correctly
+** TODO Make plugin count start failure cause tests to fail
+** TODO Add "test" devices to test plugin for testing timeouts, disappears, etc...
+** TODO Properly handle Unicode Manufacturer and Product strings in USB descriptors
+** TODO Write game control vibrator plugin
+** TODO Write socket.io based webvibrator plugin
+** TODO Find wiimote library for python
+** TODO Write trancevibe plugin
+** TODO Write Pen15 board plugin
+** TODO Write original interactive fleshlight plugin?
+** TODO Write virtual hole plugin
+** TODO Write Ju-C Air plugin
+** TODO Write realtouch plugin
+** TODO Write vstroker plugin
+** TODO Write phone sensor plugin
+* Testing
+** Core
+*** DONE Help Message
 CLOSED: [2013-03-01 Fri 23:57]
 - State "DONE"       from "TODO"       [2013-03-01 Fri 23:57]
-**** DONE Directory Creation
+*** DONE Directory Creation
 CLOSED: [2013-03-02 Sat 17:27]
 - State "DONE"       from "TODO"       [2013-03-02 Sat 17:27]
-**** DONE Alternate configuration file
+*** DONE Alternate configuration file
 CLOSED: [2013-03-02 Sat 17:27]
 - State "DONE"       from "TODO"       [2013-03-02 Sat 17:27]
-**** DONE Plugin found
+*** DONE Plugin found
 CLOSED: [2013-03-02 Sat 22:11]
 - State "DONE"       from "TODO"       [2013-03-02 Sat 22:11]
-**** DONE Plugin fails to load (invalid config)
+*** DONE Plugin fails to load (invalid config)
 CLOSED: [2013-03-02 Sat 22:11]
 - State "DONE"       from "TODO"       [2013-03-02 Sat 22:11]
-**** DONE Plugin fails to load (can't start count process)
+*** DONE Plugin fails to load (can't start count process)
 CLOSED: [2013-03-02 Sat 22:11]
 - State "DONE"       from "TODO"       [2013-03-02 Sat 22:11]
-*** Plugin
-**** DONE Plugin comes up on server load
+** Plugin
+*** DONE Plugin comes up on server load
 CLOSED: [2013-03-02 Sat 22:11]
 - State "DONE"       from "TODO"       [2013-03-02 Sat 22:11]
-**** TODO Plugin shutdown on server missing
-**** TODO Plugin count mode
-**** TODO Plugin tries to register more messages than needed on count mode
-**** TODO Plugin can't open device claim
-*** Client
-**** TODO Client fails connect to non-existent host
-**** TODO Client connect to existing host
-**** TODO Client claims device success
-**** TODO Client claims device failure
-**** TODO Client registers messages
-**** TODO Client tries to register system message
-**** TODO Client tries to register plugin message
-**** TODO Claims released on client disconnect
-** Continuations
+*** TODO Plugin shutdown on server missing
+*** TODO Plugin count mode
+*** TODO Plugin tries to register more messages than needed on count mode
+*** TODO Plugin can't open device claim
+** Client
+*** TODO Client fails connect to non-existent host
+*** TODO Client connect to existing host
+*** TODO Client claims device success
+*** TODO Client claims device failure
+*** TODO Client registers messages
+*** TODO Client tries to register system message
+*** TODO Client tries to register plugin message
+*** TODO Claims released on client disconnect
+* Continuations
 *** Event Manager
 *** Heartbeat
 **** DONE Set up gevent per heartbeat
@@ -277,9 +154,4 @@ CLOSED: [2013-03-09 Sat 00:29]
 *** Plugin Lifetime
 *** Process Manager
 *** Socket Manager?
-* Things we do
-** Count Processes
-** Client/System Communication
-** Claim Devices
-** Client/Device Communication
-** Heartbeat
+

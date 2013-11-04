@@ -435,6 +435,138 @@ likely resemble:
 
 ** Client Ideas
 ** Currently Supported Hardware
+* Old Notes
+** FuckEverything
+*** Features
+**** Pluggable communications modules
+**** Cross-platform communication
+**** Local client-server architecture
+**** Hot-pluggable devices
+*** Packets
+**** Format
+***** OSC? msgpack?
+***** How to notify developers of packet types?
+**** Types
+***** Client Ping
+***** Device List
+***** Device Claim
+***** Device Addition
+***** Device Removal
+***** Device Command Status
+***** Raw Device - Real Touch
+***** Raw Device - Virtual Hole
+***** 1D vector input - Speed
+***** 2D vector input - Direction/Speed
+***** 2D vector input - Absolute Position/Speed
+***** Accelerometer output 
+***** Gyro output
+***** Pressure output?
+***** ?D vector output?
+*** Program Setup
+**** Networking core
+***** Twisted
+***** Creates new client every connection
+**** Client
+***** Takes data from outside apps, translates, routes to app as needed
+**** Device Manager
+***** Single manager for whole program
+***** Deals with who can access what device, hotplugging, etc...
+**** Plugins
+***** The portion that talks to hardware
+***** Hotpluggable/upgradable
+***** Each device on own thread?
+** Video Subclient
+*** Features
+**** Encode animated gifs
+**** Encode youtube videos
+**** Encode any media available
+**** User accounts on central database
+**** Upload/Download encoding information to central database
+**** Replay encoding information on multiple output devices, synced with videos
+**** Replay encoding information without video
+**** Visualization of encoding information, with editor
+**** Manual encoding tools
+**** Plugin system for new hardware/encoding GUIs
+*** Versions
+**** 0.1 - OpenFrameworks + RealTouch + Animated gifs + OpenCV
+***** TODO Load an animated gif
+***** TODO Display animated gif
+***** TODO Apply simple optical flow on a per frame basis, averaged across the image
+***** TODO Replay flow information to RealTouch, sending one network frame per animation, with haptic information for real touch
+**** 0.2 - Qt
+***** TODO Create simple GUI for loading/playing gifs
+*** Subprojects
+**** Web Backend for pattern sharing
+**** Qt based cross-platform RealTouch network server
+** ZeroMQ/Protocol Design
+- Server runs a single ROUTER socket
+- Both clients and plugins are DEALER sockets with random identities
+*** Plugin
+- On discovery, server starts instance of all plugins as "counters" for device updates
+- On plugin process startup:
+  - Plugin sends registration to server, saying whether it's in count mode or device mode
+  - If in count mode, plugin only takes "DeviceCount" and "ClosePlugin" messages
+  - If in device mode, plugin expects to open a device, transfer data to/from it, close device, and close itself
+- On device claim:
+  - If not multicast, start new plugin process
+  - If multicast, check if process exists already. If so, add claim counter.
+- On server shutdown:
+  - Send "ClosePlugin" to plugin
+  - Wait until a timeout for a join
+*** Client
+- On client connect, client sends over a ClientRegistration message to register itself with the server
+- Client can then query for device info, claim devices etc...
+- To end session, client sends CloseClient message to server
+*** Process heartbeat
+- Add both client and plugin sockets to heartbeat manager on registration
+- Server initiates heartbeat, client replies
+- On timeout from client to server, disconnect client
+- On timeout from server to client, ?!?
+- On CloseClient message, remove client socket from heartbeat list
+** Messages
+*** System Messages
+**** FEGetServerInfo
+**** FEDeviceCount
+**** FEDeviceClaim
+**** FEDeviceRelease
+**** FEDeviceList
+**** FECloseConnection
+**** FEClientRegistration
+**** FEPluginRegistration
+**** FEServerInfo
+**** FEPluginList
+**** FEPing
+**** FESetConfigValue
+**** FEGetConfigValue
+*** Plugin Messages
+**** RealTouchCDKStr
+**** VStrokerRaw
+**** USBHIDVibrationRaw
+**** 3AxisAccelmRange
+**** 3AxisAccelm
+**** 1DMovement
+**** 2DMovement
+** Configuration Values
+*** Server Name - RW
+*** Server Address - RW
+*** Plugins Directory - RW
+** Filters
+
+A way to translate between messages without changing drivers
+** Data Passing
+*** Device message from plugin (socket identity) to router
+Router needs to resolve plugin socket identity to connected client identities
+*** Device message from client (socket identity, device id) to router
+Router needs to turn device id into plugin socket identity, verify
+that client socket identity has claim on device id
+
+** Things we do
+*** Count Processes
+*** Client/System Communication
+*** Claim Devices
+*** Client/Device Communication
+*** Heartbeat
+
 * Tasks
 ** TODO Add section about message filtering for clients and plugins
 ** TODO Add section for filter design
