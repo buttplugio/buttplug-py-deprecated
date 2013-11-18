@@ -4,6 +4,7 @@ from buttplug.core import utils
 from buttplug.core import plugin
 from buttplug.core import queue
 
+
 def handle_client(identity, msg):
     hb = utils.spawn_heartbeat(identity, gevent.getcurrent())
     utils.add_identity_greenlet(identity, gevent.getcurrent())
