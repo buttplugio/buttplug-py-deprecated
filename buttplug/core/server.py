@@ -19,6 +19,7 @@ def init():
     queue.init(_zmq["context"])
     _zmq["router"] = _zmq["context"].socket(zmq.ROUTER)
     _zmq["router"].bind(config.get_value("server_address"))
+    _zmq["router"].bind("inproc://ws-queue")
     _zmq["router"].setsockopt(zmq.LINGER, 100)
     _zmq["queue"] = _zmq["context"].socket(zmq.PULL)
     _zmq["queue"].connect(queue.QUEUE_ADDRESS)
