@@ -5,6 +5,7 @@ from buttplug.core import utils
 from buttplug.core import wsclient
 import zmq.green as zmq
 import msgpack
+import logging
 from gevent.pywsgi import WSGIServer
 from geventwebsocket.handler import WebSocketHandler
 
@@ -42,7 +43,12 @@ def msg_loop():
             if _zmq["router"] in socks and socks[_zmq["router"]] == zmq.POLLIN:
                 identity = _zmq["router"].recv()
                 msg = _zmq["router"].recv()
-                system.parse_message(identity, msgpack.unpackb(msg))
+                try:
+                    unpacked_msg = msgpack.unpackb(msg)
+                except:
+                    logging.warning("Malformed message from " + identity)
+                    continue
+                system.parse_message(identity, unpacked_msg)
 
             if _zmq["queue"] in socks and socks[_zmq["queue"]] == zmq.POLLIN:
                 identity = _zmq["queue"].recv()
