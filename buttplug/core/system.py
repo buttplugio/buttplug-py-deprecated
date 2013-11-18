@@ -74,10 +74,10 @@ _msg_table = {"BPServerInfo": _handle_server_info,
 
 def parse_message(identity, msg):
     if not isinstance(msg, (list, tuple)):
-        logging.debug("NOT A LIST: %s", msg)
+        logging.warning("Message from %s not a list: %s", identity, msg)
         return
     if len(msg) is 0:
-        logging.debug("NULL LIST")
+        logging.warning("Null list from %s", identity)
         return
     msg_address = msg[0]
     msg_type = msg[1]
