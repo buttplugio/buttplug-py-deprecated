@@ -1,18 +1,43 @@
 from buttplug.core import utils
+from buttplug.core import config
 import logging
 import json
 import msgpack
 import gevent
 import zmq.green as zmq
+from gevent.pywsgi import WSGIServer
+from geventwebsocket.handler import WebSocketHandler
+
+
+def init_ws(context):
+    addr = config.get_value("websocket_address")
+    logging.info("Opening websocket server on %s", addr)
+    # TODO: Believe it or not this is not a valid way to check an address
+    _ws_server = WSGIServer(addr,
+                            WebSocketClientFactory(context),
+                            handler_class=WebSocketHandler)
+    _ws_server.start()
+
+
+class WebSocketClientFactory(object):
+    def __init__(self, context):
+        self.context = context
+
+    def __call__(self, environ, start_response):
+        id = utils.random_ident()
+        logging.info("New Websocket connection %s", id)
+        utils.spawn_gevent_func("websocket %s" % id, "websockets",
+                                WebSocketClient.run_loop,
+                                WebSocketClient(id, self.context, environ)).join()
 
 
 class WebSocketClient(object):
-
-    def __init__(self, context):
+    def __init__(self, identity, context, environ):
         self.context = context
         self.alive = True
-        self.ws = None
-        self.identity = utils.random_ident()
+        # Handle websocket connection
+        self.ws = environ['wsgi.websocket']
+        self.identity = identity
         self.socket_client = None
 
     def recv_loop(self):
@@ -22,10 +47,12 @@ class WebSocketClient(object):
                 json_msg = None
                 try:
                     json_msg = json.loads(msg)
-                except:
+                except ValueError:
                     logging.warning("Message from websocket %s not json!",
                                     self.identity)
                     continue
+                except:
+                    raise
                 # for now, msgpack the json we get in
                 self.socket_client.send(msgpack.packb(json_msg))
         except:
@@ -51,11 +78,7 @@ class WebSocketClient(object):
     # greenlet that will act as the zmq handler for us. This allows us to just
     # deal with serialization at the JS level, without also having to do zmq
     # setup.
-    def __call__(self, environ, start_response):
-        logging.info("New Websocket connection")
-
-        # Handle websocket connection
-        self.ws = environ['wsgi.websocket']
+    def run_loop(self):
         # Basically set up a client connection here, complete with normal
         # sockets.
         self.socket_client = self.context.socket(zmq.DEALER)
@@ -79,6 +102,7 @@ class WebSocketClient(object):
                 gevent.sleep(1)
         except:
             self.alive = False
+        self.socket_client.send(msgpack.packb(["s", "BPClose"]))
         sl.join()
         rl.join()
         logging.info("Shutting down Websocket %s", self.identity)

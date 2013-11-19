@@ -8,9 +8,11 @@ _cdirs = {"config": os.path.join(expanduser("~"), ".buttplug"),
           "plugin": os.path.join(expanduser("~"), ".buttplug", "plugins")}
 
 _default_server_addr = "tcp://127.0.0.1:9389"
+_default_wsserver_addr = ""
 
 _config = {"server_address": _default_server_addr,
            "ping_rate": 1,
+           "websocket_address": _default_wsserver_addr,
            "ping_max": 3}
 
 CONFIG_FILENAME = "config.json"
@@ -42,6 +44,9 @@ def init():
     parser.add_argument('--server_address', metavar='addr', type=str,
                         help='Address to listen on',
                         default=_config["server_address"])
+    parser.add_argument('--websocket_address', metavar='websocket', type=str,
+                        help='Enable websocket clients access via specified interface:port',
+                        default=_config["websocket_address"])
     parser.add_argument('--config_dir', metavar='path', type=str,
                         help='configuration directory',
                         default=_cdirs["config"])
@@ -67,9 +72,11 @@ def init():
         logging.debug("Creating directory %s", _cdirs["plugin"])
         os.makedirs(_cdirs["plugin"])
 
-    # only reset the server address if it's not the default
     if args.server_address != _default_server_addr:
         set_value("server_address", args.server_address)
+
+    if args.websocket_address != _default_wsserver_addr:
+        set_value("websocket_address", args.websocket_address)
 
 
 def get_value(key):
