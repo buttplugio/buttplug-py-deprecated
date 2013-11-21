@@ -9,7 +9,7 @@ from buttplug.core import server, config, utils, plugin
 def main():
     """Start server loop"""
     # Bring up logging, fill out configuration values
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     config.init()
     server.init()
     # Start plugins
