@@ -64,11 +64,17 @@ def _handle_client(identity, msg):
                             identity, msg)
 
 
+def _handle_internals(identity, msg):
+    queue.add(identity, ["s", "BPInternals", utils._live_greenlets])
+    return True
+
+
 _msg_table = {"BPServerInfo": _handle_server_info,
               "BPPluginList": _handle_plugin_list,
               "BPDeviceList": _handle_device_list,
               "BPRegisterClient": _handle_client,
               "BPClaimDevice": _handle_claim_device,
+              "BPInternals": _handle_internals,
               "BPClose": _handle_close}
 
 
@@ -81,8 +87,7 @@ def parse_message(identity, msg):
         return
     msg_address = msg[0]
     msg_type = msg[1]
-    # if msg_type not in ["BPPing", "BPPluginDeviceList"]:
-    logging.info("New message %s from %s", msg_type, identity)
+    logging.debug("New message %s from %s", msg_type, identity)
     # System Message
     if msg_address == "s":
         if msg_type in _msg_table.keys():
