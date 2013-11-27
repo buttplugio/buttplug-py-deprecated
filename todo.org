@@ -70,7 +70,8 @@ CLOSED: [2013-04-04 Thu 21:05]
 CLOSED: [2013-04-04 Thu 22:54]
 - State "DONE"       from "TODO"       [2013-04-04 Thu 22:54]
 ** TODO Make a message template for the server
-** TODO Add client websocket access via argument
+** DONE Add client websocket access via argument
+CLOSED: [2013-11-24 Sun 12:40]
 ** TODO Add server tests for process/pool cleanup on shutdown
 ** TODO Log subprocess output to logging module
 http://www.velocityreviews.com/forums/t612189-subprocess-popen-output-to-logging-streamhandler.html
@@ -154,4 +155,3 @@ CLOSED: [2013-03-09 Sat 00:29]
 *** Plugin Lifetime
 *** Process Manager
 *** Socket Manager?
-
