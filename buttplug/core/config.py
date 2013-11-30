@@ -19,6 +19,10 @@ CONFIG_FILENAME = "config.json"
 
 
 def _load():
+    """Load JSON config file into a python dict, checking validity against expected
+    values.
+
+    """
     logging.debug("Loading JSON Config from %s", os.path.join(_cdirs["config"],
                                                               CONFIG_FILENAME))
     with open(os.path.join(_cdirs["config"], CONFIG_FILENAME), "r+") as f:
@@ -32,6 +36,7 @@ def _load():
 
 
 def _save():
+    """Save the config dict to a JSON file on disk"""
     logging.debug("Saving JSON Config to %s", os.path.join(_cdirs["config"],
                                                            CONFIG_FILENAME))
     with open(os.path.join(_cdirs["config"], CONFIG_FILENAME), "w") as f:

@@ -6,6 +6,9 @@ from buttplug.core import queue
 
 
 def handle_client(identity, msg):
+    """Start a greenlet that will survive the duration of client connection.
+    Handles replying to client registration, and cleaning up claims on
+    disconnect."""
     hb = utils.spawn_heartbeat(identity, gevent.getcurrent())
     utils.add_identity_greenlet(identity, gevent.getcurrent())
     # Let the client know we're aware of it

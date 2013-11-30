@@ -13,6 +13,7 @@ _ws_server = None
 
 
 def init():
+    """Initialize structures and sockets needed to run router."""
     _zmq["context"] = zmq.Context()
     queue.init(_zmq["context"])
     _zmq["router"] = _zmq["context"].socket(zmq.ROUTER)
@@ -29,6 +30,8 @@ def init():
 
 
 def msg_loop():
+    """Main loop for router system. Handles I/O for communication with clients and
+    plugins."""
     try:
         while True:
             # Timeout the poll every so often, otherwise things can get stuck
@@ -54,6 +57,7 @@ def msg_loop():
 
 
 def shutdown():
+    """Kill all remaining greenlets, close sockets."""
     utils.killjoin_greenlets("plugin")
     utils.killjoin_greenlets("client")
     utils.killjoin_greenlets("main")

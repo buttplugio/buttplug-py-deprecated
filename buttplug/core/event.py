@@ -6,6 +6,10 @@ QUEUE_ADDRESS = "inproc://fequeue"
 
 
 def add(identity, msgtype, event=None):
+    """Add an event to wait for. An event consists of a message type, and an
+    identity we expect to receive the message from.
+
+    """
     if event is None:
         event = gevent.event.AsyncResult()
     if identity not in _mvars["_socket_events"]:
@@ -18,6 +22,8 @@ def add(identity, msgtype, event=None):
 
 
 def fire(identity, msg):
+    """Fire all events related to the message coming from the identity
+    specified."""
     msgtype = msg[1]
     se = _mvars["_socket_events"]
     logging.debug("Event %s for %s", msgtype, identity)
@@ -64,4 +70,5 @@ def fire(identity, msg):
 
 
 def remove(identity, msgtype):
+    """Remove an event from the list of things we're waiting on."""
     del _mvars["_socket_events"][identity][msgtype]
