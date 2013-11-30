@@ -1,5 +1,5 @@
 from buttplug.core import plugin
-from buttplug.core import feinfo
+from buttplug.core import bpinfo
 from buttplug.core import queue
 from buttplug.core import event
 from buttplug.core import utils
@@ -25,8 +25,8 @@ def _handle_server_info(identity, msg):
     """
     queue.add(identity, ["s", "BPServerInfo",
                          [{"name": "Buttplug",
-                           "version": feinfo.SERVER_VERSION,
-                           "date": feinfo.SERVER_DATE}]])
+                           "version": bpinfo.SERVER_VERSION,
+                           "date": bpinfo.SERVER_DATE}]])
     return True
 
 

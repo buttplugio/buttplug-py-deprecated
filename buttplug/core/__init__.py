@@ -4,4 +4,4 @@ from buttplug.core import queue
 from buttplug.core import system
 from buttplug.core import utils
 from buttplug.core import event
-from buttplug.core import feinfo
+from buttplug.core import bpinfo
