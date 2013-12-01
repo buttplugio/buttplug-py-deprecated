@@ -1,8 +1,9 @@
-#+TITLE: Buttplug Developer's Manual
+#+TITLE: Buttplug Manual
 #+OPTIONS: h:4 toc:2 
 
-* Who Should Read This
-* Rationale
+* Overview
+** Who Should Read This
+** Rationale
 
 I've been digitally pontificating about sex and technology since
 sometime in 2004. During that time, I've noticed a recurring call for
@@ -36,7 +37,7 @@ sex toys?
 
 Thus, Buttplug began.
 
-* Design Considerations
+** Design Considerations
 
 Diverting into a quick software engineering discussion... 
 
@@ -188,7 +189,7 @@ Buttplug are below.
 
 - Removing the Problem of Hardware/Media Lock-in
 
-  - Once FE is done, you should hopefully be able to take media or
+  - Once BP is done, you should hopefully be able to take media or
     software created for one toy, and with a minimal amount of code,
     use it with another toy taht it wasn't originally meant for.
     Beyond that, we could also start working toward the aforementioned
@@ -242,12 +243,24 @@ Buttplug are below.
     router up front just due to the frameworks we're planning on, but
     let's go for 1:1 first.
 
-* System Overview
+* User Manual
+* Developer Manual
+** System Overview
 This section covers the general architecture of a Buttplug
 system, including the main components: Routers, Clients, Plugins, and
 Messages.
 
-** Plugins
+*** Router
+
+At the center of Buttplug is a router. This is a single process
+capable of managing a large number of connections from hardware
+managers (plugins) and interfaces (clients). It manages the type of
+plugins the clients can access, and bonds clients to plugins in order
+to let clients talk to hardware. All messages going through the
+system are either addressed to the router, or use the router to get to
+a client or plugin.
+
+*** Plugins
 
 Plugins exposes a certain type of hardware to the router. There are
 two states that a plugin can run in:
@@ -260,7 +273,7 @@ two states that a plugin can run in:
   which client it is receiving data from, since the connection is
   handled by the router.
 
-** Clients
+*** Clients
 
 Clients provide new interfaces for users to interact with whatever
 hardware is exposed via router. Clients should be able to list
@@ -270,16 +283,7 @@ interactive displays, movie players, video games, even network bridges
 for teledildonics systems (though it is recommended that any developer
 thinking that reread the "Security" section earlier in this document.
 
-** Router
-
-At the center of Buttplug is a router. This is a single process
-capable of managing a finite but extremely large number of clients and
-plugins. It manages the type of plugins the clients can access, and
-bonds clients to plugins in order to let clients talk to hardware. All
-messages going through an FE system are either addressed to the
-router, or go through it to get to a client or plugin.
-
-** Messages
+*** Messages
 
 Messages are how processes talk to each other. All messages are going
 either to the router from a client or plugin, or to a plugin or client
@@ -307,38 +311,37 @@ Messages contain the following fields:
 Messages should be sent as a single atomic unit. ZMQ will handle
 message splitting across sockets if the need arises.
 
-* Router Internals
+** Router Internals
 
 This section covers the internal architecture of the router, and the
 workflows and processes it manages. This section is mostly written for
-design and isn't required for understanding or using FE as a whole.
+design and isn't required for understanding or using BP as a whole.
 
-** ZMQ Choices
+*** ZMQ Choices
 
 For ZMQ sockets to the outside world, we have a rather simple setup.
 The router itself maintains a ROUTER socket that it uses to
 communicate with all clients and plugins. Each client or plugin is a
-DEALER socket, considered to have a unique identity. For plugins,
-since the router manages all plugin processes, we set the identity for
-the plugin. For clients, we trust the connecting socket to have a
-non-colliding identity.
+DEALER socket, considered to have a unique identity. Since the router
+manages all plugin processes, it sets the identity for the plugin. For
+clients, we trust the connecting socket to have a non-colliding
+identity.
 
-Internally, we maintain a PUSH/PULL socket set for queuing messages to
-send. The Buttplug.Queue module maintains a global socket that
-all internal components can push messages to, and the router maintains
-a socket that it will pull from when the scheduler arrives at the
-point to send messages out.
+Internally, we maintain a gevent.Queue for queuing messages to send.
+The Buttplug.Queue module maintains a global queue that all internal
+components can push messages to, and the router will pull from the
+queue when the scheduler arrives at the point to send messages out.
 
-** Asynchronous Calls via gevent
+*** Asynchronous Calls via gevent
 
-In FE, gevent is used to make sure we can run asynchronous calls
+In BP, gevent is used to make sure we can run asynchronous calls
 without blocking, as well as to provide greenlets for us to run a
 coroutine based system.
 
-To identify where FE is spawning greenlets, they are all spawned via
+To identify where BP is spawning greenlets, they are all spawned via
 the utils.spawn_gevent_func function, which allocates them from a
-single pool. FE manages the following kinds of calls via gevent
-greenlets (v1.0 beta at the time of this writing):
+single pool. BP manages the following kinds of calls via gevent
+greenlets:
 
 - Process Heartbeats
 - Plugin Count Process Updates and Lifetime
@@ -358,7 +361,7 @@ asynchronous:
 Calls to either zmq or subprocess are monkeypatched to yield to the
 gevent scheduler.
 
-** Message Handler
+*** Message Handler
 
 When the router receives messages, it throws them through a parser to
 see where they're supposed to go. 
@@ -378,7 +381,7 @@ see where they're supposed to go.
 If none of these cases is satisfied, we don't know was the message is,
 give up.
 
-** Router Lifetime
+*** Router Lifetime
 
 The router lifetime should resemble the following workflow:
 
@@ -396,7 +399,7 @@ The router lifetime should resemble the following workflow:
 - Close all ZMQ sockets
 - Exit
 
-** Plugin Count Lifetime
+*** Plugin Count Lifetime
 
 The plugin count lifetime should resemble the following workflow:
 
@@ -404,13 +407,13 @@ The plugin count lifetime should resemble the following workflow:
 - For each plugin found, router starts Plugin Count process
 - Every X seconds, plugin returns count of devices it handles that are
   currently connected to the system.
-- On FEClose message, process closes socket, dies
+- On BPClose message, process closes socket, dies
 
-** Client Device Claiming and Plugin Device Lifetime
+*** Client Device Claiming and Plugin Device Lifetime
 
 The dance between the client, router, and plugin for claiming and
 communicating with devices is probably the most complicated part of
-FE.
+BP.
 
 The device claim process should resemble the following workflow:
 
@@ -438,7 +441,7 @@ client -> router [label=BPDeviceList];
 - Once either client is closed or claim is no longer needed by
   client, router closes Plugin Device process. 
 
-** Client Lifetime
+*** Client Lifetime
 
 Client lifetimes will differ based on their usages, but will most
 likely resemble:
@@ -450,5 +453,7 @@ likely resemble:
 - On client close, router unclaims devices
 
 
-* Plugin/Client Internals
-
+** Plugins
+*** Count Mode
+*** Interaction Mode
+** Clients
