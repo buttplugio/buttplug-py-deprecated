@@ -10,7 +10,7 @@ import logging
 _msg_table = {}
 
 
-def close_internal(identity, msg):
+def _close_internal(identity, msg):
     g = util.get_identity_greenlet(identity)
     if g is not None:
         g.kill(timeout=1, block=True, exception=util.BPGreenletExit)
@@ -48,7 +48,7 @@ def _handle_device_list(identity, msg):
 
 def _handle_close(identity, msg):
     util.spawn_gevent_func("close and block: %s" % identity,
-                           "main", close_internal,
+                           "main", _close_internal,
                            identity, msg)
 
 
