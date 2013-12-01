@@ -1,10 +1,7 @@
-Client
+client
 ------
 
 .. automodule:: buttplug.core.client
+   :members:
 
-Functions
-~~~~~~~~~
-
-.. autofunction:: buttplug.core.client.handle_client
 
