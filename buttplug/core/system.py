@@ -2,7 +2,7 @@ from buttplug.core import plugin
 from buttplug.core import bpinfo
 from buttplug.core import queue
 from buttplug.core import event
-from buttplug.core import utils
+from buttplug.core import util
 from buttplug.core import client
 import logging
 
@@ -11,9 +11,9 @@ _msg_table = {}
 
 
 def close_internal(identity, msg):
-    g = utils.get_identity_greenlet(identity)
+    g = util.get_identity_greenlet(identity)
     if g is not None:
-        g.kill(timeout=1, block=True, exception=utils.BPGreenletExit)
+        g.kill(timeout=1, block=True, exception=util.BPGreenletExit)
 
 
 def _handle_server_info(identity, msg):
@@ -47,25 +47,25 @@ def _handle_device_list(identity, msg):
 
 
 def _handle_close(identity, msg):
-    utils.spawn_gevent_func("close and block: %s" % identity,
-                            "main", close_internal,
-                            identity, msg)
+    util.spawn_gevent_func("close and block: %s" % identity,
+                           "main", close_internal,
+                           identity, msg)
 
 
 def _handle_claim_device(identity, msg):
-    utils.spawn_gevent_func("claim_device: %s" % msg[2],
-                            "device", plugin.run_device_plugin,
-                            identity, msg)
+    util.spawn_gevent_func("claim_device: %s" % msg[2],
+                           "device", plugin.run_device_plugin,
+                           identity, msg)
 
 
 def _handle_client(identity, msg):
-    utils.spawn_gevent_func("client: %s" % identity,
-                            "client", client.handle_client,
-                            identity, msg)
+    util.spawn_gevent_func("client: %s" % identity,
+                           "client", client.handle_client,
+                           identity, msg)
 
 
 def _handle_internals(identity, msg):
-    queue.add(identity, ["s", "BPInternals", utils._live_greenlets])
+    queue.add(identity, ["s", "BPInternals", util._live_greenlets])
     return True
 
 
@@ -94,6 +94,6 @@ def parse_message(identity, msg):
             _msg_table[msg_type](identity, msg)
         else:
             event.fire(identity, msg)
-    # Client/Plugin Comms forwarding
+            # Client/Plugin Comms forwarding
     else:
         plugin.forward_device_msg(identity, msg)

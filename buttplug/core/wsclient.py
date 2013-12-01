@@ -1,4 +1,4 @@
-from buttplug.core import utils
+from buttplug.core import util
 from buttplug.core import config
 import logging
 import json
@@ -24,11 +24,11 @@ class WebSocketClientFactory(object):
         self.context = context
 
     def __call__(self, environ, start_response):
-        id = utils.random_ident()
+        id = util.random_ident()
         logging.info("New Websocket connection %s", id)
-        utils.spawn_gevent_func("websocket %s" % id, "websockets",
-                                WebSocketClient.run_loop,
-                                WebSocketClient(id, self.context, environ)).join()
+        util.spawn_gevent_func("websocket %s" % id, "websockets",
+                               WebSocketClient.run_loop,
+                               WebSocketClient(id, self.context, environ)).join()
 
 
 class WebSocketClient(object):
@@ -91,12 +91,12 @@ class WebSocketClient(object):
         # out how to get a pollable fileno from gevent-websocket. The internal
         # socket object just blocks the zmq poller even if set non-block. So,
         # for the moment, we're stuck with using 2 more greenlets. Sadness.
-        sl = utils.spawn_gevent_func("websocket send %s" % self.identity,
-                                     "websockets", WebSocketClient.send_loop,
-                                     self)
-        rl = utils.spawn_gevent_func("websocket receive %s" % self.identity,
-                                     "websockets", WebSocketClient.recv_loop,
-                                     self)
+        sl = util.spawn_gevent_func("websocket send %s" % self.identity,
+                                    "websockets", WebSocketClient.send_loop,
+                                    self)
+        rl = util.spawn_gevent_func("websocket receive %s" % self.identity,
+                                    "websockets", WebSocketClient.recv_loop,
+                                    self)
         try:
             while self.alive:
                 gevent.sleep(1)

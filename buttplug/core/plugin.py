@@ -3,7 +3,7 @@ import json
 import gevent
 import logging
 from gevent import subprocess
-from buttplug.core import utils
+from buttplug.core import util
 from buttplug.core import event
 from buttplug.core import queue
 from buttplug.core import config
@@ -57,8 +57,8 @@ def scan_for_plugins():
         if info["name"] in _plugins.keys():
             raise PluginException("Plugin Collision! Two plugins named " +
                                   info["name"])
-        utils.spawn_gevent_func("run_count_plugin: %s" % info["name"],
-                                "plugin", _run_count_plugin, Plugin(info, i))
+        util.spawn_gevent_func("run_count_plugin: %s" % info["name"],
+                               "plugin", _run_count_plugin, Plugin(info, i))
 
 
 def _start_process(cmd, identity):
@@ -75,7 +75,7 @@ def _start_process(cmd, identity):
 
 
 def _run_count_plugin(plugin):
-    count_identity = utils.random_ident()
+    count_identity = util.random_ident()
     e = event.add(count_identity, "BPPluginRegisterCount")
     count_process_cmd = [plugin.executable_path, "--server_port=%s" %
                          config.get_value("server_address"), "--count"]
@@ -91,13 +91,13 @@ def _run_count_plugin(plugin):
         logging.info("%s count process never registered, removing.",
                      plugin.name)
         return
-    except utils.BPGreenletExit:
+    except util.BPGreenletExit:
         logging.debug("Shutting down count process for %s", plugin.name)
         return
     logging.info("Count process for %s up on identity %s", plugin.name,
                  count_identity)
-    utils.add_identity_greenlet(count_identity, gevent.getcurrent())
-    hb = utils.spawn_heartbeat(count_identity, gevent.getcurrent())
+    util.add_identity_greenlet(count_identity, gevent.getcurrent())
+    hb = util.spawn_heartbeat(count_identity, gevent.getcurrent())
     _plugins[plugin.name] = plugin
     while True:
         queue.add(count_identity, ["s", "BPPluginDeviceList"])
@@ -107,22 +107,22 @@ def _run_count_plugin(plugin):
         except gevent.Timeout:
             logging.info("%s count process timed out, removing.", plugin.name)
             break
-        except utils.BPGreenletExit:
+        except util.BPGreenletExit:
             logging.debug("Shutting down count process for %s", plugin.name)
             break
         _devices[plugin.name] = msg[2]
         # TODO: Make this a configuration value
         try:
             gevent.sleep(1)
-        except utils.BPGreenletExit:
+        except util.BPGreenletExit:
             logging.debug("Shutting down count process for %s", plugin.name)
             break
 
     # Heartbeat may already be dead if we're shutting down, so check first
     if not hb.ready():
-        hb.kill(exception=utils.BPGreenletExit, block=True, timeout=1)
+        hb.kill(exception=util.BPGreenletExit, block=True, timeout=1)
     # Remove ourselves, but don't kill since we're already shutting down
-    utils.remove_identity_greenlet(count_identity, kill_greenlet=False)
+    util.remove_identity_greenlet(count_identity, kill_greenlet=False)
     # TODO: If a count process goes down, does every associated device go with
     # it?
     del _plugins[plugin.name]
@@ -178,12 +178,12 @@ def kill_claims(identity):
         logging.warning("No client %s is known to claim a device!", identity)
         return
     for dev_id in _ctd[identity]:
-        g = utils.get_identity_greenlet(dev_id)
+        g = util.get_identity_greenlet(dev_id)
         if g is None:
             logging.warning("Device %s is not bound to client %s", dev_id,
                             identity)
             continue
-        g.kill(exception=utils.BPGreenletExit, timeout=1, block=True)
+        g.kill(exception=util.BPGreenletExit, timeout=1, block=True)
 
 
 def run_device_plugin(identity, msg):
@@ -222,7 +222,7 @@ def run_device_plugin(identity, msg):
     try:
         # TODO: Make device open timeout a config option
         (i, m) = e.get(timeout=5)
-    except utils.BPGreenletExit:
+    except util.BPGreenletExit:
         # If we shut down now, just drop
         return
     except gevent.Timeout:
@@ -232,17 +232,17 @@ def run_device_plugin(identity, msg):
         queue.add(identity, ["s", "BPClaimDevice", dev_id, False])
         return
 
-    utils.add_identity_greenlet(dev_id, gevent.getcurrent())
+    util.add_identity_greenlet(dev_id, gevent.getcurrent())
 
     # Add a heartbeat now that the process is up
-    hb = utils.spawn_heartbeat(dev_id, gevent.getcurrent())
+    hb = util.spawn_heartbeat(dev_id, gevent.getcurrent())
 
     # System to device process: Open device
     queue.add(dev_id, ["s", "BPPluginOpenDevice", dev_id])
     e = event.add(dev_id, "BPPluginOpenDevice")
     try:
         (i, m) = e.get()
-    except utils.BPGreenletExit:
+    except util.BPGreenletExit:
         queue.add(dev_id, ["s", "BPClose"])
         return
 
@@ -266,16 +266,16 @@ def run_device_plugin(identity, msg):
     while True:
         try:
             gevent.sleep(1)
-        except utils.BPGreenletExit:
+        except util.BPGreenletExit:
             break
 
     if not hb.ready():
-        hb.kill(exception=utils.BPGreenletExit, block=True, timeout=1)
+        hb.kill(exception=util.BPGreenletExit, block=True, timeout=1)
 
     _ctd[identity].remove(dev_id)
     del _dtc[dev_id]
 
     # Remove ourselves, but don't kill since we're already shutting down
-    utils.remove_identity_greenlet(dev_id, kill_greenlet=False)
+    util.remove_identity_greenlet(dev_id, kill_greenlet=False)
     queue.add(dev_id, ["s", "BPClose"])
     logging.debug("Device keeper %s exiting...", dev_id)

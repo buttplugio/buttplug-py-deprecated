@@ -1,7 +1,7 @@
 from buttplug.core import config
 from buttplug.core import queue
 from buttplug.core import system
-from buttplug.core import utils
+from buttplug.core import util
 from buttplug.core import wsclient
 import zmq.green as zmq
 import msgpack
@@ -52,15 +52,15 @@ def msg_loop():
                 msg = _zmq["queue"].recv()
                 _zmq["router"].send(identity, zmq.SNDMORE)
                 _zmq["router"].send(msg)
-    except utils.BPGreenletExit:
+    except util.BPGreenletExit:
         pass
 
 
 def shutdown():
     """Kill all remaining greenlets, close sockets."""
-    utils.killjoin_greenlets("plugin")
-    utils.killjoin_greenlets("client")
-    utils.killjoin_greenlets("main")
+    util.killjoin_greenlets("plugin")
+    util.killjoin_greenlets("client")
+    util.killjoin_greenlets("main")
     _zmq["router"].close()
     _zmq["queue"].close()
     queue.close()
