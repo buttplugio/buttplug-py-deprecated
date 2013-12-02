@@ -1,3 +1,44 @@
+# Buttplug - websocket module
+# Copyright (c) Kyle Machulis/Nonpolynomial Labs, 2012-2013
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the <ORGANIZATION> nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+"""Assuming the proper configuration values are set, BP handles websocket
+connections directly, allowing developers to write clients/plugins in pure
+javascript. The websocket handler maintains the connection to the websocket,
+creating a corresponding client connection which it attaches to the ZMQ router.
+This allows web developers to ignore the ZMQ requirements of BP while still
+using its resources. All messages going through the websocket are encoded to
+JSON by the websocket handler.
+
+"""
+
 from buttplug.core import util
 from buttplug.core import config
 import logging
@@ -10,6 +51,9 @@ from geventwebsocket.handler import WebSocketHandler
 
 
 def init_ws(context):
+    """Initialize websocket connection handler.
+
+    """
     addr = config.get_value("websocket_address")
     logging.info("Opening websocket server on %s", addr)
     # TODO: Believe it or not this is not a valid way to check an address

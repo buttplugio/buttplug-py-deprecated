@@ -30,7 +30,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-"""There are times when functions in Buttplug need to wait on information from
+"""There are times when functions in BP need to wait on information from
 an outside source. To do this, they register for an event. Events are keyed
 based on the identity of a outside process, and the type of message that those
 waiting on the event expect to receive from it. Events can be assigned a

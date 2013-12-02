@@ -1,3 +1,53 @@
+# Buttplug - plugin module
+# Copyright (c) Kyle Machulis/Nonpolynomial Labs, 2012-2013
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the <ORGANIZATION> nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+
+"""Plugins are how BP accesses and controls outside resources, usually
+hardware. Each plugin can run in two different modes:
+
+- Count mode, which just keeps a count of how many of a specific resource are
+  attached to the system at the moment
+
+- Claim mode, which connects to a certain device address to deliver messages
+  back and forth.
+
+Each plugin runs as a process per mode, so there's a minimum of 1 process per
+plugin (the count mode process), plus an additional process per device being
+accessed. This keeps per device crashes from bringing down the whole system.
+
+To claim a device, a client begins a claim process. The protocol for this is
+outlined in the run_device_plugin() docs.
+
+"""
+
 import os
 import json
 import gevent
@@ -10,7 +60,15 @@ from buttplug.core import config
 
 
 class Plugin(object):
-    PLUGIN_INFO_FILE = "bdplugin.json"
+    """The plugin class provides access to various plugin configuration values,
+    including the name/version of the plugin, where its executables are, and
+    the types of messages it accepts.
+
+    It also acts as the source of truth for plugin configuration format,
+    specifying the filename and keys required in the loaded JSON dict.
+
+    """
+    PLUGIN_INFO_FILE = "bpplugin.json"
     PLUGIN_REQUIRED_KEYS = [u"name", u"version", u"executable", u"messages"]
 
     def __init__(self, info, plugin_dir):
@@ -36,7 +94,7 @@ class PluginException(Exception):
 
 def scan_for_plugins():
     """Look through plugin directory for any directory with a file named
-    "bdplugin.json". Fill in an plugin object, and pass to _run_count_plugin to
+    "bpplugin.json". Fill in an plugin object, and pass to _run_count_plugin to
     handle lifetime.
 
     """
@@ -62,6 +120,9 @@ def scan_for_plugins():
 
 
 def _start_process(cmd, identity):
+    """Constructs command line options string and runs a plugin process.
+
+    """
     cmd += ["--identity=%s" % identity]
     logging.info("Starting process %s", cmd)
     try:
@@ -75,6 +136,10 @@ def _start_process(cmd, identity):
 
 
 def _run_count_plugin(plugin):
+    """Runs the count process for a plugin. Constantly polls for list of devices,
+    keeping an internal reference of the devices available from the plugin.
+
+    """
     count_identity = util.random_ident()
     e = event.add(count_identity, "BPPluginRegisterCount")
     count_process_cmd = [plugin.executable_path, "--server_port=%s" %
@@ -132,8 +197,8 @@ def _run_count_plugin(plugin):
 
 
 def plugins_available():
-    """
-    Return the list of all plugins available on the system
+    """Return the list of all plugins available on the system
+
     """
     return _plugins.values()
 
@@ -142,9 +207,13 @@ _ctd = {}
 _dtc = {}
 
 
-# Forwarding messages: Because providing security we don't even need matters.
-# Yup.
 def forward_device_msg(identity, msg):
+    """Forwards a message from plugin->client or client->plugin, editing it to take
+    out all identifying information. This way, all identity management stays in
+    the router, and plugins/clients talk to each other with no actual knowledge
+    of who claims/says what.
+
+    """
     to_alias = msg[0]
     print _ctd
     print _dtc
@@ -174,6 +243,8 @@ def forward_device_msg(identity, msg):
 
 
 def kill_claims(identity):
+    """Kill all plugin claims for a certain client identity. Used when a client
+    disconnects from the router."""
     if identity not in _ctd:
         logging.warning("No client %s is known to claim a device!", identity)
         return
@@ -187,6 +258,10 @@ def kill_claims(identity):
 
 
 def run_device_plugin(identity, msg):
+    """Execute the plugin claim protocol. This happens whenever a client requests
+    to claim a resource advertised by a plugin.
+
+    """
     # Figure out the plugin that owns the device we want
     p = None
     dev_id = msg[2]

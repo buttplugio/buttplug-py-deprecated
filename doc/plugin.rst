@@ -1,19 +1,11 @@
-Plugin
+plugin
 ------
 
 .. automodule:: buttplug.core.plugin
+   :members: scan_for_plugins, forward_device_msg, kill_claims, run_device_plugin
 
 Classes
 ~~~~~~~
 
 .. autoclass:: Plugin
 .. autoclass:: PluginException
-
-
-Functions
-~~~~~~~~~
-
-.. autofunction:: buttplug.core.plugin.scan_for_plugins
-.. autofunction:: buttplug.core.plugin.forward_device_msg
-.. autofunction:: buttplug.core.plugin.kill_claims
-.. autofunction:: buttplug.core.plugin.run_device_plugin

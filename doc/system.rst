@@ -1,11 +1,5 @@
-System
+system
 ------
 
 .. automodule:: buttplug.core.system
-
-Functions
-~~~~~~~~~
-
-.. autofunction:: buttplug.core.system.parse_message
-
-
+   :members: parse_message
