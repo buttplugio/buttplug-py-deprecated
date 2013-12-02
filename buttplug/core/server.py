@@ -38,7 +38,7 @@ system is considered to be running as long as the msg_loop() greenlet is alive.
 from buttplug.core import config
 from buttplug.core import queue
 from buttplug.core import system
-from buttplug.core import util
+from buttplug.core import greenlet
 from buttplug.core import wsclient
 import zmq.green as zmq
 import msgpack
@@ -93,7 +93,7 @@ def msg_loop():
                 msg = _zmq["queue"].recv()
                 _zmq["router"].send(identity, zmq.SNDMORE)
                 _zmq["router"].send(msg)
-    except util.BPGreenletExit:
+    except greenlet.BPGreenletExit:
         pass
 
 
@@ -101,9 +101,9 @@ def shutdown():
     """Kill all remaining greenlets, close sockets.
 
     """
-    util.killjoin_greenlets("plugin")
-    util.killjoin_greenlets("client")
-    util.killjoin_greenlets("main")
+    greenlet.killjoin_greenlets("plugin")
+    greenlet.killjoin_greenlets("client")
+    greenlet.killjoin_greenlets("main")
     _zmq["router"].close()
     _zmq["queue"].close()
     queue.close()

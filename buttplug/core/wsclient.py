@@ -39,7 +39,7 @@ JSON by the websocket handler.
 
 """
 
-from buttplug.core import util
+from buttplug.core import greenlet
 from buttplug.core import config
 import logging
 import json
@@ -135,12 +135,12 @@ class WebSocketClient(object):
         # out how to get a pollable fileno from gevent-websocket. The internal
         # socket object just blocks the zmq poller even if set non-block. So,
         # for the moment, we're stuck with using 2 more greenlets. Sadness.
-        sl = util.spawn_gevent_func("websocket send %s" % self.identity,
-                                    "websockets", WebSocketClient.send_loop,
-                                    self)
-        rl = util.spawn_gevent_func("websocket receive %s" % self.identity,
-                                    "websockets", WebSocketClient.recv_loop,
-                                    self)
+        sl = greenlet.spawn_gevent_func("websocket send %s" % self.identity,
+                                        "websockets", WebSocketClient.send_loop,
+                                        self)
+        rl = greenlet.spawn_gevent_func("websocket receive %s" % self.identity,
+                                        "websockets", WebSocketClient.recv_loop,
+                                        self)
         try:
             while self.alive:
                 gevent.sleep(1)

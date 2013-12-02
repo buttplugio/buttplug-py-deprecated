@@ -40,7 +40,7 @@ from buttplug.core import plugin
 from buttplug.core import bpinfo
 from buttplug.core import queue
 from buttplug.core import event
-from buttplug.core import util
+from buttplug.core import greenlet
 from buttplug.core import client
 import logging
 
@@ -53,9 +53,9 @@ def _close_internal(identity, msg):
     connections on BPClose messages.
 
     """
-    g = util.get_identity_greenlet(identity)
+    g = greenlet.get_identity_greenlet(identity)
     if g is not None:
-        g.kill(timeout=1, block=True, exception=util.BPGreenletExit)
+        g.kill(timeout=1, block=True, exception=greenlet.BPGreenletExit)
 
 
 def _handle_server_info(identity, msg):
@@ -100,25 +100,25 @@ def _handle_device_list(identity, msg):
 def _handle_close(identity, msg):
     """Handle a request to close a connection.
     """
-    util.spawn_gevent_func("close and block: %s" % identity,
-                           "main", _close_internal,
-                           identity, msg)
+    greenlet.spawn_gevent_func("close and block: %s" % identity,
+                               "main", _close_internal,
+                               identity, msg)
 
 
 def _handle_claim_device(identity, msg):
     """Handle a request to claim a device from a plugin.
     """
-    util.spawn_gevent_func("claim_device: %s" % msg[2],
-                           "device", plugin.run_device_plugin,
-                           identity, msg)
+    greenlet.spawn_gevent_func("claim_device: %s" % msg[2],
+                               "device", plugin.run_device_plugin,
+                               identity, msg)
 
 
 def _handle_client(identity, msg):
     """Handle a request to begin a new client connection
     """
-    util.spawn_gevent_func("client: %s" % identity,
-                           "client", client.handle_client,
-                           identity, msg)
+    greenlet.spawn_gevent_func("client: %s" % identity,
+                               "client", client.handle_client,
+                               identity, msg)
 
 
 def _handle_internals(identity, msg):
@@ -126,7 +126,7 @@ def _handle_internals(identity, msg):
     be used by dashboard.
 
     """
-    queue.add(identity, ["s", "BPInternals", util._live_greenlets])
+    queue.add(identity, ["s", "BPInternals", greenlet._live_greenlets])
     return True
 
 

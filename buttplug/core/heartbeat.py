@@ -1,4 +1,4 @@
-# Buttplug - client module
+# Buttplug - heartbeat module
 # Copyright (c) Kyle Machulis/Nonpolynomial Labs, 2012-2013
 #
 # All rights reserved.
@@ -29,39 +29,50 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-
-"""The client module handles client registration, lifetime, and cleanup. When a
-client connected to BP, we create a new greenlet running handle_client, which
-makes sure we properly register the client, and clean up all of its device
-claims when it is finished.
+"""Heartbeat functions.
 
 """
 
 import logging
-import gevent
+import gevent.pool
+from buttplug.core import event
 from buttplug.core import greenlet
-from buttplug.core import heartbeat
-from buttplug.core import plugin
 from buttplug.core import queue
+from buttplug.core import config
 
 
-def handle_client(identity, msg):
-    """Start a greenlet that will survive the duration of client connection.
-    Handles replying to client registration, and cleaning up claims on
-    disconnect."""
-    hb = heartbeat.spawn_heartbeat(identity, gevent.getcurrent())
-    greenlet.add_identity_greenlet(identity, gevent.getcurrent())
-    # Let the client know we're aware of it
-    queue.add(identity, ["s", "BPRegisterClient", True])
-    while True:
+def _heartbeat(identity, g):
+    """Given an identity and its corresponding g, start a heartbeat loop.
+    Maintain loop until either g dies or connection does not return a
+    BPPing message in a timely manner. If message is not returned, kill
+    corresponding g.
+
+    """
+    while not g.ready():
+        e = event.add(identity, "BPPing")
+        queue.add(identity, ["s", "BPPing"])
         try:
-            gevent.sleep(1)
+            e.get(block=True, timeout=config.get_value("ping_max"))
+        except gevent.Timeout:
+            logging.info("Identity %s died via heartbeat", identity)
+            g.kill()
+            return
         except greenlet.BPGreenletExit:
-            break
-    plugin.kill_claims(identity)
-    if not hb.ready():
-        hb.kill(exception=greenlet.BPGreenletExit, block=True, timeout=1)
-    # Remove ourselves, but don't kill since we're already shutting down
-    greenlet.remove_identity_greenlet(identity, kill_greenlet=False)
-    queue.add(identity, ["s", "BPClose"])
-    logging.debug("Client keeper %s exiting...", identity)
+            logging.debug("Heartbeat for %s exiting...", identity)
+            return
+
+        if g.ready():
+            logging.debug("Heartbeat for %s exiting...", identity)
+            return
+
+        try:
+            gevent.sleep(config.get_value("ping_rate"))
+        except greenlet.BPGreenletExit:
+            logging.debug("Heartbeat for %s exiting...", identity)
+            return
+
+
+def spawn_heartbeat(identity, g):
+    """Start a new heartbeat process."""
+    return greenlet.spawn_gevent_func("heartbeat-%s" % identity, "heartbeat",
+                                      _heartbeat, identity, g)

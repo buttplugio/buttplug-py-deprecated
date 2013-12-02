@@ -11,5 +11,6 @@ Buttplug Modules
    system
    queue
    event
-   util
+   greenlet
+   heartbeat
    

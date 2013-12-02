@@ -1,4 +1,4 @@
-# Buttplug - util module
+# Buttplug - greenlet module
 # Copyright (c) Kyle Machulis/Nonpolynomial Labs, 2012-2013
 #
 # All rights reserved.
@@ -29,16 +29,13 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Utility functions used by BP.
+"""Greenlet functions.
 
 """
 
 import logging
 import gevent.pool
 import random
-from buttplug.core import event
-from buttplug.core import queue
-from buttplug.core import config
 
 _pools = {}
 _live_greenlets = []
@@ -132,40 +129,3 @@ def remove_identity_greenlet(identity, msg=None, kill_greenlet=True):
         _id_greenlet[identity].kill(timeout=1, block=True,
                                     exception=BPGreenletExit)
     del _id_greenlet[identity]
-
-
-def _heartbeat(identity, greenlet):
-    """Given an identity and its corresponding greenlet, start a heartbeat loop.
-    Maintain loop until either greenlet dies or connection does not return a
-    BPPing message in a timely manner. If message is not returned, kill
-    corresponding greenlet.
-
-    """
-    while not greenlet.ready():
-        e = event.add(identity, "BPPing")
-        queue.add(identity, ["s", "BPPing"])
-        try:
-            e.get(block=True, timeout=config.get_value("ping_max"))
-        except gevent.Timeout:
-            logging.info("Identity %s died via heartbeat", identity)
-            greenlet.kill()
-            return
-        except BPGreenletExit:
-            logging.debug("Heartbeat for %s exiting...", identity)
-            return
-
-        if greenlet.ready():
-            logging.debug("Heartbeat for %s exiting...", identity)
-            return
-
-        try:
-            gevent.sleep(config.get_value("ping_rate"))
-        except BPGreenletExit:
-            logging.debug("Heartbeat for %s exiting...", identity)
-            return
-
-
-def spawn_heartbeat(identity, greenlet):
-    """Start a new heartbeat process."""
-    return spawn_gevent_func("heartbeat-%s" % identity, "heartbeat", _heartbeat,
-                             identity, greenlet)
