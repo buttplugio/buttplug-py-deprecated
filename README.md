@@ -1,6 +1,8 @@
-# Buttplug #
+# Buttplug - DEPRECATED - See http://www.github.com/metafetish/buttplug #
 
-By Kyle Machulis <kyle@nonpolynomial.com>
+This project has been _DEPRECATED_. I'm keeping the repo around for
+reference, but it's been superceded by the Rust version of the project
+at http://www.github.com/metafetish/buttplug.
 
 ## Overview ##
 
