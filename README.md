@@ -1,8 +1,10 @@
-# Buttplug - DEPRECATED - See http://www.github.com/metafetish/buttplug #
+# Buttplug (Historical Implementation) - DEPRECATED - See http://www.github.com/buttplugio/buttplug-py
 
-This project has been _DEPRECATED_. I'm keeping the repo around for
-reference, but it's been superceded by the Rust version of the project
-at http://www.github.com/metafetish/buttplug.
+This repo was my very first try at implementing Buttplug back in 2013.
+I'm keeping it around for historical value, but none of this will be
+updated (and the repo will stay archived). If you're interested in a
+current implementation of Buttplug in Python, see
+[https://github.com/buttplugio/buttplug-py](https://github.com/buttplugio/buttplug-py)
 
 ## Overview ##
 
